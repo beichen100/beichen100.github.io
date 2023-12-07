@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>人脸识别-论文前期预调研 | 北辰的小破站</title>
+  <meta name="description" content="案例1：南都发布的《人脸识别应用场景合规报告》：  测评结果显示，20款App中，16款对个人信息作了信息加密和传输加密处理，另有4款娱乐特效App存在问题。其中，“趣演”没有对人脸信息进行加密处理，用户的换脸视频的链接可被公开访问。这意味着，换脸视频可能被任何人获取。“ZAO”、“更美”、“新氧医美”等3款App，尽管使用了HTTPS安全传输协议，但没有对数据本身加密，导致用户人脸照片等信息被上">
+<meta property="og:type" content="article">
+<meta property="og:title" content="人脸识别-论文前期预调研">
+<meta property="og:url" content="https://beichen.link/2022/08/26/Paper/%E4%BA%BA%E8%84%B8%E8%AF%86%E5%88%AB-%E8%AE%BA%E6%96%87%E8%B0%83%E7%A0%94/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="案例1：南都发布的《人脸识别应用场景合规报告》：  测评结果显示，20款App中，16款对个人信息作了信息加密和传输加密处理，另有4款娱乐特效App存在问题。其中，“趣演”没有对人脸信息进行加密处理，用户的换脸视频的链接可被公开访问。这意味着，换脸视频可能被任何人获取。“ZAO”、“更美”、“新氧医美”等3款App，尽管使用了HTTPS安全传输协议，但没有对数据本身加密，导致用户人脸照片等信息被上">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2022-08-26T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.747Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Face Security">
+<meta name="twitter:card" content="summary">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2022/08/26/Paper/%E4%BA%BA%E8%84%B8%E8%AF%86%E5%88%AB-%E8%AE%BA%E6%96%87%E8%B0%83%E7%A0%94/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Paper/人脸识别-论文调研" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      人脸识别-论文前期预调研
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2022/08/26/Paper/%E4%BA%BA%E8%84%B8%E8%AF%86%E5%88%AB-%E8%AE%BA%E6%96%87%E8%B0%83%E7%A0%94/" class="article-date">
+	  <time datetime="2022-08-26T00:00:00.000Z" itemprop="datePublished">2022-08-26</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Paper/">Paper</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/Face-Security/" rel="tag">Face Security</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2022/08/26/Paper/%E4%BA%BA%E8%84%B8%E8%AF%86%E5%88%AB-%E8%AE%BA%E6%96%87%E8%B0%83%E7%A0%94/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 1.2k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 4(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>案例1：南都发布的《人脸识别应用场景合规报告》：</p>
+<blockquote>
+<p>测评结果显示，20款App中，16款对个人信息作了信息加密和传输加密处理，另有4款娱乐特效App存在问题。其中，“趣演”没有对人脸信息进行加密处理，用户的换脸视频的链接可被公开访问。这意味着，换脸视频可能被任何人获取。“ZAO”、“更美”、“新氧医美”等3款App，尽管使用了HTTPS安全传输协议，但没有对数据本身加密，导致用户人脸照片等信息被上传服务器后，服务器返回链接可被互联网公开访问。这意味着，攻击者一旦截获传输数据包，就将获得用户的一系列敏感个人信息。</p>
+</blockquote>
+<p>案例2：「00 后」攻破厦门银行人脸识别系统，伪造76个假账户。</p>
+<blockquote>
+<p>银行APP未防止<strong>重放攻击</strong>，攻击者进行人脸识别步骤时，利用软件抓包技术将银行系统下发的人脸识别身份认证数据包进行拦截并保存。</p>
+<p>APP人脸识别<strong>本地运算</strong>，手机客户端从服务器端获取了黑客本人的高清身份照，和黑客手机摄像头采集的黑客本人照片做了比对，通过后的结果加密在一起上传，这个加密包被截获后，太容易重放攻击了。</p>
+</blockquote>
+<h2 id="研究现状"><a href="#研究现状" class="headerlink" title="研究现状"></a>研究现状</h2><ol>
+<li><p>J. Im, S. Jeon and M. Lee, “Practical Privacy-Preserving Face Authentication for Smartphones Secure Against Malicious Clients,” in <em>IEEE Transactions on Information Forensics and Security</em>, vol. 15, pp. 2386-2401, 2020, doi: 10.1109&#x2F;TIFS.2020.2969513.</p>
+<blockquote>
+<p>人脸识别二阶段：注册和验证。</p>
+<ul>
+<li>注册时，客户端生成密钥对，使用公钥加密人脸特征向量，公钥和请求标识符一起发送给服务器，服务器存储加密的生物特征</li>
+<li>验证时，同样上传加密人脸特征向量，服务器利用同态加密计算两个加密特征向量之间的匹配分数，进行图像比对并发送验证结果。</li>
+<li>生物特征的同态加密:同态加密的主要吸引力在于能够在加密域内执行基本的算术运算，如加法和乘法。</li>
+</ul>
+</blockquote>
+</li>
+<li><p>Šedenka J,Govindarajan S,Gasti P,et al.Secure outsourced biometric authentication with performance evaluation on smartphones[J].IEEE Transactions on Information Forensics and Security,2014,10(2):384-396.</p>
+<blockquote>
+<p>安全两方计算是指在没有可信任第三方的情况下，两个互相不信任的参与方在均不泄露本身私有信息的前提下，通过合作计算来完成对整体数据的分析，以得到自己想要的结果。混淆电路是安全两方计算公共函数f最有效的协议之一。</p>
+<p>客户端与服务端通过混淆电路比对加密存储在数据库里的人脸图像。</p>
+</blockquote>
+</li>
+<li><p>K. Zhou and J. Ren, “PassBio: Privacy-Preserving User-Centric Biometric Authentication,” in IEEE Transactions on Information Forensics and Security, vol. 13, no. 12, pp. 3050-3063, Dec. 2018, doi: 10.1109&#x2F;TIFS.2018.2838540.</p>
+<blockquote>
+<p>阈值谓词加密(TPE)方案可以加密两个向量x和y，通过这种方式，x和y的内积可以被计算并与预定义的阈值进行比较。TPE只显示比较结果，不能学习x和y的关键信息。</p>
+<p>谓词加密技术保证加密消息的安全性，同时保护查询关键字的隐私。</p>
+</blockquote>
+</li>
+<li><p>Abidin, Aysajan. (2016). On Privacy-Preserving Biometric Authentication. 10.1007&#x2F;978-3-319-54705-3_11.</p>
+<blockquote>
+<ul>
+<li><p>三方模型：客户端、服务端、密码服务提供者(cryptographic service provider[ CSP)] )负责保存私钥并协助服务器完成人脸验证。</p>
+</li>
+<li><p>三方模型下基于加法同态加密的保护隐私的人脸验证算法</p>
+</li>
+</ul>
+</blockquote>
+</li>
+<li><p>F. Toutara and G. Spathoulas, “A distributed biometric authentication scheme based on blockchain,” 2020 IEEE International Conference on Blockchain (Blockchain), 2020, pp. 470-475, doi: 10.1109&#x2F;Blockchain50366.2020.00068.</p>
+<blockquote>
+<ul>
+<li>第三方对用户进行身份验证，主要是以太坊智能合约和分布式文件系统实例</li>
+<li>客户端同态加密生物特征向量，生成一组特征模板并上传到以太坊智能合约中，客户端保存每个模板的密钥</li>
+<li>验证时第三方随机选择模板，客户端使用选定的模板id产生新的加密特征向量并发送第三方比对</li>
+</ul>
+</blockquote>
+</li>
+<li><p>Y. He, G. Dong, D. Liu, Y. Hao, H. Peng and Y. Chen, “A secure face authentication scheme based on honeypot technology,” 2021 6th International Conference on Communication, Image and Signal Processing (CCISP), 2021, pp. 129-133, doi: 10.1109&#x2F;CCISP52774.2021.9639321.</p>
+<blockquote>
+<ul>
+<li>采用随机投影技术对原始人脸特征数据进行加密</li>
+<li>采用fuzzy commitment完成人脸身份认证，数据库里只存储hash</li>
+<li>蜜罐模板检测生物特征模板是否数据泄漏</li>
+</ul>
+</blockquote>
+</li>
+</ol>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2022/08/26/Paper/%E4%BA%BA%E8%84%B8%E8%AF%86%E5%88%AB-%E8%AE%BA%E6%96%87%E8%B0%83%E7%A0%94/" title="人脸识别-论文前期预调研" target="_blank" rel="external">https://beichen.link/2022/08/26/Paper/人脸识别-论文调研/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/01/15/Paper/SDK-Test/%E9%98%BF%E9%87%8C/" title="人脸实名认证-阿里SDK系APP"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2022/07/15/LAB/Emulator/arm%20emulator/" title="Arm服务器上运行Android Emulator"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

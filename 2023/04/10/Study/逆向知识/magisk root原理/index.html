@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>magisk root原理 | 北辰的小破站</title>
+  <meta name="description" content="在 Android 系统中，我们如何获取 root 权限呢？ 实现 root 的方式整体上可以分为两种：  解锁 Bootloader，通过修改 Android 系统的某一部分实现 root。 通过某些系统漏洞提取，进而获取 root 权限。  解锁 Bootloader 实际上就允许我们刷入第三方或者被修改过的操作系统；未解锁的BootLoader，不允许刷入非官方签名过的img镜像（包括Rec">
+<meta property="og:type" content="article">
+<meta property="og:title" content="magisk root原理">
+<meta property="og:url" content="https://beichen.link/2023/04/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/magisk%20root%E5%8E%9F%E7%90%86/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="在 Android 系统中，我们如何获取 root 权限呢？ 实现 root 的方式整体上可以分为两种：  解锁 Bootloader，通过修改 Android 系统的某一部分实现 root。 通过某些系统漏洞提取，进而获取 root 权限。  解锁 Bootloader 实际上就允许我们刷入第三方或者被修改过的操作系统；未解锁的BootLoader，不允许刷入非官方签名过的img镜像（包括Rec">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-04-10T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.751Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="逆向知识">
+<meta name="twitter:card" content="summary">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/04/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/magisk%20root%E5%8E%9F%E7%90%86/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/逆向知识/magisk root原理" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      magisk root原理
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/04/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/magisk%20root%E5%8E%9F%E7%90%86/" class="article-date">
+	  <time datetime="2023-04-10T00:00:00.000Z" itemprop="datePublished">2023-04-10</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/04/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/magisk%20root%E5%8E%9F%E7%90%86/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 1.8k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 6(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>在 Android 系统中，我们如何获取 root 权限呢？</p>
+<p>实现 root 的方式整体上可以分为两种：</p>
+<ol>
+<li>解锁 Bootloader，通过修改 Android 系统的某一部分实现 root。</li>
+<li>通过某些系统漏洞提取，进而获取 root 权限。</li>
+</ol>
+<p>解锁 Bootloader 实际上就允许我们刷入第三方或者被修改过的操作系统；未解锁的BootLoader，不允许刷入非官方签名过的img镜像（包括Recovery.img，Boot.img等）</p>
+<p>如果我们可以解锁 Bootloader，那么理论上讲我们就可以任意修改其操作系统，而 root 权限只不过是操作系统的某种机制，因此获取 root 权限自然不在话下。而这种修改方式常见的如下：</p>
+<ol>
+<li><p>通过直接刷入第三方系统实现；在这个第三方系统中，系统自带 root 权限。</p>
+</li>
+<li><p>通过修改原系统的 <code>init</code> 实现；因为 init 进程是 Linux 系统的第一个进程，因此它实际上就以 root 身份执行的；通过修改 init 也可以实现 root 访问；Magisk 就是通过代理 init 实现的 root 权限。</p>
+<blockquote>
+<p>Magisk的原理，从底层看，主要就是把&#x2F;init替换成了它自己的magiskinit。</p>
+<p>Magisk通过对boot.img的patch，在boot启动阶段创建钩子，把&#x2F;data&#x2F;magisk.img挂载到&#x2F;magisk，构建出一个在 system 基础上能够自定义替换，增加以及删除的文件系统。</p>
+<p>所有操作都在启动时完成，实际上并不修改&#x2F;system(即所谓systemless方案，以不触动 &#x2F;system 的方式修改 &#x2F;system)。&#x2F;magisk相当于android系统的另一个独立分区。</p>
+</blockquote>
+<p>当boot启动时，magiskinit首先从&#x2F;.backup恢复原始的init文件。然后从magiskinit中释放出来magisk.bin和Manager的APK等后续建立root需要的文件。接着它会以init权限patch sepolicy，增加一个名为magisk的上下文环境，最后启动magiskd等待su的连接。</p>
+<p>当su命令执行时，背后实际上是向magiskd请求root，magisk则会向Magisk Manager发起问询，等待用户确认后才赋予放行，最后magiskd启动一个shell，并把它重定向到su通过unix socket发送过来的输入输出句柄上。</p>
+</li>
+<li><p>通过自定义内核实现；因为 root 权限实际上是内核操控的，因此自定义内核然后刷入自然可以获取 root 权限。</p>
+</li>
+</ol>
+<p>如果我们不能解锁 Bootloader，那么可以通过系统漏洞来提权，进而拥有 root 权限。在远古时代（特别是 Android 6.0 以前），各种一键 root 满天飞，比如 kingroot，360 一键 root，他们本质上都是通过系统漏洞来获取特殊权限；然而，随着 Android 系统的演进，这种通过漏洞提权获取 root 的方式已经很难出现在普通的大众视野里面了太极有一种「少阳」模式，它就是通过这种方式来提权，进而实现不解锁就能对系统进程加载模块的；然而由于这种方式实际上就是利用漏洞，从机制上讲并不长久，因此被永久雪藏。</p>
+<p>如果通过系统漏洞提权，那么必须妥善处理好各种限制，如绕过 SELinux，关闭 seccomp，获取所有 capabilities，否则提权之后的 root 基本就是个残废；然而，绕过这所有的机制并无一个稳定可用的方法，再加上 Android 系统的碎片化，导致通过漏洞获取通杀 root 权限的实现成本变得非常之高。</p>
+<h3 id="root-的过去和现在"><a href="#root-的过去和现在" class="headerlink" title="root 的过去和现在"></a>root 的过去和现在</h3><p>上面我们介绍了一些 root 权限的获取方式，那么具体来说，从 Android 诞生到现在，我们实际上所使用的 root 方案，具体是哪种机制呢？</p>
+<p>在 Android 系统的远古时代，root 方案基本上是通过 SUID 实现的。在上文描述 capabilities 和自主访问控制的时候我们提到过这种机制。<a target="_blank" rel="noopener" href="https://source.android.com/security/enhancements/enhancements43">SUID</a> 是一个特殊的权限位，它的特殊之处在于，如果某个可执行文件设置了这个权限位，某个用户在执行这个文件的之后，启动进程的 uid 会被自动切换为文件所有者的 uid。</p>
+<p>打个比方，假设我有个文件名叫 <code>su</code>，它的所有者是 root，其他进程有其可执行权限；如果没有设置 SUID，那么某个进程比如 uid 为 10000，在执行这文件之后，它启动的进程实际 uid 也是 10000，也就是一个普通进程；而如果这个文件有被设置 SUID 位，那么 uid 为 10000 的用户在执行这个文件之后，所启动的进程 uid 会被自动切换为文件所有者，也就是 root 用户，这个进程就是一个特权进程。</p>
+<p>用这种方式实现 root 可谓是非常简单，只需要丢一个 SUID 的文件到系统里面就结束了。然而，Android 4.3 系统的安全性改进让这种机制退出了历史舞台。</p>
+<p>这种机制其实非常简单，就是通过 capabilities 机制，给 zygote 的子进程限制了 CAP_SETUID；而我们的 Android App 都是 zygote 子进程，因此 App 从此与 SUID root 告别了。然而，我们的 shell 用户还是可以 SUID 的；某些系统中自带的 <code>su</code> 还是这种 SUID 的 root，在这种系统中我们会发现，adb shell 可以获取 root 权限，但是 App 进程死活无法获取 root，这时候可以看一下 <code>su</code> 文件是否有 SUID 位，如果有的话就是这个原因。</p>
+<p>在没有 SUID 之后，App 进程是无法 fork 一个 uid 为 0 的子进程的；从此以后，我们常见的 root 实际上是一种「远程 root 进程」。</p>
+<p>因为我们的 App fork 出来的进程 uid 不能被改为 0，因此这个进程肯定无法变成 root 进程，怎么办呢？</p>
+<p>我们可以启动一个远程的特权进程，这个进程的 uid 是 0（比如从 init fork 出来），一旦我们的 App 需要使用 root，那就从 App fork 出一个子进程，让这个子进程与那个远程的特权进程关联起来。</p>
+<p>我们想要执行 root 命令的时候，还是与以前一样让这个子进程去做，不同的是，这个子进程实际上并不会执行这些命令，而是把命令发给那个远程的特权进程让它去执行，特权进程执行完毕之后把结果再返回给子进程，这样也实现了我们所需要的 root 访问。</p>
+<p>你可以简单地把我们 fork 出来的子进程当作那个远程特权进程的代理，所以我把这种方式称之为「远程 root 进程」。现在的Supersu 和 MagiskSU 都是通过这种方式实现的，如果你在 Magisk 下执行一个 root 命令，你会发现除了你自已的 <code>su</code> 进程之外，还会有一个 magiskd 的进程，这两个进程会通过 UDS(Unix Domain Socket) 通信，有很多 Magisk 检测手段就是通过检测 UDS 实现的。</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/04/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/magisk%20root%E5%8E%9F%E7%90%86/" title="magisk root原理" target="_blank" rel="external">https://beichen.link/2023/04/10/Study/逆向知识/magisk root原理/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/07/01/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E6%8A%93%E5%8C%85%E5%A5%87%E6%8A%80%E6%B7%AB%E5%B7%A7/" title="抓包奇技淫巧"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/04/05/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/APP%E9%80%86%E5%90%91%E9%A1%B9%E7%9B%AE%E9%9A%BE%E7%82%B9/" title="APP逆向难点"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

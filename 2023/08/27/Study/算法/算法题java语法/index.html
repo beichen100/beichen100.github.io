@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>算法题java语法 | 北辰的小破站</title>
+  <meta name="description" content="输入、输出远程在线面试的手撕代码环节，通常需要白板上写代码。如果需要在控制台输入、输出，需要借助 Scanner 类。示例如下： 12345678910111213141516import java.util.Scanner;public class Solution &amp;#123;    public static void main(String[] args) &amp;#123;        Sc">
+<meta property="og:type" content="article">
+<meta property="og:title" content="算法题java语法">
+<meta property="og:url" content="https://beichen.link/2023/08/27/Study/%E7%AE%97%E6%B3%95/%E7%AE%97%E6%B3%95%E9%A2%98java%E8%AF%AD%E6%B3%95/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="输入、输出远程在线面试的手撕代码环节，通常需要白板上写代码。如果需要在控制台输入、输出，需要借助 Scanner 类。示例如下： 12345678910111213141516import java.util.Scanner;public class Solution &amp;#123;    public static void main(String[] args) &amp;#123;        Sc">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-08-27T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.747Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="算法">
+<meta name="twitter:card" content="summary">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/08/27/Study/%E7%AE%97%E6%B3%95/%E7%AE%97%E6%B3%95%E9%A2%98java%E8%AF%AD%E6%B3%95/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/算法/算法题java语法" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      算法题java语法
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/08/27/Study/%E7%AE%97%E6%B3%95/%E7%AE%97%E6%B3%95%E9%A2%98java%E8%AF%AD%E6%B3%95/" class="article-date">
+	  <time datetime="2023-08-27T00:00:00.000Z" itemprop="datePublished">2023-08-27</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/08/27/Study/%E7%AE%97%E6%B3%95/%E7%AE%97%E6%B3%95%E9%A2%98java%E8%AF%AD%E6%B3%95/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 1.1k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 5(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="输入、输出"><a href="#输入、输出" class="headerlink" title="输入、输出"></a>输入、输出</h2><p>远程在线面试的手撕代码环节，通常需要白板上写代码。如果需要在控制台输入、输出，需要借助 Scanner 类。示例如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.Scanner;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Solution</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        <span class="type">Scanner</span> <span class="variable">scanner</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Scanner</span>(System.in);</span><br><span class="line">        <span class="comment">//方法1：一般用来接收数组。以空格分界</span></span><br><span class="line">        <span class="keyword">while</span>(scanner.hasNext())&#123;</span><br><span class="line">        <span class="type">int</span> <span class="variable">num</span> <span class="operator">=</span> scanner.nextInt();</span><br><span class="line">        <span class="comment">/*或者*/</span></span><br><span class="line">        <span class="type">String</span> <span class="variable">next</span> <span class="operator">=</span> scanner.next();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//方法2：一般用来接受字符串。以换行符分界</span></span><br><span class="line">        <span class="keyword">while</span> (scanner.hasNextLine()) &#123;</span><br><span class="line">            <span class="type">String</span> <span class="variable">str</span> <span class="operator">=</span> scanner.nextLine();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="类型转换"><a href="#类型转换" class="headerlink" title="类型转换"></a>类型转换</h2><h3 id="Integer"><a href="#Integer" class="headerlink" title="Integer"></a>Integer</h3><ol>
+<li><p>String -&gt; int：int value &#x3D; Integer.parseInt(str);</p>
+</li>
+<li><p>将 str 转换成二进制的 int： int binary &#x3D; Integer.parseInt(str,2);</p>
+</li>
+<li><p>十进制转二进制：String binaryN &#x3D; Integer.toBinaryString(N);</p>
+</li>
+</ol>
+<h3 id="String"><a href="#String" class="headerlink" title="String"></a>String</h3><ol>
+<li><p>Object -&gt; String：String str &#x3D; String.valueOf(o);</p>
+</li>
+<li><p>char[ ] -&gt; String：String str &#x3D; String.valueOf(charArray);</p>
+</li>
+<li><p>int -&gt; String：String str &#x3D; String.valueOf(N);</p>
+</li>
+</ol>
+<h2 id="String-方法"><a href="#String-方法" class="headerlink" title="String 方法"></a>String 方法</h2><ol>
+<li><p>长度：int len &#x3D; str.length();</p>
+</li>
+<li><p>字符串比较：str1.equals()</p>
+</li>
+<li><p>字符串替换：String newStr &#x3D; str.replaceAll(“a”,”.”); &#x2F;&#x2F;replace 只能换 char</p>
+</li>
+<li><p>字符串分割：String newStr &#x3D; str.split(“ “); &#x2F;&#x2F;根据括号里的分割</p>
+</li>
+<li><p>String -&gt; char[ ]：char[] charStr &#x3D; str.toCharArray();</p>
+<p>String -&gt; char：char charS &#x3D; str.charAt(index);</p>
+</li>
+<li><p>字符串变小写：String lowerStr &#x3D; str.toLowerCase();</p>
+<p>字符串变大写：String upperStr &#x3D; str.toUpperCase();</p>
+</li>
+<li><p>字符串截取：str.substring(start,end); &#x2F;&#x2F;包含 start,不包含 end</p>
+</li>
+<li><p>数字转字符串：String str &#x3D; String.valueOf(123456);</p>
+</li>
+<li><p>辅助工具类：StringBuider sb &#x3D; new StringBuilder(“”);</p>
+<p>&#x2F;&#x2F;添加<br>sb.append(“”);<br>&#x2F;&#x2F;删除<br>sb.deleteCharAt();<br>&#x2F;&#x2F;反转<br>sb.reverse();<br>&#x2F;&#x2F; 转 string<br>sb.toString();</p>
+</li>
+</ol>
+<h2 id="对-Map-的方法"><a href="#对-Map-的方法" class="headerlink" title="对 Map 的方法"></a>对 Map 的方法</h2><ol>
+<li><p>map 中是否包含 key：boolean isContain &#x3D; map.containsKey(key);</p>
+</li>
+<li><p>map 的 get()：Object value &#x3D; map.get(key);</p>
+<p>map 的 getOrDefault()： map.getOrDefault(key,default);&#x2F;&#x2F;没找到就 return default</p>
+</li>
+<li><p>map 的 put()：map.put(key,value); &#x2F;&#x2F;若 key 已存在，则替代并返回旧的 value 值</p>
+</li>
+<li><p>map 的遍历：for(Object key : map.keySet()){ &#x2F;&#x2F;… }</p>
+</li>
+</ol>
+<h2 id="求长度"><a href="#求长度" class="headerlink" title="求长度"></a>求长度</h2><ol>
+<li><p>数组：用 arr.length length 是数组的一个属性。</p>
+</li>
+<li><p>字符串：用 str.length() length() 是 StringObject 的一个方法。</p>
+</li>
+<li><p>集合：用 list.size() size()是 list 的一个方法。</p>
+</li>
+</ol>
+<h2 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h2><ol>
+<li><p>长度：int h &#x3D; height.length</p>
+</li>
+<li><p>新建：int[] tmp &#x3D; new int[arr.length];</p>
+</li>
+<li><p>排序：Arrays.sort(nums); &#x2F;&#x2F;从小到大排序，时间复杂度为 o(nlog n)</p>
+</li>
+<li><p>复制：Arrays.copyOf 复制一个数组：int[] newA &#x3D; Array.copyOf(a, 5); &#x2F;&#x2F;5 为数组 size</p>
+</li>
+<li><p>初始化：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Type[] names = new Type[capacity];</span></span><br><span class="line"><span class="type">int</span>[] a = <span class="keyword">new</span> <span class="title class_">int</span>[<span class="number">10</span>];</span><br><span class="line">String[] s = <span class="keyword">new</span> <span class="title class_">String</span>[<span class="number">3</span>];</span><br><span class="line"></span><br><span class="line"> <span class="comment">// Type[] names = new Type[]&#123;Tpye ...a&#125;;</span></span><br><span class="line"> <span class="type">int</span>[] a = <span class="keyword">new</span> <span class="title class_">int</span>[]&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>&#125;; <span class="comment">// int[] a = &#123;1, 2, 3, 4&#125;;</span></span><br><span class="line"> <span class="type">char</span>[] b = <span class="keyword">new</span> <span class="title class_">char</span>[]&#123;<span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;b&#x27;</span>&#125;; <span class="comment">// char[] b = &#123;&#x27;a&#x27;, &#x27;b&#x27;&#125;;</span></span><br><span class="line"> String[] s = <span class="keyword">new</span> <span class="title class_">String</span>[]&#123;<span class="string">&quot;hello&quot;</span>, <span class="string">&quot;world&quot;</span>&#125;;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="HashMap-和-HashSet"><a href="#HashMap-和-HashSet" class="headerlink" title="HashMap 和 HashSet"></a>HashMap 和 HashSet</h2><p>HashMap 即：映射 (Map 接口，将键映射到值的对象。一个映射不能包含重复的键；每个键最多只能映射到一个值) 性质：使用健值对的方式存储数据 &lt;Key,Value&gt;</p>
+<p>初始化：Map&lt;Characters, Integer&gt; map &#x3D; new HashMap&lt;&gt;();</p>
+<ol>
+<li><p>map 中是否包含 key：boolean isContain &#x3D; map.containsKey(key);</p>
+</li>
+<li><p>map 的 put()将键值对&lt;K,V&gt;放入 map ：map.put(key,value);</p>
+</li>
+<li><p>map 的 get()获得指定 key 值对应键值：Object value &#x3D; map.get(key);<br>map 的 getOrDefault()： map.getOrDefault(key,default);&#x2F;&#x2F;没找到就 return default</p>
+</li>
+<li><p>map.keySet(): 返回一个 Set,这个 Set 中包含 Map 中所有的 Key<br>map.values(): 返回一个 Collection<v>,里面全是对应的每一个 value<br>map 的遍历：for(Object key : map.keySet()){ &#x2F;&#x2F;… }<br>for (Integer value : map.values()) {·····}</p>
+</li>
+<li><p>map 删除指定键值:map.remove(Object key)</p>
+</li>
+<li><p>map.isEmpty(): 判断是不是空：</p>
+</li>
+<li><p>map.size(): 返回 Map 中中键值对&lt;K, V&gt;的个数:</p>
+</li>
+</ol>
+<h2 id="HashSet"><a href="#HashSet" class="headerlink" title="HashSet"></a>HashSet</h2><p>集合(Set 接口是一个不包含重复元素的集合)性质：Set 中没有重复元素，重复添加的元素抛弃</p>
+<p>导入库 java.util.HashSet</p>
+<p>HashSet 初始化: HashSet<T> setname &#x3D; new HashSet&lt;&gt;();</p>
+<ol>
+<li><p>.add() 增加元素</p>
+</li>
+<li><p>.contains():判断是否存在一个元素</p>
+</li>
+<li><p>.remove() 删除一个制定元素</p>
+</li>
+<li><p>.isEmpty() 判断集合是否为空</p>
+</li>
+<li><p>.clear() 清空集合</p>
+</li>
+<li><p>.size() 返回集合中中元素个数</p>
+</li>
+</ol>
+<h2 id="Stack-先进后出"><a href="#Stack-先进后出" class="headerlink" title="Stack 先进后出"></a>Stack 先进后出</h2><p>初始化 : Stack<Integer> stack &#x3D; new Stack<Integer>();</p>
+<ol>
+<li>入栈：stack.push(Object o)&#x2F;&#x2F; 入栈元素 o， 返回值为元素 o</li>
+<li>出栈：stack.pop()&#x2F;&#x2F; 出栈一个元素，返回出栈元素 o</li>
+<li>返回栈顶：stack.peek()&#x2F;&#x2F; 查看栈顶元素， 返回值为栈顶元素 o</li>
+<li>栈空：stack.isEmpty()&#x2F;&#x2F; 若栈空返回 true， 否则返回 false</li>
+<li>元素个数：stack.size() &#x2F;&#x2F; 返回栈中元素个数</li>
+<li>遍历用 for (Integer x : s)</li>
+</ol>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/08/27/Study/%E7%AE%97%E6%B3%95/%E7%AE%97%E6%B3%95%E9%A2%98java%E8%AF%AD%E6%B3%95/" title="算法题java语法" target="_blank" rel="external">https://beichen.link/2023/08/27/Study/算法/算法题java语法/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/09/10/Study/Android%E7%9F%A5%E8%AF%86/System_Server%E5%AD%A6%E4%B9%A0/" title="System Server"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/08/27/Study/%E7%AE%97%E6%B3%95/%E9%9D%A2%E8%AF%95%E7%AE%97%E6%B3%95/" title="算法练习"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

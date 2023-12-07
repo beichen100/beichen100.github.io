@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Android-JNI | 北辰的小破站</title>
+  <meta name="description" content="一、JNI介绍JNI是Java Native Interface的缩写，中文为JAVA本地调用。通过它可以做到Java与C&#x2F;C++代码互调。  Java程序中的函数可以调用Native语言写的函数，Native一般指的是C&#x2F;C++编写的函数。 Native程序中的函数可以调用Java层的函数，也就是说在C&#x2F;C++程序中可以调用Java的函数。  在Android平台中">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android-JNI">
+<meta property="og:url" content="https://beichen.link/2022/05/07/LAB/AOSP/Android-JNI%E5%B1%82%E4%B8%8Eso%E5%BA%93/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="一、JNI介绍JNI是Java Native Interface的缩写，中文为JAVA本地调用。通过它可以做到Java与C&#x2F;C++代码互调。  Java程序中的函数可以调用Native语言写的函数，Native一般指的是C&#x2F;C++编写的函数。 Native程序中的函数可以调用Java层的函数，也就是说在C&#x2F;C++程序中可以调用Java的函数。  在Android平台中">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205042105233.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205042112099.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205042121746.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205042143140.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205042152574.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205042009156.png">
+<meta property="article:published_time" content="2022-05-07T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.743Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="android">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205042105233.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2022/05/07/LAB/AOSP/Android-JNI%E5%B1%82%E4%B8%8Eso%E5%BA%93/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-LAB/AOSP/Android-JNI层与so库" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Android-JNI
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2022/05/07/LAB/AOSP/Android-JNI%E5%B1%82%E4%B8%8Eso%E5%BA%93/" class="article-date">
+	  <time datetime="2022-05-07T00:00:00.000Z" itemprop="datePublished">2022-05-07</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/AOSP/">AOSP</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/android/" rel="tag">android</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2022/05/07/LAB/AOSP/Android-JNI%E5%B1%82%E4%B8%8Eso%E5%BA%93/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 2.4k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 9(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="一、JNI介绍"><a href="#一、JNI介绍" class="headerlink" title="一、JNI介绍"></a>一、JNI介绍</h2><p>JNI是Java Native Interface的缩写，中文为JAVA本地调用。通过它可以做到Java与C&#x2F;C++代码互调。</p>
+<ul>
+<li>Java程序中的函数可以调用Native语言写的函数，Native一般指的是C&#x2F;C++编写的函数。</li>
+<li>Native程序中的函数可以调用Java层的函数，也就是说在C&#x2F;C++程序中可以调用Java的函数。</li>
+</ul>
+<p>在Android平台中，JNI就是一座将Native和Java连接起来的桥梁，将两种语言紧密地联系在了一起。</p>
+<h2 id="二、JNI实例分析：MediaPlayer"><a href="#二、JNI实例分析：MediaPlayer" class="headerlink" title="二、JNI实例分析：MediaPlayer"></a>二、JNI实例分析：MediaPlayer</h2><p>在Android中，主要的JNI代码在以下的路径中：AOSP&#x2F;frameworks&#x2F;base&#x2F;core&#x2F;jni&#x2F;，这个路径中的内容将被编译成库libandroid_runtime.so，这就是一个普通的动态库，被放置在目标系统的&#x2F;system&#x2F;lib目录中。</p>
+<p>除此之外，Android还包含其他的JNI库，例如，媒体部分的JNI目录frameworks&#x2F;base&#x2F;media&#x2F;jni&#x2F;中，被编译成库文件libmedia_jni.so。</p>
+<p>以Java层的MediaPlayer类为例：<br><img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205042105233.png" alt="img" style="zoom:72%;" /></p>
+<ul>
+<li><p>Java层对应的是MediaPlayer类，类中有一些函数需要由Native层来实现。</p>
+</li>
+<li><p>JNI层对应的是libmedia_jni.so，media_jni是JNI库的名字。其中，下划线前的“media”是Native层库的名字。下划线后的“jni”表示它是一个JNI库。注意，JNI库的名字可以随便取，不过Android平台基本上都采用“lib模块名_jni.so”的命名方式。JNI中的各个文件实际上就是C++的普通文件，其命名一般 和支持的Java类有对应关系。这种关系是习惯上的写法，而不是强制的。</p>
+</li>
+<li><p>Native层对应的是libmedia.so，这个库完成了实际的功能。</p>
+</li>
+</ul>
+<h2 id="三、MediaPlayer的Java层"><a href="#三、MediaPlayer的Java层" class="headerlink" title="三、MediaPlayer的Java层"></a>三、MediaPlayer的Java层</h2><p>MediaPlayer将通过JNI库libmedia_jni.so和Native层的libmedia.so交互。从上面的分析中还可知道：JNI层必须实现为动态库的形式，这样Java虚拟机才能加载它并调用它的函数。</p>
+<img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205042112099.png" alt="img" style="zoom:80%;" />
+
+<p> 上面代码中列出了两个比较重要的要点：</p>
+<ul>
+<li><p>一个是加载JNI库；</p>
+</li>
+<li><p>另一个是Java的native函数。</p>
+</li>
+</ul>
+<p>前面说过，如果Java要调用native函数，就必须通过一个位于JNI层的动态库来实现。顾名思义，动态库就是运行时加载的库，那么在什么时候以及什么地方加载这个库呢？</p>
+<p>这个问题没有标准答案，原则上是：在调用native函数前，任何时候、任何地方加载都可以。通行的做法是在类的static语句中加载，调用System.loadLibrary方法就可以了。这一点在上面的代码中也见到了，我们以后就按这种方法编写代码即可。</p>
+<p>另外，System.loadLibrary函数的参数是动态库的名字，即media_jni。系统会自动根据不同的平台拓展成真实的动态库文件名，例如在Linux系统上会拓展成libmedia_jni.so，而在Windows平台上则会拓展成media_jni.dll。    </p>
+<p>从上面代码中可以发现，native_init函数前有Java的关键字native，它表示这个函数将由JNI层来实现。</p>
+<h2 id="四、MediaPlayer的JNI层"><a href="#四、MediaPlayer的JNI层" class="headerlink" title="四、MediaPlayer的JNI层"></a>四、MediaPlayer的JNI层</h2><p>native_init函数位于android.media这个包中，它的全路径名应该是android.media.MediaPlayer.native_init，而JNI层函数的名字是android_media_MediaPlayer_native_init。</p>
+<p>因为在Native语言中，符号“.”有着特殊的意义，所以JNI层需要把Java函数名称（包括包名）中的“.”换成“_”。也就是通过这种方式，native_init找到了自己JNI层的本家兄弟android.media.MediaPlayer.native_init。</p>
+<img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205042121746.png" alt="image-20220504212138651" style="zoom: 67%;" />
+
+<p>那问题来了，如何才能知道Java层的native_init函数对应的是JNI层的android_media_MediaPlayer_native_init(JNIEnv *env)函数呢？</p>
+<p>答案是通过注册JNI函数。</p>
+<p>“注册”之意就是将Java层的native函数和JNI层对应的实现函数关联起来，有了这种关联，调用Java层的native函数时，就能顺利转到JNI层对应的函数执行了。而JNI函数的注册方法实际上有两种：静态注册与动态注册。但在Android 源码开发环境下，大多采用显式注册native方法，NDK开发模式下一般采用隐式注册native函数。以下只介绍JNI<strong>显式注册</strong>方法。</p>
+<p>应用层的Java类一般是通过VM去寻找*.so里的native函数。如果需要连续调用很多次，每次都需要寻找一遍，会多花许多时间。此时，如果可以将native函数向VM进行注册，就能加快后续调用native函数的效率。</p>
+<p> 既然Java native函数和JNI函数是一一对应的，那么是不是会有一个结构来保存这种关联关系呢？答案是肯定的。在JNI技术中，用来记录这种一一对应关系的，是一个叫JNINativeMethod的结构，其定义如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//源码位于：libnativehelper/include_jni/jni.h</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> &#123;</span><br><span class="line">    <span class="comment">// Java中native函数的名字，不用携带包的路径，例如“native_init”。</span></span><br><span class="line">    <span class="type">const</span> <span class="type">char</span>* name;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// Java函数的签名信息，用字符串表示，是参数类型和返回值类型的组合。</span></span><br><span class="line">    <span class="type">const</span> <span class="type">char</span>* signature;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// JNI层对应函数的函数指针，注意它是void*类型。</span></span><br><span class="line">    <span class="type">void</span>*       fnPtr;</span><br><span class="line">&#125; JNINativeMethod;</span><br></pre></td></tr></table></figure>
+
+<p>其中比较难以理解的是第二个参数，例如: “()V”，”(II)V”，”(Ljava&#x2F;lang&#x2F;String;Ljava&#x2F;lang&#x2F;String;)V”</p>
+<p>实际上这些字符是与函数的参数类型一一对应的。”()” 中的字符表示参数，后面的则代表返回值。例如”()V” 就表示void Func();”(II)V” 表示 void Func(int, int)。具体的每一个字符的对应关系如下：（数组则以”[“开始，用两个字符表示。）</p>
+<table>
+<thead>
+<tr>
+<th align="center">字符</th>
+<th align="center">Java类型</th>
+<th align="center">C类型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">V</td>
+<td align="center">void</td>
+<td align="center">void</td>
+</tr>
+<tr>
+<td align="center">Z</td>
+<td align="center">jboolean</td>
+<td align="center">boolean</td>
+</tr>
+<tr>
+<td align="center">I</td>
+<td align="center">jint</td>
+<td align="center">int</td>
+</tr>
+<tr>
+<td align="center">J</td>
+<td align="center">jlong</td>
+<td align="center">long</td>
+</tr>
+<tr>
+<td align="center">D</td>
+<td align="center">jdouble</td>
+<td align="center">double</td>
+</tr>
+<tr>
+<td align="center">F</td>
+<td align="center">jfloat</td>
+<td align="center">float</td>
+</tr>
+<tr>
+<td align="center">B</td>
+<td align="center">jbyte</td>
+<td align="center">byte</td>
+</tr>
+<tr>
+<td align="center">C</td>
+<td align="center">jchar</td>
+<td align="center">char</td>
+</tr>
+<tr>
+<td align="center">S</td>
+<td align="center">jshort</td>
+<td align="center">short</td>
+</tr>
+<tr>
+<td align="center">[I</td>
+<td align="center">jintArray</td>
+<td align="center">int[]</td>
+</tr>
+</tbody></table>
+<p>上面的都是基本类型，如果Java函数的参数是class，则以”L”开头，以”;”结尾。中间是用”&#x2F;“ 隔开的包及类名。而其对应的C函数名的参数则为jobject。</p>
+<blockquote>
+<p>一个例外是String类，其对应的类为jstring：<br>Ljava&#x2F;lang&#x2F;String;——–String———jstring<br>Ljava&#x2F;net&#x2F;Socket; ——–Socket——–jobject</p>
+</blockquote>
+<p>如果JAVA函数位于一个嵌入类，则用$作为类名间的分隔符。</p>
+<p>例如 “(Ljava&#x2F;lang&#x2F;String;Landroid&#x2F;os&#x2F;FileUtils$FileStatus;)Z”</p>
+<hr>
+<p>应该如何使用这个结构体呢？来看MediaPlayer JNI层是如何做的，代码如下所示：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">const</span> JNINativeMethod gMethods[] = &#123;</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// Java中native函数的函数名</span></span><br><span class="line">        <span class="string">&quot;native_init&quot;</span>,  </span><br><span class="line">        <span class="comment">// native_init的签名信息       </span></span><br><span class="line">        <span class="string">&quot;()V&quot;</span>,      </span><br><span class="line">        <span class="comment">// JNI层对应的函数指针                        </span></span><br><span class="line">        (<span class="type">void</span> *)android_media_MediaPlayer_native_init</span><br><span class="line">    &#125;,</span><br><span class="line">&#125;;</span><br><span class="line"> </span><br><span class="line"><span class="comment">// This function only registers the native methods</span></span><br><span class="line"><span class="function"><span class="type">static</span> <span class="type">int</span> <span class="title">register_android_media_MediaPlayer</span><span class="params">(JNIEnv *env)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">// 调用AndroidRuntime的registerNativeMethods函数，</span></span><br><span class="line">    <span class="comment">// 第二个参数表明是Java中的哪个类</span></span><br><span class="line">    <span class="keyword">return</span> AndroidRuntime::<span class="built_in">registerNativeMethods</span>(env,</span><br><span class="line">                <span class="string">&quot;android/media/MediaPlayer&quot;</span>, gMethods, <span class="built_in">NELEM</span>(gMethods));</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>AndroidRunTime类提供了一个registerNativeMethods函数来完成注册工作，下面来看registerNativeMethods的实现，代码如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Register native methods using JNI.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"> <span class="comment">/*static*/</span> <span class="function"><span class="type">int</span> <span class="title">AndroidRuntime::registerNativeMethods</span><span class="params">(JNIEnv* env,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">const</span> <span class="type">char</span>* className, <span class="type">const</span> JNINativeMethod* gMethods, <span class="type">int</span> numMethods)</span> </span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">// 调用jniRegisterNativeMethods函数完成注册</span></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">jniRegisterNativeMethods</span>(env, className, gMethods, numMethods);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中jniRegisterNativeMethods是Android平台中为了方便JNI使用而提供的一个帮助函数，其代码如下所示：</p>
+<img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205042143140.png" alt="img" style="zoom: 80%;" />
+
+<p><strong>其实显式注册的工作，只用两个函数就能完成。总结如下：</strong></p>
+<ul>
+<li><p>jclass clazz&#x3D;（*env）-＞FindClass（env,className）；</p>
+<p>env指向一个JNIEnv结构体，classname为对应的Java类名，由于JNINativeMethod中使用的函数名并非全路径名，所以要指明是哪个类。</p>
+</li>
+<li><p>（*env）-＞RegisterNatives（env,clazz,gMethods,numMethods）；</p>
+<p>调用JNIEnv的RegisterNatives函数，注册关联关系。</p>
+</li>
+</ul>
+<p>所以，在自己的JNI层代码中使用这种方法，就可以完成显式注册了。那这些动态注册的函数在什么时候和什么地方被调用呢？</p>
+<p>当Java层通过System.loadLibrary加载完JNI动态库后，紧接着会查找该库中一个叫JNI_OnLoad的函数。如果有，就调用它，而显式注册的工作就是在这里完成的。 所以，如果想使用显式注册方法，就必须实现JNI_OnLoad函数，只有在这个函数中才有机会完成显式注册的工作。</p>
+<p>那么，libmedia_jni.so的JNI_OnLoad函数是在哪里实现的呢？由于多媒体系统很多地方都使用了JNI，所以它被放到android_media_MediaPlayer.cpp中了。</p>
+<img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205042152574.png" alt="image-20220504215237472" style="zoom: 55%;" />
+
+<h2 id="五、so与-NDK"><a href="#五、so与-NDK" class="headerlink" title="五、so与 NDK"></a>五、so与 NDK</h2><p>JNI技术调用的C&#x2F;C++代码会被编译成动态链接库(.so)文件，.so文件的文件格式是<strong>ELF</strong>，也就是linux下的可执行文件。.so文件可以采用多种架构，包括x86、arm等，ARM架构的文件逆向会需要ARM汇编知识。我们直接解压.apk看到lib文件夹下的x86、armeabi文件夹就是不同架构的.so文件，他们通过JNI技术被Android程序的dex文件调用。</p>
+<p>NDK(Native Development Kit,原生开发工具包)是一组可以让开发人员在Android应用中调用C和C++代码的工具集。简单来说利用NDK，可以开发纯C&amp;C++的代码，然后编译成库，让Java程序调用。NDK开发可以称为底层开发或者jni(java native interface)层开发。</p>
+<p>NDK是一系列工具的集合，NDK提供了一系列的工具，可以帮助开发者进行C&#x2F;C++的开发，并能自动将.so打包成apk。NDK集成了交叉编译器，并提供了相应的mk文件可以做到隔离CPU,平台，ABI等差异，只需修改mk文件即可。开发人员只需要简单修改mk文件，就可以创建出“.so”文件。NDK还提供了一份稳定的功能有限的API头文件声明。</p>
+<img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205042009156.png" alt="img" style="zoom: 67%;" />
+
+<hr>
+<blockquote>
+<p>参考：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/flydream0/article/details/7088514">Android下如何通过JNI方法向上提供接口总结_flydream0的博客-CSDN博客_jni接口</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/xingkongtianma01/article/details/81114678">深入理解“JNI”_Peter-OK的博客-CSDN博客_深入理解jni</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/flydream0/article/details/7371692">Android Jni调用浅述_flydream0的博客-CSDN博客_android jni调用</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/foooooods/article/details/80259395">静态库和共享库的区别_foooooods的博客-CSDN博客_静态库和共享库的区别</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_32465127/article/details/102832552">Android逆向工程-基础概念:Arm、Art、Dalvik、Smali、dex、NDK、JNI之间的关系_Siphre的博客-CSDN博客_smali和dex的关系</a></li>
+</ul>
+</blockquote>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2022/05/07/LAB/AOSP/Android-JNI%E5%B1%82%E4%B8%8Eso%E5%BA%93/" title="Android-JNI" target="_blank" rel="external">https://beichen.link/2022/05/07/LAB/AOSP/Android-JNI层与so库/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2022/05/14/LAB/AOSP/Android-property%E5%88%86%E6%9E%90/" title="Android Property分析"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2022/05/07/LAB/AOSP/Android-Log%E5%88%86%E6%9E%90/" title="Android源码Log类的实现"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

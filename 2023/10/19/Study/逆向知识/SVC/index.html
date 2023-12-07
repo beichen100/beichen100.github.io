@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>SVC | 北辰的小破站</title>
+  <meta name="description" content="什么是 SVC 指令？什么是 Syscall？在 Linux 里面内存主要分为 Linux 用户态，内核态。 用户自定义运行的函数在用户态。内核态是当 Linux 需要处理文件，或者进行中断 IO 等操作的时候就会进入内核态。 syscall 就是这个内核态的入口。(（systcall 是 Linux 内核的入口，切换到内核态以后，无法被 Hook）) 而 syscall 函数里面的实现就是一段汇">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SVC">
+<meta property="og:url" content="https://beichen.link/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="什么是 SVC 指令？什么是 Syscall？在 Linux 里面内存主要分为 Linux 用户态，内核态。 用户自定义运行的函数在用户态。内核态是当 Linux 需要处理文件，或者进行中断 IO 等操作的时候就会进入内核态。 syscall 就是这个内核态的入口。(（systcall 是 Linux 内核的入口，切换到内核态以后，无法被 Hook）) 而 syscall 函数里面的实现就是一段汇">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231021164409.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231021164641.png">
+<meta property="article:published_time" content="2023-10-19T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.751Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="逆向知识">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231021164409.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/逆向知识/SVC" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      SVC
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="article-date">
+	  <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 2.2k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 8(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="什么是-SVC-指令？什么是-Syscall？"><a href="#什么是-SVC-指令？什么是-Syscall？" class="headerlink" title="什么是 SVC 指令？什么是 Syscall？"></a>什么是 SVC 指令？什么是 Syscall？</h2><p>在 Linux 里面内存主要分为 Linux 用户态，内核态。</p>
+<p>用户自定义运行的函数在用户态。内核态是当 Linux 需要处理文件，或者进行中断 IO 等操作的时候就会进入内核态。</p>
+<p>syscall 就是这个内核态的入口。(（systcall 是 Linux 内核的入口，切换到内核态以后，无法被 Hook）)</p>
+<p>而 syscall 函数里面的实现就是一段汇编，汇编里面便是调用了 svc 指令。</p>
+<p>当 arm 系列 cpu 发现 svc 指令的时候，就会陷入中断，简称 0x80 中断。开始执行内核态逻辑，这个时候程序会进入暂停状态, 优先去执行内核的逻辑。以此保证程序的安全性。</p>
+<p>Linux 内核本身提供很多函数，比如常见的文件函数,openat，execve 都是 Linux 内核提供的。这些函数都可以通过 svc 指令的方式去调用，只是实现的 sysnum 不一样。传入的参数不一样而已。</p>
+<p>但是通过 svc 执行的函数无法进行 inlinehook Hook ，所以会提升程序的安全度。</p>
+<p>总结：svc 是一条 arm 指令，Syscall 函数是 libc 函数，实现底层使用了 svc 指令。</p>
+<p>syscall 32&amp;64 位具体实现如下。</p>
+<p>32 位：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">raw_syscall:</span><br><span class="line">        MOV             R12, SP</span><br><span class="line">        STMFD           SP!, &#123;R4-R7&#125;</span><br><span class="line">        MOV             R7, R0</span><br><span class="line">        MOV             R0, R1</span><br><span class="line">        MOV             R1, R2</span><br><span class="line">        MOV             R2, R3</span><br><span class="line">        LDMIA           R12, &#123;R3-R6&#125;</span><br><span class="line">        SVC             <span class="number">0</span></span><br><span class="line">        LDMFD           SP!, &#123;R4-R7&#125;</span><br><span class="line">        mov             pc, lr</span><br></pre></td></tr></table></figure>
+
+<p>64 位：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">raw_syscall:</span><br><span class="line">        MOV             X8, X0</span><br><span class="line">        MOV             X0, X1</span><br><span class="line">        MOV             X1, X2</span><br><span class="line">        MOV             X2, X3</span><br><span class="line">        MOV             X3, X4</span><br><span class="line">        MOV             X4, X5</span><br><span class="line">        MOV             X5, X6</span><br><span class="line">        SVC             <span class="number">0</span></span><br><span class="line">        RET</span><br></pre></td></tr></table></figure>
+
+<p>cmake 里添加</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">enable_language(C ASM)</span><br></pre></td></tr></table></figure>
+
+<p>编译即可</p>
+<p>比如获取网卡设备信息</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">LOG(ERROR) &lt;&lt; <span class="string">&quot;读取文件内容  &quot;</span> &lt;&lt;</span><br><span class="line">            FileUtils::getFileText(<span class="string">&quot;/sys/class/net/p2p0/address&quot;</span>,<span class="number">20</span>);</span><br></pre></td></tr></table></figure>
+
+<h2 id="对抗"><a href="#对抗" class="headerlink" title="对抗"></a>对抗</h2><p>可以通过 Ptrace 进行 svc 拦截，在使用前需要将 Ptrace 方法堵住</p>
+<p>（因为 Ptrace 作为 Linux 的调试函数，是可以调试 svc 指令的，很多游戏辅助也都是这么搞得）<br>方法也很多，可以像一般壳子的方式提前占坑，或者读取调试状态，去判断是否被调试 都是不错的办法。</p>
+<p>Seccomp(Secure Computing Mode) 是 Linux 的一种安全机制，android 8.1 以上使用了 Seccomp，主要通过限制进程的系统调用来完成部分沙箱隔离功能。seccomp-bpf 是 seccomp 的一个扩展，它可以通过配置来允许应用程序调用其他的系统调用。</p>
+<p>主要功能是限制直接通过 syscall 去调用某些系统函数，当开启了 Seccomp 的进程在此调用的时候会变走异常的回调。</p>
+<p>Seccomp 的过滤模式有两种(strict&amp;filter)，</p>
+<ul>
+<li><p>strict</p>
+<p>strict 模式如果开启以后，只支持四个函数的系统调用(read,write,exit,rt_sigreturn)。如果一旦使用了其他的 syscall 则会收到 SIGKILL 信号</p>
+</li>
+<li><p>filter（BPF）</p>
+<p>全程 Seccomp-bpf，BPF 是一种过滤模式，只有在 Linux 高版本会存在该功能，当某进程调用了 svc 以后，如果发现当前 sysnum 是我们进行过滤的 sysnum，首先会进入我们自己写的 BPF 规则。</p>
+<p>通过我们自己的写的规则，进行判断该系统调用是否被运行调用，应该怎么进行处理.</p>
+<p>当返回规则设置为「SECCOMP_RET_TRAP」，目标系统调用时 seccomp 会产生一个 SIGSYS 系统信号并软中断，这时就可以通过捕获这个 SIGSYS 信号获得 svc 调用和打印具体参数。</p>
+<p>seccomp 发出 SECCOMP_RET_TRAP 信号时，会引发程序阻塞机制，此时系统会产生一个 SIGSYS 信号，并使原程序处于临时阻塞状态。因此我们可以使用 sigaction 来注册一个对 SIGSYS 信号进行处理的 handler，再将处理完的结果返回出去，从而达到 hook 效果。</p>
+<p>常用的指令如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">BPF_LD, BPF_LDX加载指令</span><br><span class="line">BPF_ST, BPF_STX存储指令</span><br><span class="line">BPF_ALU, 计算指令</span><br><span class="line">BPF_JMP, 跳转指令</span><br><span class="line">BPF_RET, 返回指令 （结束指令）</span><br><span class="line">BPF_MISC 其他指令</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>指令之间可以相加或者相减，来完成一条 JUMP 操作</p>
+<h2 id="对-Seccomp-BPF-技术的防护"><a href="#对-Seccomp-BPF-技术的防护" class="headerlink" title="对 Seccomp-BPF 技术的防护"></a>对 Seccomp-BPF 技术的防护</h2><p>Seccomp-BPF 提供了一个钩子函数，在 SVC 系统调用执行之前会进入到这个函数，对系统调用进行检查，并做业务逻辑的修改和绕过。故任何 SVC 调用，都无法逃离 Seccomp-BPF 的魔掌。</p>
+<p>那么，Seccomp-BPF 在 Android 应用攻击中是怎么做的呢？举例如下。</p>
+<p>有的 APP 为了保障自身的安全，不允许 APP 动态调试、二次签名、运行在框架环境等。采用的方案一般使用 open 系统调用的方式打开特定文件检查有无异常特征，例如&#x2F;proc&#x2F;self&#x2F;map 或者&#x2F;proc&#x2F;self&#x2F;status 等。有些开发者比较注重安全，对 open 采用了 svc 的实现方式。但是利用 Seccomp-BPF 完全可以对 open 操作进行拦截，重定位参数路径，完成逻辑的绕过。</p>
+<h3 id="1-基于-prctl-调用的检测"><a href="#1-基于-prctl-调用的检测" class="headerlink" title="1. 基于 prctl 调用的检测"></a>1. 基于 prctl 调用的检测</h3><p>prctl 方法也是一个系统调用。使用 Seccomp-BPF 前，会调用 prctl，并传入特定参数作为前置条件。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231021164409.png" alt="20231021164409"></p>
+<p>为了检测这种方式。我们同样可以调用 prctl，传入 PR_GET_NO_NEW_PRIVS。根据返回值来判断是否 NO_NEW_PRIVS 被设置为 1。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(prctl(PR_GET_NO_NEW_PRIVS, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>) == <span class="number">1</span>) &#123; <span class="keyword">do</span> something… &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>但是该方案有个缺陷，因为 prctl 本身是个系统调用。所以仍然可以被 Seccomp-BPF 拦截修改进而绕过。</p>
+<h3 id="2-基于-Signal-的捕获检测"><a href="#2-基于-Signal-的捕获检测" class="headerlink" title="2. 基于 Signal 的捕获检测"></a>2. 基于 Signal 的捕获检测</h3><p>将 SECCOMP_RET_TRAP 传入 BPF 指令中，当执行该指令时，将会产生 SIGSYS 信号。我们可以提前通过 sigaction 方法来注册 SIGSYS 信号，当捕获到信号时，会执行对应的 handler 方法。在正常情况下，都是可以正常接收到信号，并执行 handler 方法。但是如果该进程已经提前使用了 Seccomp-BPF，将会无法正常接收到信号，handler 方法也不会执行。所以可以通过这种逻辑来判断该应用是否处在 Seccomp-BPF 环境中。</p>
+<p>不过该方法依然有被绕过的可能性，攻击者可以通过 Hook 的方式，拿到 handler 方法地址并主动去执行。则可以绕过校验。</p>
+<h3 id="3-基于-status-文件的检测方案"><a href="#3-基于-status-文件的检测方案" class="headerlink" title="3. 基于 status 文件的检测方案"></a>3. 基于 status 文件的检测方案</h3><p>当调用代码时，会在对应进程的 status 文件中留下痕迹。如图所示，NoNewPrivs 对应的值变为 1。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231021164641.png" alt="20231021164641"></p>
+<p>我们可以使用 open 打开&#x2F;proc&#x2F;self&#x2F;status 文件，检测该值是否为 1。当然，open 系统调用，我们之前说过了，可以被绕过。但这并不意味着防御到此结束，我们依然可以通过 open 返回的句柄值，来进一步验证句柄的合法性。</p>
+<h2 id="额外"><a href="#额外" class="headerlink" title="额外"></a>额外</h2><h3 id="1-批量检测-android-app-的-so-中是否有-svc-调用"><a href="#1-批量检测-android-app-的-so-中是否有-svc-调用" class="headerlink" title="1. 批量检测 android app 的 so 中是否有 svc 调用"></a>1. 批量检测 android app 的 so 中是否有 svc 调用</h3><p>原理很容易理解，对于 armv7 svc 0 对应的 00DF 二进制 调用号是在 r7 寄存器中<br>armv8 svc 0 对应的 010000D4 二进制 调用号是在 x8 寄存器中，只要在 so 文件中的.text 段中找到相关的二进制字串就可以确定是否有 svc 调用，再向前看就可以看出 svc 的调用号是多少。不同人不同写法，会导致分析调用号多少不一样</p>
+<p>参考：<a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-269895.htm">https://bbs.kanxue.com/thread-269895.htm</a></p>
+<p>arm32 关键代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">textStart = <span class="number">0</span></span><br><span class="line">            textEnd = <span class="number">0</span></span><br><span class="line">            FindtextEnd =<span class="literal">False</span></span><br><span class="line">            <span class="comment">#读取elf文件信息，计算代码的地址与终止段 ,取section.name==&#x27;.text&#x27;后，马上取下一个就是textEnd</span></span><br><span class="line">            <span class="comment">#</span></span><br><span class="line">            <span class="keyword">with</span> <span class="built_in">open</span>(file_path,<span class="string">&#x27;rb&#x27;</span>) <span class="keyword">as</span> f:</span><br><span class="line">                e=ELFFile(f)</span><br><span class="line">                <span class="keyword">for</span> section <span class="keyword">in</span> e.iter_sections():</span><br><span class="line">                    <span class="comment">#打印Elf各段地址</span></span><br><span class="line">                    <span class="comment">#print(section[&#x27;sh_addr&#x27;],hex(section[&#x27;sh_addr&#x27;]),section.name)</span></span><br><span class="line">                    <span class="keyword">if</span> FindtextEnd <span class="keyword">is</span> <span class="literal">True</span>:</span><br><span class="line">                        textEnd = section[<span class="string">&#x27;sh_addr&#x27;</span>]</span><br><span class="line">                        <span class="keyword">break</span></span><br><span class="line">                    <span class="keyword">if</span>(section.name==<span class="string">&#x27;.text&#x27;</span>):</span><br><span class="line">                        textStart=section[<span class="string">&#x27;sh_addr&#x27;</span>]</span><br><span class="line">                        FindtextEnd=<span class="literal">True</span></span><br><span class="line"></span><br><span class="line">            <span class="comment"># 微信应用是这个svc 0 =&gt;00DF</span></span><br><span class="line">            sub = <span class="string">&quot;00DF&quot;</span></span><br><span class="line">            addr = [substr.start() <span class="keyword">for</span> substr <span class="keyword">in</span> re.finditer(sub, file_str)]</span><br><span class="line">            total_svc=<span class="number">0</span></span><br><span class="line">            <span class="keyword">for</span> i <span class="keyword">in</span> addr:</span><br><span class="line">                <span class="keyword">if</span>( i &gt;= textStart <span class="keyword">and</span>  i&lt; textEnd):</span><br><span class="line">                    <span class="comment">#之前有问题是因为地址没对齐，比如 E0 0E F1 转成字串时 E00EF1</span></span><br><span class="line"></span><br><span class="line">                    <span class="comment"># 也包含了00EF,这就要用地址必须为偶数</span></span><br><span class="line">                    <span class="comment"># 4FF0140700DF</span></span><br><span class="line">                    m=<span class="built_in">int</span>(i/<span class="number">2</span>)-<span class="number">6</span></span><br><span class="line">                    <span class="keyword">if</span>(i % <span class="number">4</span>==<span class="number">0</span>):</span><br><span class="line"></span><br><span class="line">                        fun_id  = <span class="built_in">int</span>(<span class="string">&quot;0x&quot;</span>+file_str[i - <span class="number">4</span>:i - <span class="number">2</span>],<span class="number">16</span>)</span><br><span class="line">                        fun_id_check = <span class="built_in">int</span>(<span class="string">&quot;0x&quot;</span> + file_str[i - <span class="number">2</span>:i ], <span class="number">16</span>)</span><br><span class="line">                        <span class="keyword">if</span>(fun_id_check ==<span class="number">0x7</span>):</span><br><span class="line">                            total_svc = total_svc + <span class="number">1</span></span><br><span class="line">                            <span class="keyword">if</span> (fun_id <span class="keyword">in</span> sysCallTab):</span><br><span class="line">                                <span class="built_in">print</span>(file_str[i - <span class="number">8</span>:i + <span class="number">4</span>], <span class="built_in">hex</span>(fun_id),</span><br><span class="line">                                      <span class="string">&quot;addr : 0x%.8x       Func Name : %s     &quot;</span> % (m, sysCallTab[fun_id]))</span><br><span class="line">                            <span class="keyword">else</span>:</span><br><span class="line">                                <span class="built_in">print</span>(file_str[i - <span class="number">8</span>:i + <span class="number">4</span>], <span class="built_in">hex</span>(fun_id),</span><br><span class="line">                                      <span class="string">&quot;addr : 0x%.8x       Func Name : need check again*********    &quot;</span> % (m))</span><br><span class="line">            <span class="comment">#print(os.path.basename(file_path), &quot;totoal find svc call &quot;, total_svc)</span></span><br><span class="line">            <span class="keyword">if</span> (total_svc &gt; <span class="number">0</span>):</span><br><span class="line">                <span class="built_in">print</span>(os.path.basename(file_path), <span class="string">&quot;elf infor &quot;</span>)</span><br><span class="line">                <span class="built_in">print</span>(os.path.basename(file_path), <span class="string">&quot;.text start &quot;</span>, <span class="built_in">hex</span>(textStart), <span class="string">&quot;.text end &quot;</span>, <span class="built_in">hex</span>(textEnd))</span><br><span class="line">                <span class="built_in">print</span>(os.path.basename(file_path), <span class="string">&quot;find svc call &quot;</span>, total_svc)</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">&quot;——————————————————————————————\n&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" title="SVC" target="_blank" rel="external">https://beichen.link/2023/10/19/Study/逆向知识/SVC/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" title="IDA脚本找jni_load"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" title="hook对抗方法"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Android源码Log类的实现 | 北辰的小破站</title>
+  <meta name="description" content="一、Log日志框架Android 提供的 Logger 日志系统是基于内核的 Logger 日志驱动程序实现的，它将日志记录保存在内核空间内。Logger日志驱动程序会在内部使用一个环形的缓冲区来对日志进行保存，当缓冲区满了之后，新的日志就会覆盖掉旧的日志。 Logger日志驱动程序会根据日志的类型和日志的输出量来对日志记录进行分类。不同的 log 会指定不同的缓冲区然后被写入到不同的设备中，包括">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android源码Log类的实现">
+<meta property="og:url" content="https://beichen.link/2022/05/07/LAB/AOSP/Android-Log%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="一、Log日志框架Android 提供的 Logger 日志系统是基于内核的 Logger 日志驱动程序实现的，它将日志记录保存在内核空间内。Logger日志驱动程序会在内部使用一个环形的缓冲区来对日志进行保存，当缓冲区满了之后，新的日志就会覆盖掉旧的日志。 Logger日志驱动程序会根据日志的类型和日志的输出量来对日志记录进行分类。不同的 log 会指定不同的缓冲区然后被写入到不同的设备中，包括">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205032057742.jpeg">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205032229499.jpeg">
+<meta property="article:published_time" content="2022-05-07T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.743Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="android">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205032057742.jpeg">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2022/05/07/LAB/AOSP/Android-Log%E5%88%86%E6%9E%90/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-LAB/AOSP/Android-Log分析" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Android源码Log类的实现
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2022/05/07/LAB/AOSP/Android-Log%E5%88%86%E6%9E%90/" class="article-date">
+	  <time datetime="2022-05-07T00:00:00.000Z" itemprop="datePublished">2022-05-07</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/AOSP/">AOSP</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/android/" rel="tag">android</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2022/05/07/LAB/AOSP/Android-Log%E5%88%86%E6%9E%90/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 2.1k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 8(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="一、Log日志框架"><a href="#一、Log日志框架" class="headerlink" title="一、Log日志框架"></a>一、Log日志框架</h2><p>Android 提供的 Logger 日志系统是基于内核的 Logger 日志驱动程序实现的，它将日志记录保存在内核空间内。Logger日志驱动程序会在内部使用一个环形的缓冲区来对日志进行保存，当缓冲区满了之后，新的日志就会覆盖掉旧的日志。</p>
+<p>Logger日志驱动程序会根据日志的类型和日志的输出量来对日志记录进行分类。不同的 log 会指定不同的缓冲区然后被写入到不同的设备中，包括 <strong>system</strong>（系统相关）、<strong>radio</strong>（无线&#x2F;电话相关）、<strong>event</strong>（事件相关）、<strong>main</strong>（主缓冲区，默认）。这四种类型的日志分别通过&#x2F;dev&#x2F;log&#x2F;main, &#x2F;dev&#x2F;log&#x2F;system, &#x2F;dev&#x2F;log&#x2F;radio, &#x2F;dev&#x2F;log&#x2F;events 四个设备文件来进行访问。</p>
+<p>main的日志是<strong>应用程序级别</strong>；system的日志是<strong>系统级别</strong>的，这个类型的日志相较于程序级别的日志会更重要，所以与main类型的日志记录分开；events类型是用来<strong>诊断系统问题</strong>的记录；radio的日志记录是<strong>无线设备</strong>相关的，日志记录量比较大，所以单独记录在一块，这样可以防止覆盖掉其他类型的日志记录。</p>
+<ul>
+<li><p>在Android系统的框架层中提供了android.util.log, android.util.Slog, android.util.Eventlog三个Java接口来向Logger日志驱动程序中写入日志。他们写入的日志类型分别是main, system和events，如果使用android.util.log和android.util.Slog接口写入日志的标签值是以”RIL”开头或是等于”HTC_RIL”, “AT”, “GSM”, “STK”, “CDMA”, “PHONE”和”SMS”时，会转换成<strong>radio</strong>类型的日志写入到logger日志驱动程序中。</p>
+</li>
+<li><p>Android系统在运行时库层中也提供了三组C&#x2F;C++宏来向Logger日志驱动程序中写入日志。其中宏ALOGV, ALOGD, ALOGI, ALOGW和ALOGE用来写入main类型的日志，宏SLOGV, SLOGD, SLOGI, SLOGW和SLOGE用来写入system类型的日志，宏LOG_EVENT_INT, LOG_EVENT_LONG, LOG_EVENT_STRING用来写入events类型的日志。</p>
+</li>
+</ul>
+<p>不管Java接口还是C&#x2F;C++日志的写入接口最终都会通过运行库层的日志库liblog来向Logger日志驱动程序中写入日志。系统还提供了一个名为Logcat的工具来读取和显示Logger日志驱动程序中的日志。</p>
+<p>Android系统日志系统整体框架如下图所示：</p>
+<img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205032057742.jpeg" alt="a44b6bf15383878e8c938086f97285b1.png" style="zoom:100%;" />    
+
+<p>上面提到了Logger驱动程序的日志一共有四种类型，其中main、system和radio三种类型的日志格式是相同的。日志格式为 | priority | tag | message | ，其中 priority 是一个整数，代表的是日志的优先级，按重要程度不同划分为：VERBOSE、DEBUG、INFO、WARN、ERROR和FATAL 六种；tag 是一个字符串，代表的是日志的标签；message 是一个字符串，代表的是日志的内容。events类型的日志格式和前三种有一些差别，它并没有优先级。</p>
+<h2 id="二、Log日志-Java-层接口"><a href="#二、Log日志-Java-层接口" class="headerlink" title="二、Log日志 Java 层接口"></a>二、Log日志 Java 层接口</h2><p>上文介绍了三个Java日志写入接口：android.util.log, android.util.Slog, android.util.Eventlog，这三个Java接口都是通过<strong>JNI</strong>方法调用<strong>liblog</strong>日志库提供的函数来实现日志记录的写入功能。其中使用较多的是android.util.Slog和<strong>android.util.Log</strong>这两个接口，这两个接口的差异不大，所以在这部分就只介绍一下android.util.Log接口。</p>
+<h4 id="1-Java层实现"><a href="#1-Java层实现" class="headerlink" title="1. Java层实现"></a><strong>1. Java层实现</strong></h4><p>android.util.Log源码位于：frameworks&#x2F;base&#x2F;core&#x2F;java&#x2F;android&#x2F;util&#x2F;Log.java，打印日志的方法实现以及日志级别的定义都在该类中。</p>
+<p>该接口提供的日志记录写入成员比较多，不过在应用开发只关注常用的成员函数v、d、i、w和e，并且这些成员函数写入的日志记录的类型都是main。Log日志的优先级按重要程度不同划分为：VERBOSE、DEBUG、INFO、WARN、ERROR和What a Terrible Failure 六种 ，代码定义如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="type">int</span> v/d/i/w/e/wtf(String tag, String msg) &#123;</span><br><span class="line">  <span class="keyword">return</span> println_native(LOG_ID_MAIN, VERBOSE, tag, msg);</span><br><span class="line">&#125;</span><br><span class="line">------------------------------------------------------------</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="type">int</span> v/d/i/w/e/wtf(String tag, String msg, Throwable tr) &#123;</span><br><span class="line">  <span class="keyword">return</span> printlns(LOG_ID_MAIN, VERBOSE, tag, msg, tr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用JNI的println_native方法进行日志的打印，该方法实现的地方在frameworks\base\core\jni\android_util_Log.cpp中。注：下面这种函数调用带异常记录 tr ，也就是会调用 Log 类内部类 ImediateLogWriter 来写入日志消息，但最终也会调用 println_native 函数。</p>
+<p>注意此处的参数 LOG_ID_MAIN，实际上数值定义为：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="keyword">enum</span> &#123;</span><br><span class="line">     LOG_ID_MAIN = <span class="number">0</span>,</span><br><span class="line">     LOG_ID_RADIO = <span class="number">1</span>,</span><br><span class="line">     LOG_ID_EVENTS = <span class="number">2</span>,</span><br><span class="line">     LOG_ID_SYSTEM = <span class="number">3</span></span><br><span class="line">&#125; <span class="type">log_id_t</span>;</span><br></pre></td></tr></table></figure>
+
+<p>对应的是Logger日志驱动程序指定的不同缓冲区，包括 <strong>system</strong>（系统相关）、<strong>radio</strong>（无线&#x2F;电话相关）、<strong>event</strong>（事件相关）、<strong>main</strong>（主缓冲区，默认）。</p>
+<h4 id="2-JNI层实现"><a href="#2-JNI层实现" class="headerlink" title="2. JNI层实现"></a>2. JNI层实现</h4><p>使用println_native方法进行日志打印时，JNI层定义在 &#x2F;frameworks&#x2F;base&#x2F;core&#x2F;jni&#x2F;android_util_Log.cpp：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> jint <span class="title">android_util_Log_println_native</span><span class="params">(JNIEnv* env, jobject clazz,</span></span></span><br><span class="line"><span class="params"><span class="function">        jint bufID, jint priority, jstring tagObj, jstring msgObj)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">   ......</span><br><span class="line">   <span class="comment">// 核心代码</span></span><br><span class="line">   <span class="type">int</span> res = __android_log_buf_write(bufID, (android_LogPriority)priority, tag, msg);</span><br><span class="line">   ......</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 以下为JNI注册native方法</span></span><br><span class="line"><span class="type">static</span> <span class="type">const</span> JNINativeMethod gMethods[] = &#123;</span><br><span class="line">  &#123; <span class="string">&quot;isLoggable&quot;</span>, <span class="string">&quot;(Ljava/lang/String;I)Z&quot;</span>, (<span class="type">void</span>*) android_util_Log_isLoggable &#125;,</span><br><span class="line">  &#123; <span class="string">&quot;println_native&quot;</span>, <span class="string">&quot;(IILjava/lang/String;Ljava/lang/String;)I&quot;</span>, (<span class="type">void</span>*) android_util_Log_println_native &#125;,</span><br><span class="line">  &#123; <span class="string">&quot;logger_entry_max_payload_native&quot;</span>, <span class="string">&quot;()I&quot;</span>, (<span class="type">void</span>*) android_util_Log_logger_entry_max_payload_native &#125;,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">register_android_util_Log</span><span class="params">(JNIEnv* env)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ......</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">RegisterMethodsOrDie</span>(env, <span class="string">&quot;android/util/Log&quot;</span>, gMethods, <span class="built_in">NELEM</span>(gMethods));</span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br><span class="line">    </span><br></pre></td></tr></table></figure>
+
+<p>可以发现，<strong>println_native</strong>方法最终使用**__android_log_buf_write函数**打印日志，此函数定义在&#x2F;system&#x2F;core&#x2F;liblog&#x2F;logger_write.cpp ，并被编译到 <strong>liblog.so库</strong>。</p>
+<h4 id="3-Native层实现"><a href="#3-Native层实现" class="headerlink" title="3. Native层实现"></a>3. Native层实现</h4><p>liblog.so 是一个用来和 logger 日志驱动程序进行交互的日志库，会被所有需要日志操作的进程加载，负责处理打印和读取日志的流程。通过 liblog 库提供的接口，应用可以方便的往 logger 日志驱动程序中<strong>写入日志记录</strong>。</p>
+<p>主要代码在 &#x2F;system&#x2F;core&#x2F;liblog&#x2F;logger_write.cpp中，其中实现了一系列的<strong>日志写入函数</strong>，如下图所示：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205032229499.jpeg" alt="img"></p>
+<ul>
+<li><p>android_log_assert，android_log_vprint 和 android_log_print 用来写入类型为 main 的日志记录；</p>
+</li>
+<li><p>android_log_buf_print 可以写入任意类型的日志记录。</p>
+</li>
+<li><p>android_log_btwrite 和android_log_bwrite 用来写入类型为 events 的日志记录；</p>
+</li>
+</ul>
+<p>上述所有类型的写入方式，最终都会调用write_to_log函数将日志记录写入到logger日志驱动中的。</p>
+<p>JNI层的**__android_log_buf_write<strong>函数最终会调用Native层的</strong>write_to_log函数**。</p>
+<p>write_to_log 是一个函数指针，初始设置指向 __write_to_log_init，进入 __write_to_log_init 后，首先会去调用 write_to_log_initialize，然后将 write_to_log 设置为指向 <strong>write_to_log_daemon</strong>，然后又调用一次 <strong>write_to_log</strong>。</p>
+<p>详细的 write_to_log 实现较为复杂，在此不做具体分析。</p>
+<h2 id="三、Log日志-C-x2F-C-层接口"><a href="#三、Log日志-C-x2F-C-层接口" class="headerlink" title="三、Log日志 C&#x2F;C++ 层接口"></a>三、Log日志 C&#x2F;C++ 层接口</h2><p>对于 Android 中 Log 的 Java 层接口，只需要在项目里import android.util.Log，在需要打印Log的地方执行Log.v，Log.d，Log.i，Log.w和Log.e。</p>
+<p>而关于Log日志 C&#x2F;C++ 层接口，C&#x2F;C++层定义了几组宏来实现不同类型日志的写入，即要在调用Log的地方执行：ALOGV，ALOGD，ALOGI，ALOGW和ALOGE，使用时需要在 C&#x2F;C++ 层包含此头文件：#include &lt;cutils&#x2F;log.h&gt;。</p>
+<p>宏的定义在log.h头文件中，Android10中路径为：system&#x2F;core&#x2F;include&#x2F;log&#x2F;log_main.h </p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 条件指示符#ifndef的最主要目的是防止头文件的重复包含和编译。</span></span><br><span class="line"><span class="comment">   语句1 #ifndef 标识1</span></span><br><span class="line"><span class="comment">   语句2 #define 标识1</span></span><br><span class="line"><span class="comment">   语句3 #endif</span></span><br><span class="line"><span class="comment">   语句4 ……</span></span><br><span class="line"><span class="comment">   语句5 ……</span></span><br><span class="line"><span class="comment">   该段代码意思是:如果标识1没有被定义，则重定义标识1，即执行语句2、语句3;如果标识1已经被定义，则直接跳过语句2、语句3，直接执行语句4、语句5、……</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">ifndef</span> ALOGW</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ALOGW(...) ((void)ALOG(LOG_WARN, LOG_TAG, __VA_ARGS__))</span></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">ifndef</span> ALOG</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ALOG(priority, tag, ...) LOG_PRI(ANDROID_##priority, tag, __VA_ARGS__)</span></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">ifndef</span> LOG_PRI</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> LOG_PRI(priority, tag, ...) android_printLog(priority, tag, __VA_ARGS__)</span></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> android_printLog(prio, tag, ...) \</span></span><br><span class="line"><span class="meta">  __android_log_print(prio, tag, __VA_ARGS__)</span></span><br></pre></td></tr></table></figure>
+
+<p>显然，Native 层通过定义一系列宏的方式提供 log 功能，最终全部是调用了 <strong>_android_log_print</strong> 方法，接着调用 <strong>__android_log_write</strong>方法，再转向__android_log_buf_write方法，这里 Java&#x2F;C++ 层就走到同一个函数，在这个函数中会实现写设备日志文件。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">LIBLOG_ABI_PUBLIC <span class="type">int</span> __android_log_write(<span class="type">int</span> prio, <span class="type">const</span> <span class="type">char</span>* tag,</span><br><span class="line">                                          <span class="type">const</span> <span class="type">char</span>* msg) &#123;</span><br><span class="line">  <span class="keyword">return</span> __android_log_buf_write(LOG_ID_MAIN, prio, tag, msg);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里 Java&#x2F;C++ 层就走到同一个函数，在这个函数中会实现写设备文件</p>
+<hr>
+<p>参考：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/101999292">Android日志系统分析 - 知乎 (zhihu.com)</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_35016347/article/details/102687162">Android_8.1 Log 系统源码分析_喵吉诃德的博客-CSDN博客</a></li>
+</ul>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2022/05/07/LAB/AOSP/Android-Log%E5%88%86%E6%9E%90/" title="Android源码Log类的实现" target="_blank" rel="external">https://beichen.link/2022/05/07/LAB/AOSP/Android-Log分析/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2022/05/07/LAB/AOSP/Android-JNI%E5%B1%82%E4%B8%8Eso%E5%BA%93/" title="Android-JNI"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2022/05/06/LAB/AOSP/libcore%E4%B8%AD%E6%B7%BB%E5%8A%A0Log/" title="Android Java核心库libcore中打印Log（Android10）"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

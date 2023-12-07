@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>IDA 调试 init_array | 北辰的小破站</title>
+  <meta name="description" content="在安卓脱壳过程中，经常需要用 ida 动态调试 so,并且在解密代码执行前下断点，下面介绍用 IDA 在 Android so 文件的.init、.init_array 上和 JNI_OnLoad 处下断点方法。 一、上传 android_server,启动 android_server上传 android_server 到手机&#x2F;data&#x2F;local&#x2F;tmp 目录 a">
+<meta property="og:type" content="article">
+<meta property="og:title" content="IDA 调试 init_array">
+<meta property="og:url" content="https://beichen.link/2023/09/13/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E8%B0%83%E8%AF%95init/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="在安卓脱壳过程中，经常需要用 ida 动态调试 so,并且在解密代码执行前下断点，下面介绍用 IDA 在 Android so 文件的.init、.init_array 上和 JNI_OnLoad 处下断点方法。 一、上传 android_server,启动 android_server上传 android_server 到手机&#x2F;data&#x2F;local&#x2F;tmp 目录 a">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906101358.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906101428.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906101451.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906101509.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906101620.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906101826.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906101844.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906101859.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906102308.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906102439.png">
+<meta property="article:published_time" content="2023-09-13T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.751Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="逆向知识">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906101358.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/09/13/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E8%B0%83%E8%AF%95init/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/逆向知识/调试init" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      IDA 调试 init_array
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/09/13/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E8%B0%83%E8%AF%95init/" class="article-date">
+	  <time datetime="2023-09-13T00:00:00.000Z" itemprop="datePublished">2023-09-13</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/09/13/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E8%B0%83%E8%AF%95init/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 569(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 2(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>在安卓脱壳过程中，经常需要用 ida 动态调试 so,并且在解密代码执行前下断点，下面介绍用 IDA 在 Android so 文件的.init、.init_array 上和 JNI_OnLoad 处下断点方法。</p>
+<h2 id="一、上传-android-server-启动-android-server"><a href="#一、上传-android-server-启动-android-server" class="headerlink" title="一、上传 android_server,启动 android_server"></a>一、上传 android_server,启动 android_server</h2><p>上传 android_server 到手机&#x2F;data&#x2F;local&#x2F;tmp 目录</p>
+<p><code>adb push  android_server   /data/local/tmp</code></p>
+<p>赋予 android_server 执行权限</p>
+<p><code>$ chmod 777 android_server</code></p>
+<p>以 root 身份执行 android_server 文件，android_server 文件默认监听 23946 端口，可以通过-p 端口参数进行设置端口，注意 p 和端口之间无空格</p>
+<p><code>./android_server -p23946</code></p>
+<h2 id="二、打开-DDMS-程序"><a href="#二、打开-DDMS-程序" class="headerlink" title="二、打开 DDMS 程序"></a>二、打开 DDMS 程序</h2><p>打开 DDMS 程序,DDMS 程序会将应用的调试端口映射到电脑上，使用 jdb 命令能够对被挂起的程序恢复执行。</p>
+<h2 id="三、进行端口转发"><a href="#三、进行端口转发" class="headerlink" title="三、进行端口转发"></a>三、进行端口转发</h2><p>使用 adb 命令进行端口转发</p>
+<p><code>adb forward tcp:23946（PC_port） tcp:23946(Phone_port)</code></p>
+<h2 id="四、以调试模式启动-app"><a href="#四、以调试模式启动-app" class="headerlink" title="四、以调试模式启动 app"></a>四、以调试模式启动 app</h2><p>我们以 debug 模式启动程序。程序会出现 waiting for debugger 的调试界面</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">adb shell am start -D -n com.example.inittest/.MainActivity</span><br><span class="line">Starting: Intent &#123; cmp=com.example.inittest/.MainActivity &#125;</span><br></pre></td></tr></table></figure>
+
+<p>程序会出现 waiting for debugger 的调试界面</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906101358.png" alt="20230906101358"></p>
+<p>这时 DDMS 显示，调试端口在 8700</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906101428.png" alt="20230906101428"></p>
+<h2 id="五、用-IDA-附加到启动-ida-并-attach-这个-app-的进程。"><a href="#五、用-IDA-附加到启动-ida-并-attach-这个-app-的进程。" class="headerlink" title="五、用 IDA 附加到启动 ida 并 attach 这个 app 的进程。"></a>五、用 IDA 附加到启动 ida 并 attach 这个 app 的进程。</h2><p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906101451.png" alt="20230906101451"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906101509.png" alt="20230906101509"></p>
+<h2 id="六、当-so-加载的时候挂起"><a href="#六、当-so-加载的时候挂起" class="headerlink" title="六、当 so 加载的时候挂起"></a>六、当 so 加载的时候挂起</h2><p>在 debugger setup 里勾选 suspend on library load。然后点击继续（按 F9 键继续）。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906101620.png" alt="20230906101620"></p>
+<h2 id="七、使用-jdb-命令恢复程序执行"><a href="#七、使用-jdb-命令恢复程序执行" class="headerlink" title="七、使用 jdb 命令恢复程序执行"></a>七、使用 jdb 命令恢复程序执行</h2><p>使用 jdb 命令恢复程序执行</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">jdb -connect com.sun.jdi.SocketAttach:hostname=127.0.0.1,port=8700</span></span><br><span class="line"></span><br><span class="line">设置未捕获的java.lang.Throwable</span><br><span class="line">设置延迟的未捕获的java.lang.Throwable</span><br><span class="line">正在初始化jdb...</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>这时 DDMS 中该应用的颜色变为了绿色：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906101826.png" alt="20230906101826"></p>
+<p>程序加载 so,由于之前的设置，程序停在了 liner 处</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906101844.png" alt="20230906101844"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906101859.png" alt="20230906101859"></p>
+<h2 id="八、确定模块的加载地址，在-linker-和-libvm-so-中下断点"><a href="#八、确定模块的加载地址，在-linker-和-libvm-so-中下断点" class="headerlink" title="八、确定模块的加载地址，在 linker 和 libvm.so 中下断点"></a>八、确定模块的加载地址，在 linker 和 libvm.so 中下断点</h2><p>在 android4.4.4_r1 源码中，linker 中 .init 和.init_array 的断点位置为 0000274C,JNI_OnLoad 的断点位置为 00050004</p>
+<p>我们先查看内存中 segment 中 linker 加载的位置</p>
+<p>按 Ctrl+S 组合键打开内存中的 segmets,知道 linker 的内存加载地址 4008B000,那么断点的位置是 4008B000+0000274C&#x3D;4008D74C。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906102308.png" alt="20230906102308"></p>
+<p>按 G 键输入地址 4008D74C 进行跳转，将光标移至该处后按 P 键进行反汇编，看到了汇编代码，在该处 4008D74C 下断点</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906102439.png" alt="20230906102439"></p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/09/13/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E8%B0%83%E8%AF%95init/" title="IDA 调试 init_array" target="_blank" rel="external">https://beichen.link/2023/09/13/Study/逆向知识/调试init/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/09/15/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E6%94%B6%E8%97%8F%E7%9A%84%E7%BD%91%E5%9D%80/" title="待整理的文章"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/09/10/Study/Android%E7%9F%A5%E8%AF%86/System_Server%E5%AD%A6%E4%B9%A0/" title="System Server"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

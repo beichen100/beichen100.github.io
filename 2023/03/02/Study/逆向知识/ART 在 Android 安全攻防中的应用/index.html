@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>ART 在 Android 安全攻防中的应用 | 北辰的小破站</title>
+  <meta name="description" content="在日常的 Android 应用安全分析中，经常会遇到一些对抗，比如目标应用加壳、混淆、加固，需要进行脱壳还原；又或者会有针对常用注入工具的检测，比如 frida、Xposed 等，这时候也会想知道这些工具的核心原理以及是否自己可以实现。 其实这些问题的答案就在 Android 的 Java 虚拟机实现中。可以是早期的 Dalvik 虚拟机，也可以是最新的 ART 虚拟机。从时代潮流来看，本文主要专">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ART 在 Android 安全攻防中的应用">
+<meta property="og:url" content="https://beichen.link/2023/03/02/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/ART%20%E5%9C%A8%20Android%20%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="在日常的 Android 应用安全分析中，经常会遇到一些对抗，比如目标应用加壳、混淆、加固，需要进行脱壳还原；又或者会有针对常用注入工具的检测，比如 frida、Xposed 等，这时候也会想知道这些工具的核心原理以及是否自己可以实现。 其实这些问题的答案就在 Android 的 Java 虚拟机实现中。可以是早期的 Dalvik 虚拟机，也可以是最新的 ART 虚拟机。从时代潮流来看，本文主要专">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-03-02T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.747Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="逆向知识">
+<meta name="twitter:card" content="summary">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/03/02/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/ART%20%E5%9C%A8%20Android%20%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/逆向知识/ART 在 Android 安全攻防中的应用" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      ART 在 Android 安全攻防中的应用
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/03/02/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/ART%20%E5%9C%A8%20Android%20%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/" class="article-date">
+	  <time datetime="2023-03-02T00:00:00.000Z" itemprop="datePublished">2023-03-02</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/03/02/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/ART%20%E5%9C%A8%20Android%20%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 4.3k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 15(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>在日常的 Android 应用安全分析中，经常会遇到一些对抗，比如目标应用加壳、混淆、加固，需要进行脱壳还原；又或者会有针对常用注入工具的检测，比如 frida、Xposed 等，这时候也会想知道这些工具的核心原理以及是否自己可以实现。</p>
+<p>其实这些问题的答案就在 Android 的 Java 虚拟机实现中。可以是早期的 Dalvik 虚拟机，也可以是最新的 ART 虚拟机。从时代潮流来看，本文主要专注于 ART。不过，为了铭记历史，也会对 Dalvik 虚拟机做一个简单的介绍。最后会从 ART 的实现出发对一些实际的应用场景进行讨论。</p>
+<h2 id="Jvm"><a href="#Jvm" class="headerlink" title="Jvm"></a>Jvm</h2><p>我们知道，Java 是一门跨平台的语言，系统实际运行的是 Java 字节码，由 Java 虚拟机去解释执行。</p>
+<p>Android 代码既然是用 Java 代码编写的，那么运行时应该也会有一个解析字节码的虚拟机。和标准的 JVM 不同，Android 中实际会将 Java 代码编译为 Dalvik 字节码，运行时解析的也是用自研的虚拟机实现。</p>
+<p>之所以使用自研实现，也许一方面有商业版权的考虑，另一方面也确实是适应了移动端的的运行场景。</p>
+<p>Dalvik 指令基于寄存器，占 1-2 字节，Java 虚拟机指令基于栈，每条指令只占 1 字节；因此 Dalvik 虚拟机用空间换时间从而获得比 Oracle JVM 更快的执行速度。</p>
+<h2 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h2><p>其实 Java 代码执行并不慢，但其启动时间却是一大瓶颈。如果每个 APP 运行都要启动并初始化 Java 虚拟机，那延时将是无法接受的。在 <a target="_blank" rel="noopener" href="https://evilpan.com/2021/12/05/apk-startup/">Android 12 应用启动流程分析</a> 一文中我们说到，APP 应用进程实际上是通过 zygote 进程 fork 出来的。这样的好处是子进程继承了父进程的进程空间，对于只读部分可以直接使用，而数据段也可以通过 COW(Copy On Write) 进行延时映射。查看 zygote 与其子进程的 <code>/proc/self/maps</code> 可以发现大部分系统库的映射都是相同的，这就是 fork 所带来的好处。</p>
+<p>Java 虚拟机是在 Zygote 进程创建的，并由子进程继承，因此 APP 从 zygote 进程中 fork 启动后就无需再次启动 Java 虚拟机，而是复用原有的虚拟机执行轻量的初始化即可。</p>
+<h2 id="接口"><a href="#接口" class="headerlink" title="接口"></a>接口</h2><p>Android Java 虚拟机包括早期的 Dalvik 虚拟机和当前的 ART 虚拟机，我们将其统称为 Java 虚拟机，因为对于应用程序而言应该是透明的，也就是说二者应该提供了统一的对外接口。</p>
+<p>这个接口可以分为两部分，一部分是提供给 Java 应用的接口，即我们常见的 JavaVM、JNIEnv 结构体提供的诸如 FindClass、GetMethodID、CallVoidMethod 等接口；另一部分则是提供给系统开发者的接口，系统通过这些接口去初始化并创建虚拟机，从而使自身具备执行 Java 代码的功能。</p>
+<p><strong>JniInvocation.Init</strong> 方法中即进行了第二部分接口的初始化操作，其中主要逻辑是根据系统属性 (persist.sys.dalvik.vm.lib.2) 判断待加载的虚拟机动态库，Dalvik 虚拟机对应的是 libdvm.so，ART 虚拟机对应的是 libart.so</p>
+<p>总的来说，Java 虚拟机只在 Zygote 进程中创建一次，子进程通过 fork 获得虚拟机的一个副本，因此 zygote 才被称为所有 Java 进程的父进程；同时，也因为每个子进程拥有独立的虚拟机副本，所以某个进程的虚拟机崩溃后不影响其他进程，从而实现安全的运行时隔离。</p>
+<h2 id="Dalvik"><a href="#Dalvik" class="headerlink" title="Dalvik"></a>Dalvik</h2><p>Dalvik 是早期 Android 的 Java 虚拟机，伴随着 Android 5.0 的更新，正式宣告其历史使命的结束</p>
+<p>虽然 Dalvik 已经被 ART 取代，但其中的 Dalvik 字节码格式还是被保留了下来。即便在最新版本的 Android 中，编译 Java 生成的依旧是 DEX 文件</p>
+<h2 id="ART"><a href="#ART" class="headerlink" title="ART"></a>ART</h2><p>ART 全称为 Android Runtime，是继 Dalvik 之后推出的高性能 Android Java 虚拟机</p>
+<h3 id="提前优化"><a href="#提前优化" class="headerlink" title="提前优化"></a>提前优化</h3><p>在我们使用 Android-Studio 编译应用时，实际上是通过 Java 编译器先将 .java 代码编译为对应的 Java 字节码，即 .class 类文件；然后用 dx(在新版本中是 d8) 将 Java 字节码转换为 Dalvik 字节码，并将所有生成的类打包到统一的 DEX 文件中，最终和资源文件一起 zip 压缩为 .apk 文件。</p>
+<p>在安装用户的 APK 时，Android 系统主要通过 PacketManager 对应用进行解包和安装。其中在处理 DEX 文件时候，会通过 installd 进程调用对应的二进制程序对字节码进行优化，这对于 Dalvik 虚拟机而言使用的是 dexopt 程序，而 ART 中使用的是 dex2oat 程序。</p>
+<p>dexopt 将 dex 文件优化为 odex 文件，即 optimized-dex 的缩写，其中包含的是优化后的 Dalvik 字节码，称为 quickend dex；</p>
+<p>dex2oat 基于 LLVM，优化后生成的是对应平台的二进制代码，以 oat 格式保存，oat 的全称为 Optimized Android Runtime。oat 文件实际上是以 ELF 格式进行存储的，并在其中 oatdata 段(section) 包含了原始的 DEX 内容。</p>
+<p>值得一提的是，在 Andorid 系统中 dex2oat 会将优化后的代码保存在 &#x2F;data&#x2F;app 对应的应用路径下，系统应用会保存在 &#x2F;data&#x2F;dalvik-cache&#x2F; 下</p>
+<h3 id="AOT-和-JIT-是什么？"><a href="#AOT-和-JIT-是什么？" class="headerlink" title="AOT 和 JIT 是什么？"></a>AOT 和 JIT 是什么？</h3><p>AOT,即 Ahead-of-time,指预先编译. JIT,即 Just-In-Time,指即时编译.</p>
+<p>区别: 主要区别在于是否在“运行时”进行编译.</p>
+<p>AOT 编译是在程序运行之前将整个源代码或字节码文件一次性地编译成本地机器码。这意味着在程序运行时不需要再进行额外的编译工作，直接执行已经编译好的机器码。</p>
+<p>JIT 编译是在程序运行过程中动态地将热点代码（频繁执行的代码）从字节码即时编译成本地机器码。JIT 编译器会根据实际的执行情况来选择需要编译的代码，并且可以根据优化策略对代码进行优化。</p>
+<h4 id="优劣"><a href="#优劣" class="headerlink" title="优劣"></a>优劣</h4><p>AOT 优点：</p>
+<ol>
+<li>在程序运行前编译,可以避免在运行时的编译性能消耗和内存消耗.</li>
+<li>可以在程序运行初期就达到最高性能.</li>
+<li>可以显著的加快程序的启动.</li>
+</ol>
+<p>AOT 缺点：</p>
+<ol>
+<li>在程序运行前编译会使程序安装的时间增加.</li>
+<li>牺牲 Java 的一致性.</li>
+<li>将提前编译的内容保存会占用更多的外存.</li>
+</ol>
+<p>JIT 优点：</p>
+<ol>
+<li>可以根据当前硬件情况实时编译生成最优机器指令.</li>
+<li>当程序需要支持动态链接时,只能使用 JIT.</li>
+<li>可以根据进程中内存的实际情况调整代码,使内存能够更充分的利用.</li>
+</ol>
+<p>JIT 缺点：</p>
+<ol>
+<li>编译需要占用运行时资源,会导致进程卡顿.</li>
+<li>由于编译时间需要占用运行时间,对于某些代码的编译优化不能完全支持,需要在程序流畅和编译时间之间做权衡.</li>
+<li>在编译准备和识别频繁使用的方法需要占用时间,使得初始编译不能达到最高性能.</li>
+</ol>
+<p>混合编译: Android N 引入了使用编译+解释+JIT 的混合运行时,以获得安装时间,内存占用,电池消耗和性能之间的最佳折衷. 优点: 即使是大型应用程序的安装时间也减少到几秒钟. 系统更新安装得更快,因为它们不需要优化步骤. 应用程序的 RAM 占用空间较小,在某些情况下降至 50％. 改善了表现. 降低电池消耗.</p>
+<h3 id="文件加载"><a href="#文件加载" class="headerlink" title="文件加载"></a>文件加载</h3><p>APP 的代码(DEX&#x2F;OAT 文件) 是如何加载到进程中的？</p>
+<p>在 Java 中负责加载指定类的对象是 ClassLoader，Android 中也是类似，BaseDexClassLoader 继承自 ClassLoader 类，实现了许多 DEX 相关的加载操作，其子类包括:</p>
+<ul>
+<li>DexClassLoader: 负责从 .jar 或者 .apk 中加载类；</li>
+<li>PathClassLoader: 负责从本地文件中初始化类加载器；</li>
+<li>InMemoryDexClassLoader: 从内存中初始化类加载器；</li>
+</ul>
+<h2 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h2><p>通过上面的分析，我们大致了解了 ART 虚拟机的文件、代码加载流程，以及对应 Java 方法和指令的运行过程。正所谓无利不起早，之所以花费这么多时间精力去学习 ART，是因为其在 Android 运行过程中起着举足轻重的作用，下面就列举一些常见的应用场景。</p>
+<h3 id="热修复-amp-Hook"><a href="#热修复-amp-Hook" class="headerlink" title="热修复 &amp; Hook"></a>热修复 &amp; Hook</h3><p>所谓热修复，就是在不修改原有代码的基础上修改应用功能，比如替换某些类方法的实现，达到热更新的目的。犹记得在几年前，热修复的概念在 Android 生态中甚嚣尘上，随着 ART 替换 Dalvik，以及碎片化引入的一系列问题导致这种方案逐渐销声匿迹。但是热修复的使用场景并没有完全消失，比如在 Android 应用安全研究中 Hook 的概念也是热修复的一种延续。</p>
+<p>那么根据前面总结的知识可以考虑一个问题，如何在运行时劫持某个 Java 方法的执行流程？最好是可以在指定方法调用前以及返回前分别触发我们自己定义的回调，从而实现调用参数和返回值的观察和修改。</p>
+<p>根据前文对方法调用和代码加载的分析，Android 中的 Java 方法在 ART 中执行都会通过 ArtMethod::Invoke 进行调用，在其内部要么通过解释器直接解释执行(配合 JIT)；要么通过 GetEntryPointFromQuickCompiledCode 获取本地代码进行执行，当然后者在某些场景下依然会回退到解释器，但入口都是固定的，即<br>entry_point_from_quick_compiled_code 所指向的 quick 代码。因此，要想实现 Java 方法调用的劫持，可以有几种思路:</p>
+<ul>
+<li>修改 ArtMethod::Invoke 这个 C++ 函数为我们自己的实现，在其中增加劫持逻辑；</li>
+<li>修改目标 Java 方法属性，令所有调用都走 quick 分支，然后将 entry_point_from_quick_compiled_code 修改为指向我们自己的实现，从而实现劫持；</li>
+<li>类似于上述方法，不过不修改指针的值，而是修改 stub code；</li>
+</ul>
+<p>frida 实际上是使用了我们上述的第 3 种 Hook 思路，即修改 stub code 为我们的劫持代码，这种方式一般称之为 dynamic callee-side rewriting，优点是即便对于 OAT 极致优化的系统类方法也同样有效。</p>
+<h3 id="加固"><a href="#加固" class="headerlink" title="加固"></a>加固</h3><p>了解过 Android 逆向工程的人应该都知道，基于 Java 编译出来的 Dalvik 字节码其实很好理解，加上一些开源或者商业的反编译工具，甚至可以将字节码还原为和源代码非常接近的 Java 代码表示。这对于很多想在代码中隐藏秘密的公司而言是很不愿意看到的。</p>
+<p>因此，安全工程师们就想出了一些保护代码防止静态逆向分析的方案，业内常称为 加壳，国外叫做 Packer，即在原始字节码上套上一层保护壳，并在运行时进行执行解密还原。</p>
+<p>回顾我们学习的知识可以脑暴出几种安全加固方案(其实是业内已有方案):</p>
+<ul>
+<li>把整个 DEX 文件加密，然后在壳程序启动时还原解密文件并加载；</li>
+<li>优化上述方案，不落地文件，直接在内存中解密加载；</li>
+<li>提取出 DEX 文件中的字节码，并在运行时还原；</li>
+<li>替换掉 DEX 文件中每个方法的字节码为解密代码，运行时解密执行；</li>
+</ul>
+<p>这些加固方案根据解密粒度不同也常称为整体壳、抽取壳。对于整体加密的方案不必多说，在 PC 时代也有很多类似的混淆方法；而对于抽取壳，实现就百花齐放了，比如有的加固方案是在类初始化期间进行还原，有的是在方法执行前进行还原。</p>
+<p>回顾上面介绍热修复的内容，壳代码其实也可以看做是一个热修复框架，只不过是对于每个函数都进行了劫持，在目标函数运行前对实际的字节码进行还原；</p>
+<p>有些类级别的加固则是基于上文中代码加载流程，在类的初始化函数(<clinit>)中执行解密操作，因为 Java 标准保证了这是一个类最先执行的代码。</p>
+<p>由于抽取壳本身对字节码进行了加密，因此在应用安装期间 dex2oat 就无法优化这些代码，以至于在运行时只能通过解释执行，虽然有一部分 JIT 的加持，但还是让 ART 的大部分优化心血付诸东流；另外，加壳本身会使用到 ART 中的一些内部符号和偏移，因此需要针对不同版本进行适配，一个不小心就是用户端的持续崩溃。</p>
+<p>也因为这些原因，很多头部厂商的 Android 应用其实是不加壳的，对于真正需要保护的代码，可以选择 JNI 用 C&#x2F;C++ 实现，并配上 LLVM 成熟的混淆方案进行加固。</p>
+<h3 id="脱壳"><a href="#脱壳" class="headerlink" title="脱壳"></a>脱壳</h3><p>由于很多安全公司把加固做成了商业服务，因此除了正常应用，大部分恶意软件和非法应用也都用上了商业的加固方案，这对于正义的安全研究员而言是一个确实的阻碍，因此脱壳也就成了常见需求。</p>
+<p>一开始我们在遇到加固的应用时候会先尝试进行手动进行分析、调试、还原，但是后来大家发现其实基于 ART 的运行模式有更通用的解决方式。</p>
+<p>这里以目前相对较新的抽取壳为例，回顾上文代码方法调用和代码加载的章节，不论加固的抽取和还原方法如何，最终还是要回到解释执行的(至少在 JIT 之前)，因为加密的代码在安装时并没有被 AOT 优化。而且为了保证原始代码逻辑不变，对应加密方法在实际运行之前肯定需要被正确解密还原。</p>
+<p>基于这点事实，我们可以在 ArtMethod 调用前进行断点，然后通过 method-&gt;GetDexFile() 获得对应 dex 文件在内存中的地址并进行转储保存。如果当前内存中的 dex 部分偏移被恶意修改，那么还可以通过 method-&gt;GetCodeItem() 获取对应方法解密后的字节码地址进行手动转储恢复。</p>
+<p>如果要恢复完整的 dex 文件，则需要令目标程序在运行时调用所有类的所有方法，这显然不太现实；不过网上已经有了一些开源的方案基于主动调用的思路去批量伪造方法调用，触发壳的解密逻辑从而实现全量还原，比如 DexHunter 和 FART，都是通过修改 Android 源码实现的脱壳方案。</p>
+<h3 id="方法跟踪"><a href="#方法跟踪" class="headerlink" title="方法跟踪"></a>方法跟踪</h3><p>对于上述 Android 应用加壳的方案，在数次攻防角斗下已经被证明了只能作为辅助防护，因此移动安全厂商又提出了一些新的加固方案，比如直接对字节码本身下手，套用 LLVM 控制流和数据流混淆的那一套方案，将字节码的执行顺序打乱，插入各种无效指令来阻碍逆向工程；又或者将字节码的实现抽批量自动取到 JNI 层，并辅以二进制级别的安全加固，这种方案通常称为 Java2C，即将 Java 代码转译成 C 代码编译来防止逆向分析。……</p>
+<p>这时，传统的脱壳方法就不见得有效了，因为即便还原出字节码或者 Java 代码，其流程也是混乱的，对于 Java2C 则更不用说，只能在二进制中想办法将 JNI 调用还原。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本文主要目的是分析 Android 12 中 ART 的实现，包括 Java 方法初始化和执行的过程。基于对 ART 的深入理解，我们也列举了几种实践中经常遇到的场景，比如热修复、动态注入、安全加固、脱壳等。也许在工作中信奉拿来主义，只需要工具能用就行，但了解工具背后的原理，才能更好适应当前不断激化的攻防对抗环境，从而更好地迎接未来的挑战。</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/03/02/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/ART%20%E5%9C%A8%20Android%20%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/" title="ART 在 Android 安全攻防中的应用" target="_blank" rel="external">https://beichen.link/2023/03/02/Study/逆向知识/ART 在 Android 安全攻防中的应用/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/03/02/Study/%E7%AE%97%E6%B3%95/%E5%BF%AB%E6%85%A2%E6%8C%87%E9%92%88/" title="指针"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/03/01/Study/%E7%AE%97%E6%B3%95/%E5%93%88%E5%B8%8C%E8%A1%A8%E5%92%8C%E6%9C%89%E5%BA%8F%E8%A1%A8/" title="哈希表和有序表"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

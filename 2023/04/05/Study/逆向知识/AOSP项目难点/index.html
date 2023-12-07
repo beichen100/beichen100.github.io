@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>AOSP难点 | 北辰的小破站</title>
+  <meta name="description" content="项目难点在于  root特征 虚拟机特征 改ROM之前要了解Android的启动原理 LOG移植 属性系统的了解  Root特征 基于android 系统属性检测模拟器 模拟器上面的一些系统属性和真机上面的不同。例如，设备厂商、硬件信息，手机品牌等。同时某些属性的值为模拟器特有，可以直接判断是否是模拟器。  android.os.Build类包含设备硬件和版本信息。可以通过提取该类的静态字段来检测">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AOSP难点">
+<meta property="og:url" content="https://beichen.link/2023/04/05/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/AOSP%E9%A1%B9%E7%9B%AE%E9%9A%BE%E7%82%B9/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="项目难点在于  root特征 虚拟机特征 改ROM之前要了解Android的启动原理 LOG移植 属性系统的了解  Root特征 基于android 系统属性检测模拟器 模拟器上面的一些系统属性和真机上面的不同。例如，设备厂商、硬件信息，手机品牌等。同时某些属性的值为模拟器特有，可以直接判断是否是模拟器。  android.os.Build类包含设备硬件和版本信息。可以通过提取该类的静态字段来检测">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/Android系统架构.webp">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/Android启动架构.webp">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202304051041224.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205162023262.png">
+<meta property="article:published_time" content="2023-04-05T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.747Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="逆向知识">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/Android系统架构.webp">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/04/05/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/AOSP%E9%A1%B9%E7%9B%AE%E9%9A%BE%E7%82%B9/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/逆向知识/AOSP项目难点" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      AOSP难点
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/04/05/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/AOSP%E9%A1%B9%E7%9B%AE%E9%9A%BE%E7%82%B9/" class="article-date">
+	  <time datetime="2023-04-05T00:00:00.000Z" itemprop="datePublished">2023-04-05</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/04/05/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/AOSP%E9%A1%B9%E7%9B%AE%E9%9A%BE%E7%82%B9/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 5k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 19(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>项目难点在于</p>
+<ul>
+<li>root特征</li>
+<li>虚拟机特征</li>
+<li>改ROM之前要了解Android的启动原理</li>
+<li>LOG移植</li>
+<li>属性系统的了解</li>
+</ul>
+<h2 id="Root特征"><a href="#Root特征" class="headerlink" title="Root特征"></a>Root特征</h2><ol>
+<li><p>基于android 系统属性检测模拟器</p>
+<p>模拟器上面的一些系统属性和真机上面的不同。例如，设备厂商、硬件信息，手机品牌等。同时某些属性的值为模拟器特有，可以直接判断是否是模拟器。</p>
+<ul>
+<li><p>android.os.Build类包含设备硬件和版本信息。可以通过提取该类的静态字段来检测模拟器。<br>build.fingerprint  build.model   build.manufacturer  build.hardware<br>build.product    build.board    build.bootloader    build.serial<br>build.brand      build.device</p>
+</li>
+<li><p>通过adb的getprop命令显示属性值<br>ro.board.platform  gsm.version.baseband ro.bootloader ro.bootmode  ro.build.flavor<br>ro.kernel.qemu   ro.kernel.android.qemud   ro.kernel.qemu.gles<br>init.svc.qemud  init.svc.qemu-props qemu.hw.mainkeys  qemu.sf.fake_camera qemu.sf.lcd_density </p>
+</li>
+<li><p>通过java的反射机制使用Systemproperties类读取系统属性值</p>
+</li>
+<li><p>直接读取 &#x2F;system&#x2F;build.prop等记录了android 属性的文件</p>
+</li>
+</ul>
+</li>
+<li><p>基于系统文件特征检测模拟器</p>
+<ul>
+<li><p>通过内核文件系统&#x2F;proc目录检测模拟器<br>读取&#x2F;proc&#x2F;cpuinfo及&#x2F;proc&#x2F;tty&#x2F;drivers文件判断是否含有goldfish 字段，Goldfish是一种虚拟的ARM处理器，在android的仿真环境中使用。</p>
+<p>读取&#x2F;proc&#x2F;diskstats 文件获取设备分区状态信息，因为真机都有mmcblk0分区，而模拟器没有 </p>
+</li>
+<li><p>通过qemu文件特征检测模拟器<br>基于qemu的安卓原生模拟器上存在很多特有文件及驱动文件，可通过检测这些文件是否存在来判断是否是模拟器。<br>“&#x2F;dev&#x2F;qemu_pipe”,    “&#x2F;dev&#x2F;socket&#x2F;qemud”,<br>“&#x2F;system&#x2F;lib&#x2F;libc_malloc_debug_qemu.so”,<br>“&#x2F;sys&#x2F;qemu_trace”,   “&#x2F;system&#x2F;bin&#x2F;qemu-props”,   “&#x2F;dev&#x2F;socket&#x2F;genyd”,    “&#x2F;dev&#x2F;socket&#x2F;baseband_genyd”, &#x2F;sys&#x2F;module&#x2F;goldfish_audio”,    “&#x2F;sys&#x2F;module&#x2F;goldfish_sync,    “&#x2F;sys&#x2F;bus&#x2F;platform&#x2F;drivers&#x2F;qemu_trace”<br>“&#x2F;sys&#x2F;devices&#x2F;system&#x2F;cpu&#x2F;cpu0&#x2F;cpufreq&#x2F;scaling_cur_freq”,<br>“&#x2F;system&#x2F;bin&#x2F;qemuprops”,     if (a.a(“cat &#x2F;proc&#x2F;self&#x2F;cgroup”) &#x3D;&#x3D; null)<br>&#x2F;sys&#x2F;bus&#x2F;platform&#x2F;drivers&#x2F;qemu_pipe”;   “&#x2F;sys&#x2F;bus&#x2F;platform&#x2F;drivers&#x2F;qemu_trace”</p>
+</li>
+<li><p>模拟器厂商特殊文件检测<br>目前市面上流行的Android模拟器主要有Genymotion，天天模拟器，夜神模拟器，逍遥模拟器，BlueStacks等。这些模拟器上都存在一些特有的文件，如&#x2F;system&#x2F;bin&#x2F;nox-prop、&#x2F;system&#x2F;lib&#x2F;libdroid4x.so等。可通过检测这些模拟器厂商特殊文件是否存在来判断是否是模拟器。</p>
+</li>
+</ul>
+</li>
+<li><p>基于模拟器与真机的功能差异检测模拟器</p>
+<ul>
+<li><p>网络通信状态<br>模拟器上面的设备ID、手机号、IMEI值和IMSI值都不同于真机设备。android.telephony.TelephonyManager类提供了用于获取设备运营商的方法，用于检测手机通信服务的状态。同时真机与模拟器的网络信息有较大差异，通过读取&#x2F;system&#x2F;bin&#x2F;netcfg内信息是否异常，也可以判断是否为模拟器。</p>
+</li>
+<li><p>检测API Demos、Dev Tools等其他模拟器特有的应用程序或特有的属性，如在模拟器内app使用intent 调用拨号盘会出现crash</p>
+</li>
+<li><p>电池状态与电量和充电状态<br>通过模拟器的电池温度为0和电量始终为50%等特性，检验电压、电量是否有实时变化，检测是否模拟器。</p>
+</li>
+<li><p>A检测真机特有的wifi, GPS，蓝牙，传感器，相机闪光等<br>a.    模拟器的vlan0的ip和mac均为null，而且当正常手机接入WIFI的时候，周边往往有复数的WIFI信号，而模拟器由于不具备检索周边WIFI的能力，其WIFI列表通常为空或者只有一个WIFI。<br>b.    模拟器不存在gps设备，通常无法获取到地理位置信息<br>c.    模拟器不存在蓝牙<br>d.    模拟器与真机有温度差异，表现为真机存在thermal_zone文件<br>e.    模拟器不存在传感器或传感器个数很少<br>f.    模拟器不存在摄像头或只有一个摄像头</p>
+</li>
+</ul>
+</li>
+<li><p>基于用户层行为和数据检测模拟器</p>
+</li>
+</ol>
+<h2 id="虚拟机特征"><a href="#虚拟机特征" class="headerlink" title="虚拟机特征"></a>虚拟机特征</h2><h3 id="1-了解Android的架构"><a href="#1-了解Android的架构" class="headerlink" title="1. 了解Android的架构"></a>1. 了解Android的架构</h3><p>Android系统架构分为五层，从上到下依次是<strong>应用层、应用框架层、系统运行库层、硬件抽象层和Linux内核层</strong>。</p>
+<p>Android底层内核空间以Linux Kernel作为基石，上层用户空间由Native系统库、虚拟机运行环境、框架层组成，通过系统调用<code>(Syscall)</code>连通系统的内核空间与用户空间。对于用户空间主要采用C++和 Java代码编写，通过<code>JNI</code>技术打通用户空间的Java层和Native层(C++&#x2F;C)，从而连通整个系统。</p>
+<img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/Android系统架构.webp" alt="Android系统架构" style="zoom: 33%;" />
+
+<ul>
+<li><p><strong>应用层</strong></p>
+<p>系统内置的应用程序以及非系统级的应用程序都是属于应用层。负责与用户进行直接交互，通常都是用Java进行开发的。</p>
+</li>
+<li><p><strong>应用框架层（Java API Framework)</strong></p>
+<p>应用框架层为开发人员提供了可以开发应用程序所需要的 API ，我们平常开发应用程序都是调用的这一层所提供的 API ，当然也包括系统的应用。这一层是由Java代码编写的，可以称为Java Framework，下面来看这一层所提供的主要的组件。</p>
+<table>
+<thead>
+<tr>
+<th align="center">名称</th>
+<th align="center">功能描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Activity Manager</td>
+<td align="center">管理各个应用程序生命周期以及通常的导航回退功能</td>
+</tr>
+<tr>
+<td align="center">Location Manager</td>
+<td align="center">提供地理位置以及定位功能服务</td>
+</tr>
+<tr>
+<td align="center">Package Manager</td>
+<td align="center">管理所有安装在Android系统中的应用程序</td>
+</tr>
+<tr>
+<td align="center">Notification Manager</td>
+<td align="center">使得应用程序可以在状态栏中显示自定义的提示信息</td>
+</tr>
+<tr>
+<td align="center">Resource Manager</td>
+<td align="center">提供应用程序使用的各种非代码资源，如本地化字符串、图片、布局文件、颜色文件等</td>
+</tr>
+<tr>
+<td align="center">Telephony Manager</td>
+<td align="center">管理所有的移动设备功能</td>
+</tr>
+<tr>
+<td align="center">Window Manager</td>
+<td align="center">管理所有开启的窗口程序</td>
+</tr>
+<tr>
+<td align="center">Content Providers</td>
+<td align="center">使得不同应用程序之间可以共享数据</td>
+</tr>
+<tr>
+<td align="center">View System</td>
+<td align="center">构建应用程序的基本组件</td>
+</tr>
+</tbody></table>
+</li>
+<li><p><strong>系统运行库层（Native)</strong></p>
+<ul>
+<li><p>C&#x2F;C++程序库（Native C&#x2F;C++ Libraries）</p>
+<p>C&#x2F;C++程序库能被Android系统中的不同组件所使用，并通过应用程序框架为开发者提供服务。</p>
+</li>
+<li><p>Android运行时库 （Android Runtime）</p>
+<p>运行时库又分为 core libraries 和 android runtime (ART)，核心库提供了Java语言核心库的大多数功能，这样开发者可以使用Java语言来编写Android应用；</p>
+<p>ART作为替代Dalvik的Android虚拟机，采用AOT(Ahead-Of-Time)技术，会在应用程序安装时就转换成机器语言，不再在执行时解释，从而优化了应用运行的速度。在Dalvik下，应用每次运行的时候，字节码都需要通过即时编译器转换为机器码，这会拖慢应用的运行效率，而在ART 环境中，应用在第一次安装的时候，字节码就会预先编译成机器码，使其成为真正的本地应用。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>硬件抽象层（Hardware Abstraction Layer)</strong></p>
+<p>硬件抽象层位于操作系统内核与硬件电路之间的接口层，其目的在于将硬件抽象化，隐藏了特定平台的硬件接口细节，为操作系统提供虚拟硬件平台，使其具有硬件无关性，可在多种平台上进行移植。</p>
+</li>
+<li><p><strong>Linux内核层</strong></p>
+<p>Android 的核心系统服务基于Linux 内核，在此基础上添加了部分Android专用的驱动。系统的安全性、内存管理、进程管理、网络协议栈和驱动模型等都依赖于该内核。</p>
+</li>
+</ul>
+<h3 id="2-Android启动流程"><a href="#2-Android启动流程" class="headerlink" title="2. Android启动流程"></a>2. Android启动流程</h3><img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/Android启动架构.webp" alt="Android启动架构" style="zoom: 50%;" />
+
+<p><strong>图解：</strong>Android系统启动过程由上图从下往上的一个过程是由Boot Loader引导开机，然后依次进入 -&gt; <code>Kernel</code> -&gt; <code>Native</code> -&gt; <code>Framework</code> -&gt; <code>App</code></p>
+<blockquote>
+<p>关于Loader层：</p>
+<ul>
+<li>Boot ROM: 当手机处于关机状态时，长按Power键开机，引导芯片开始从固化在 <code>ROM</code>里的预设代码开始执行，然后加载引导程序到 <code>RAM</code>；</li>
+<li>Boot Loader：这是启动Android系统之前的引导程序，主要是检查RAM，初始化硬件参数等功能。</li>
+</ul>
+</blockquote>
+<h4 id="第一步，启动电源"><a href="#第一步，启动电源" class="headerlink" title="第一步，启动电源"></a>第一步，启动电源</h4><p><strong>按下电源键开机，从预定义的地方（固化在 ROM 中）开始执行，加载引导程序 Boot Loader 到 RAM 中。</strong></p>
+<ul>
+<li>ROM（Read-Ony-Memory）：只读存储器，只能读出无法写入，即便是切断电源数据也不会丢失；</li>
+<li>RAM（Random Access Memory）：随机存取存储器，与 CPU 直接交换数据，随时读写，一旦断电，存储的数据也将丢失；</li>
+</ul>
+<h4 id="第二步，加载引导程序"><a href="#第二步，加载引导程序" class="headerlink" title="第二步，加载引导程序"></a>第二步，加载引导程序</h4><p><strong>Boot Loader 是操作系统内核运行之前运行的一小段程序。通过这一小段程序，可以初始化硬件设备、建立内存空间的映射，从而为操作系统内核准备出比较合适的软硬件运行环境。之后，启动 Linux Kernel。</strong></p>
+<p>设备制造商要么使用比较流行的引导程序，比如 redboot、uboot、qi bootloader，要么自己开发，它不是 Android 操作系统的一部分。引导程序是 OEM 厂商或者运营商加锁和限制的地方。</p>
+<p>引导程序分为两个阶段执行：</p>
+<ul>
+<li>第一个阶段：检测外部的 RAM 以及加载对第二个阶段有用的程序；</li>
+<li>第二个阶段：引导程序设置网络、内存等功能；</li>
+</ul>
+<p>这些对于运行内核是必要的，为了达到特殊的目标，引导程序可以根据配置参数或者输入数据设置内核。</p>
+<h4 id="第三步，启动-Linux-Kernel"><a href="#第三步，启动-Linux-Kernel" class="headerlink" title="第三步，启动 Linux Kernel"></a>第三步，启动 Linux Kernel</h4><p><strong>内核启动时，会设置缓存，加载各种驱动。当内核完成各种设置后，首先会在系统文件中寻找 init 文件，进而启动 init 进程。</strong></p>
+<h4 id="第四步：启动-init-进程"><a href="#第四步：启动-init-进程" class="headerlink" title="第四步：启动 init 进程"></a>第四步：启动 init 进程</h4><p><strong>init 进程是第一个用户级别的进程，进程号固定为 1。init 进程的主要工作有：</strong></p>
+<ul>
+<li>创建（mkdir）和挂载（mount）启动所需要的文件目录；</li>
+<li>初始化和启动属性服务（property service）；</li>
+<li>解析 init.rc 配置文件并启动 zygote 、Service Manager 等进程；（Service Manager 主要用于管理系统服务）</li>
+</ul>
+<h4 id="第五步：启动-Zygote-进程"><a href="#第五步：启动-Zygote-进程" class="headerlink" title="第五步：启动 Zygote 进程"></a>第五步：启动 Zygote 进程</h4><p><strong>Zygote 的意思为孵化器，主要用于孵化子进程。</strong> Zygote 进程最初的名字为 app_process。这个名字在 &#x2F;frameworks&#x2F;base&#x2F;cmds&#x2F;app_process&#x2F;android.mk 中有定义。</p>
+<p>在 Android 系统中有两种程序，一种是 Java 应用程序，主要是基于 ART （Android Runtime），所有的应用程序都属于这一类；另一种是 Native 程序，也就是用 C&#x2F;C++ 开发的程序，如 Boot Animation（开机动画）。</p>
+<p>所有的 Java 应用程序以及 system_server 进程都是由 Zygote 进程 fork 出来的。（Native 进程则是由 init 进程创建的）</p>
+<p>Zygote 进程是通过 Socket 的方式和其他进程通信的，这里的“其他进程”其实主要指的是 system_server 进程。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202304051041224.png" alt="image-20230405104110129"></p>
+<p>Zygote 是一个 C&#x2F;S 模型，Zygote 进程作为服务端，主要负责启动 system_server 进程，创建 Java 虚拟机，加载系统资源以及在后续的运行中启动 Java 应用程序。</p>
+<p>其他进程可以向其发出“孵化”进程的请求，而 Zygote 进程接收到这个请求后会“孵化”出一个新的进程。比如，点击 Launcher 中的某个应用程序图标启动一个新的进程时，这个请求会到达 Framework 层的 ActivityManagerService（AMS）中，AMS 接收到这个请求后，会调用 Process 类发出“孵化”子进程的 Socket 请求，Zygote 监听到这个请求后会 fork 出一个新的进程。</p>
+<h4 id="第六步，启动-system-server-进程"><a href="#第六步，启动-system-server-进程" class="headerlink" title="第六步，启动 system_server 进程"></a>第六步，启动 system_server 进程</h4><p>system_server也是是一个进程，是由Zygote进程fork出来的。这个进程是Android Framework里面非常重要的进程，因为系统里面重要的服务都是在这个进程里开启的。比如ActivityManagerService、PackageManagerService、WindowManagerService等等。</p>
+<blockquote>
+<p>ActivityManagerService： 简称AMS，服务端对象，负责系统中所有Activity的生命周期（Activity的开启、暂停、销毁）。在SystemServer进程开启的时候，就会初始化ActivityManagerService。</p>
+<p>任何一个Activity的启动都是由AMS和应用程序进程（主要是ActivityThread）相互配合来完成的，AMS服务统一调度系统中所有进程的Activity启动，而每个Activity的启动过程则由其所属的进程具体来完成。</p>
+</blockquote>
+<p>system_server进程总结：</p>
+<ul>
+<li>启动Binder线程池，这样就可以和其他进程进行通信</li>
+<li>创建SystemServiceManager，其对于系统的服务进行创建，启动和生命周期管理</li>
+<li>启动各种系统服务</li>
+</ul>
+<p>Zygote 启动了 system_server 进程后，在 system_server 进程中会进一步启动 WindowManagerService（WMS）、ActivityManagerService（AMS）、PackageManagerService（PMS）等服务进程，等这些服务启动后，AMS 就会打开 Launcher 应用的 Home Activity，也就是手机桌面。</p>
+<h3 id="2-Android-属性系统"><a href="#2-Android-属性系统" class="headerlink" title="2. Android 属性系统"></a>2. Android 属性系统</h3><p>最开始想的是检测模拟器时直接把模拟器里的prop文件改掉，每次开机调个脚本。但是有些属性值改了没有用，但是又属于检测项，于是干脆从rom入手</p>
+<p>Android 中有很多 Property，他们无处不在，我们的熟悉的 android.os.Build 中的很多字段都是直接读取的对应的 Property 值。Property 都是以键值对的形式存在，键和值都是字符串类型，他们是全局的（各个进程看到的都一样），Android 中非常多的进程和应用直接或者间接依赖 Property 系统，并由此决定其运行期的行为。Property 实质上是由若干个属性读取进程和一个属性设置进程（Property Service）操作。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205162023262.png" alt="Property Service"></p>
+<p>Property Service 位于 init 进程（拥有 root 权限），在系统开机后创建各个属性对应的内存映射文件，即分配一个<strong>共享内存区</strong>来存储的属性。各个 App 进程想获得属性信息可以使用对应的内存映射文件，<strong>直接从共享内存读取</strong>，为上层的 property api 提供数据来源。</p>
+<h4 id="Property属性组成"><a href="#Property属性组成" class="headerlink" title="Property属性组成"></a>Property属性组成</h4><p>Android 的系统属性包括两部分：文件保存的持久属性和每次开机导入的cache属性。前者主要保存在prop文件中，需要注意的是android属性的名称是有一定的格式要求的。<strong>ro.开头的属性将不能被更改属性值，persist.开头的属性会被永久记录</strong>，其他属性值在重新开机后均将被丢弃。</p>
+<ul>
+<li><p>属性名以ro.开头，该属性被视为只读属性，一旦设置属性值不能改变；</p>
+</li>
+<li><p>属性名以persist.开头，该属性值将写入&#x2F;data&#x2F;property；</p>
+<p>也就是说，如果程序调property_set设了一个以persist为前缀的属性，系统会在&#x2F;data&#x2F;property&#x2F;*里加一个文件记录这个属性，重启以后这个属性还有。如果property_set其它属性，因为属性是在内存里存，所以重启后这个属性就没有了。</p>
+</li>
+</ul>
+<h4 id="Property属性的加载"><a href="#Property属性的加载" class="headerlink" title="Property属性的加载"></a>Property属性的加载</h4><p>Android启动后，在 property_service.cpp 的 property_init 中完成 prop 的初始化。</p>
+<p>系统中存在着几个文件，如 build.prop 和 default.prop 等，这些文件是在系统构建时候生成的，里面包含很多系统的配置。属性服务启动后会从系统文件中读取默认的属性，并写入共享内存中，并且<strong>后读入的属性将覆盖前面读取的相同的属性</strong>。也就是说，系统开机时会去加载这些文件中的信息并保存到 prop 模块(内存)中去，以便其它程序进行读取和使用。</p>
+<p>系统启动的时候会从几个配置文件中加载属性的默认值，大概有以下几个文件， 在不同 Android 版本系统上可能不一样：</p>
+<ul>
+<li>&#x2F;default.prop 或者是 &#x2F;prop.default，</li>
+<li>&#x2F;vendor&#x2F;default.prop</li>
+<li>&#x2F;system&#x2F;build.prop</li>
+<li>&#x2F;vendor&#x2F;build.prop</li>
+<li>&#x2F;data&#x2F;local.prop</li>
+<li>&#x2F;data&#x2F;property&#x2F;*</li>
+</ul>
+<p>系统会按先后顺序依次加载以上文件，后加载的属性将覆盖原先的值。default.prop 的值是通过 build&#x2F;tools 目录下的 buildinfo.sh 生成的。要修改的话，就要修改编译系统了，这种方法不好维护，不推荐。一般来说我们可以把属性加到 &#x2F;system&#x2F;build.prop 或者 &#x2F;vendor&#x2F;build.prop。</p>
+<h4 id="Property-prop文件的生成"><a href="#Property-prop文件的生成" class="headerlink" title="Property prop文件的生成"></a>Property prop文件的生成</h4><p>Android 编译时会收集各种property值，编译完成之后，文件生成在out&#x2F;target&#x2F;product&#x2F;system 目录下。在Android运行时刻可以通过property_get()[c&#x2F;c++]或 SystemProperties_get()[Java]读取这些属性值。以build.prop文件为例，build.prop的生成是由make系统解析build&#x2F;core&#x2F;Makefile完成。</p>
+<p>总结：build.prop的生成是由make系统解析build&#x2F;core&#x2F;Makefile完成，关于build.prop生成过程的分析，可知属性的来源：</p>
+<ul>
+<li>buildinfo.sh ：系统默认属性一般在build&#x2F;tool&#x2F;buildinfo.sh，编译时写到文件 build.prop；</li>
+<li>system.prop追加；</li>
+<li>ADDITIONAL_BUILD_PROPERTIES 或 PRODUCT_PROPERTY_OVERRIDES追加；<br>一般我们自定义属性就在对应的项目下 device&#x2F;$(TARGET_DEVICE_DIR)&#x2F;system.prop 定义自己的属性即可，建议修改属性在 system.prop 或 PRODUCT_PROPERTY_OVERRIDES，这对应于具体特定平台或产品的修改。</li>
+</ul>
+<p>Android提供了两种访问系统属性的方法，一种是通过JAVA Framework层的代码<code>SystemProperties.java</code>中提供的接口，由于该类接口并没有放入到SDK中，因此APP开发并不能使用此接口，需要使用反射；一个是通过C++来访问，在代码中包含<code>/android/system/core/include/cutils/properties.h</code>头文件即可使用<code>property_get/property_set</code>来获取或者设置系统属性值了。</p>
+<h3 id="3-插桩后需要写日志判断是否成功"><a href="#3-插桩后需要写日志判断是否成功" class="headerlink" title="3. 插桩后需要写日志判断是否成功"></a>3. 插桩后需要写日志判断是否成功</h3><p>最近在弄系统定制功能的时候(比如打印File构造函数的参数)，需要修改libcore中的核心代码并打印日志输出。虽然Android提供了android.utils.Log日志工具类，但是不能在Android Java层的核心库libcore中调用。</p>
+<p>Android Java 核心库中是无法直接使用 android.util.Log 的，添加后编译不通过，因为 framework 中的 Java API 依赖于 Java 核心库。</p>
+<p>将android.utils.Log移植到libcore中有两种方式:</p>
+<ul>
+<li>在现有的类中添加方法，并在native追加对应的方法，这种方式相对简单；</li>
+</ul>
+<p>​        比如java.lang.System中添加相应的方法，在对应System.c中添加对应的jni方法。</p>
+<ul>
+<li>在libcore中添加新的接口类，并实现native的方法，这种方式相对复杂一点。</li>
+</ul>
+<ol>
+<li><p>第一种方法，利用现有类 File.java</p>
+<p>之前的源码阅读证明，Java层的 android.utils.Log 输出 log 实际上通过JNI的链接使用的是 println_native()方法，println_native()再去调用native层的__android_log_buf_write方法。</p>
+<p>那么我们也可以在想要打印的 Java 类处也实现一个 println_native() ，搭建一个类似的JNI层，这样就能实现类似Log类的效果。</p>
+<p>以AOSP&#x2F;libcore&#x2F;ojluni&#x2F;src&#x2F;main&#x2F;java&#x2F;java&#x2F;io&#x2F;File.java 类为例：</p>
+<ul>
+<li><p>首先，在 File.java 里新建Log()方法，之后想打印的时候可以直接调用类内的方法；</p>
+</li>
+<li><p>然后，将AOSP&#x2F;frameworks&#x2F;base&#x2F;core&#x2F;java&#x2F;android&#x2F;util&#x2F;Log.java里面的native方法声明  println_native() copy到 File.java文件里面；</p>
+</li>
+<li><p>接下来，把&#x2F;frameworks&#x2F;base&#x2F;core&#x2F;jni&#x2F;android_util_Log.cpp中对之对应的本地方法copy到libcore&#x2F;ojluni&#x2F;src&#x2F;main&#x2F;native&#x2F;FileSystemPreferences.c，加在static JNINativeMethod gMethods[ ]之前就行；</p>
+<p>JNI注册修改如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> JNINativeMethod gMethods[] = &#123;</span><br><span class="line">    <span class="built_in">NATIVE_METHOD</span>(FileSystemPreferences, lockFile0, <span class="string">&quot;(Ljava/lang/String;IZ)[I&quot;</span>),</span><br><span class="line">    <span class="built_in">NATIVE_METHOD</span>(FileSystemPreferences, unlockFile0, <span class="string">&quot;(I)I&quot;</span>),</span><br><span class="line">    <span class="built_in">NATIVE_METHOD</span>(FileSystemPreferences, chmod, <span class="string">&quot;(Ljava/lang/String;I)I&quot;</span>),</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">+++ <span class="type">static</span> JNINativeMethod mygMethods[] = &#123;&#123; <span class="string">&quot;println_native&quot;</span>,  <span class="string">&quot;   (IILjava/lang/String;Ljava/lang/String;)I&quot;</span>, (<span class="type">void</span>*) android_util_Log_println_native  &#125;,&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">register_java_util_prefs_FileSystemPreferences</span><span class="params">(JNIEnv* env)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">jniRegisterNativeMethods</span>(env, <span class="string">&quot;java/util/prefs/FileSystemPreferences&quot;</span>, gMethods, <span class="built_in">NELEM</span>(gMethods));</span><br><span class="line">+++ <span class="built_in">jniRegisterNativeMethods</span>(env, <span class="string">&quot;java/io/File&quot;</span>, mygMethods, <span class="built_in">NELEM</span>(mygMethods));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>最后，在File.java里任意处调用 Log(tag,msg); 然后make update-api，编译运行即可。经测试，可打印Log。</p>
+</li>
+</ul>
+<ol start="2">
+<li>第二种方法，在libcore中添加新的接口类，并实现native的方法</li>
+</ol>
+</li>
+</ol>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/04/05/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/AOSP%E9%A1%B9%E7%9B%AE%E9%9A%BE%E7%82%B9/" title="AOSP难点" target="_blank" rel="external">https://beichen.link/2023/04/05/Study/逆向知识/AOSP项目难点/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/04/05/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/APP%E9%80%86%E5%90%91%E9%A1%B9%E7%9B%AE%E9%9A%BE%E7%82%B9/" title="APP逆向难点"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/03/28/Study/Android%E7%9F%A5%E8%AF%86/Android%E6%BC%8F%E6%B4%9E%E7%9F%A5%E8%AF%86/" title="Android 漏洞知识"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>大厂设备指纹获取和对抗 | 北辰的小破站</title>
+  <meta name="description" content="现在大厂的设备指纹层出不穷，但是想要确保稳定性和唯一性高精准其实也挺难的一件事，有的是通过设备信息比重进行的设备 ID 唯一值确认。比如 A 设备信息占比 10%，B 设备信息占比 20%，当比重超过 60%以上，设备指纹才会发生变化。这样的好处就是当你只修改某一个字段的时候，设备指纹不发生变化。还有的干脆找一个隐蔽的并且唯一的设备信息，作为缓存，每次读取缓存的方式去判断，设备信息是唯一。 比如常">
+<meta property="og:type" content="article">
+<meta property="og:title" content="大厂设备指纹获取和对抗">
+<meta property="og:url" content="https://beichen.link/2023/03/03/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E8%AE%BE%E5%A4%87%E6%8C%87%E7%BA%B9%E8%8E%B7%E5%8F%96%E4%B8%8E%E7%BB%95%E8%BF%87/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="现在大厂的设备指纹层出不穷，但是想要确保稳定性和唯一性高精准其实也挺难的一件事，有的是通过设备信息比重进行的设备 ID 唯一值确认。比如 A 设备信息占比 10%，B 设备信息占比 20%，当比重超过 60%以上，设备指纹才会发生变化。这样的好处就是当你只修改某一个字段的时候，设备指纹不发生变化。还有的干脆找一个隐蔽的并且唯一的设备信息，作为缓存，每次读取缓存的方式去判断，设备信息是唯一。 比如常">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303211112304.svg">
+<meta property="article:published_time" content="2023-03-03T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.751Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="逆向知识">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303211112304.svg">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/03/03/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E8%AE%BE%E5%A4%87%E6%8C%87%E7%BA%B9%E8%8E%B7%E5%8F%96%E4%B8%8E%E7%BB%95%E8%BF%87/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/逆向知识/设备指纹获取与绕过" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      大厂设备指纹获取和对抗
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/03/03/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E8%AE%BE%E5%A4%87%E6%8C%87%E7%BA%B9%E8%8E%B7%E5%8F%96%E4%B8%8E%E7%BB%95%E8%BF%87/" class="article-date">
+	  <time datetime="2023-03-03T00:00:00.000Z" itemprop="datePublished">2023-03-03</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/03/03/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E8%AE%BE%E5%A4%87%E6%8C%87%E7%BA%B9%E8%8E%B7%E5%8F%96%E4%B8%8E%E7%BB%95%E8%BF%87/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 3.6k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 12(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>现在大厂的设备指纹层出不穷，但是想要确保<strong>稳定性</strong>和<strong>唯一性</strong>高精准其实也挺难的一件事，有的是通过设备信息比重进行的设备 ID 唯一值确认。比如 A 设备信息占比 10%，B 设备信息占比 20%，当比重超过 60%以上，设备指纹才会发生变化。这样的好处就是当你只修改某一个字段的时候，设备指纹不发生变化。还有的干脆找一个隐蔽的并且唯一的设备信息，作为缓存，每次读取缓存的方式去判断，设备信息是唯一。</p>
+<p>比如常见的有 Native 获取 DRM，popen cat &#x2F;sys&#x2F;devices&#x2F;soc0&#x2F;serial_number ，svc 读取 bootid 并且保存到文件，netlinker 获取网卡。都是很常见并且隐蔽的的设备指纹。这篇文章主要介绍了各种指纹的获取情况，如何修改，站在上帝视角去俯看，攻击者和被攻击者遇到的问题 。</p>
+<h2 id="前置知识"><a href="#前置知识" class="headerlink" title="前置知识"></a>前置知识</h2><h3 id="Android-IPC-代理是什么？"><a href="#Android-IPC-代理是什么？" class="headerlink" title="Android IPC 代理是什么？"></a>Android IPC 代理是什么？</h3><p>Android 本身是 CS 架构，客户端（client）服务端（server），我们常用的通过 context 上下文调用的 API 都是直接调用代理人的方式去调用的，而真正的服务端是 ActivityManagerServer 简称，AMS</p>
+<p>他有很多代理，比如 PackageManager，ActivityManager 等，这些都是 AMS 的<strong>代理人</strong>。而 AMS 就是<strong>被代理人</strong>。</p>
+<p>代理模式是一种设计模式，代理人可以提供被代理人的部分或者全部功能，实现代码封装，做鉴权，代码安全的角度，代理模式很常用的设计模式。</p>
+<p>AMS 和代理们通过 Binder 进行通讯，Binder 是什么，有什么好处这里就不详细展开了，安卓面试八股文，可以理解成进程间通讯的东西，底层实现是通过共享内存，数据传输，读取速度更快。</p>
+<p>当我们调用代理人的 API 的时候，本质上是通过 Binder 去发送一些数据包，和 AMS 通讯，当 AMS 收到消息以后把结果在传输给对应的代理人。然后返回给调用方。在每个 Manager 里面都有一个代理人 。</p>
+<p>之前很久之前有一种动态代理的技术，原理就是替换了里面的代理人，因为代理是一个接口，然后我们自己通过 Proxy 这个类创建一个代理，然后反射 set 回去，就可以实现常用的 API 拦截和 Hook。</p>
+<p>类似 VA 的沙盒，对多开的 App 提供一份自己实现的代理，然后控制这些代理的返回值，以此实现沙盒相关操作。</p>
+<p>还有一种比较好的过 APK 签名的方法就是直接 Hook”水管” 也就是 hook binder 的通讯的方法，当接收到指定事件以后，直接修改具体的结果，以此对 Java 层进行全量 Hook。binder 的通讯方法被 Hook 以后，调用者和代理人只能拿到被修改以后的结果，以此实现 Java 层的全量 Hook，</p>
+<h2 id="设备指纹"><a href="#设备指纹" class="headerlink" title="设备指纹"></a>设备指纹</h2><h3 id="设备指纹面临的主要挑战"><a href="#设备指纹面临的主要挑战" class="headerlink" title="设备指纹面临的主要挑战"></a>设备指纹面临的主要挑战</h3><ul>
+<li>第一，设备重置之后，保持设备指纹不变。</li>
+<li>第二，设备更新之后（包括硬件），保持设备指纹不变。</li>
+<li>第三，保证设备指纹的唯一性，避免两个不同的设备产生相同的设备指纹</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303211112304.svg" alt="main"></p>
+<p>设备指纹主要分为三部分，Java 层设备指纹，Native 设备指纹，popen 执行一些命令获取设备信息，包括一些核心的设备指纹。</p>
+<p>这篇文章也主要围绕这三部分进行展开讨论。比如一些内核文件等信息，我也会放在 Native 层进行讨论。</p>
+<p>所有的每个设备指纹我都分为两部分</p>
+<ul>
+<li><p><strong>Get（如何获取，站在开发者角度）</strong></p>
+</li>
+<li><p><strong>Mock (如何进行修改测试，站在攻击者角度)</strong></p>
+</li>
+</ul>
+<h3 id="Java-层设备指纹"><a href="#Java-层设备指纹" class="headerlink" title="Java 层设备指纹"></a>Java 层设备指纹</h3><ol>
+<li><p>Setting 相关（重要）：</p>
+<p>Get：</p>
+<p>在 setting 里面大家经常遇到的可能就是 android id 的获取</p>
+<p>API 如下:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Settings.Secure.getString(context.getContentResolver(),Settings.Secure.ANDROID_ID)</span><br></pre></td></tr></table></figure>
+
+<p>Mock:</p>
+<ul>
+<li><p>方法 Hook</p>
+<p>底层调用的是 getStringForUser(resolver, name, resolver.getUserId()) 三个参数，如果 Hook 的话可以对这个方法进行入手。</p>
+</li>
+<li><p>内存反射</p>
+<p>很多开发者会采用内存反射的方式去获取变量，所以仅仅是通过 hook 方法的方式不够</p>
+<p>Android 高版本绕过了反射限制以后，或者判断当前手机没有 API 反射限制以后直接通过反射变量的方式去获取。</p>
+</li>
+</ul>
+</li>
+<li><p>蓝牙网卡 MAC（普通）</p>
+<p>蓝牙的网卡不是普通的网卡，后面会介绍 netlinker 获取真实的网卡。</p>
+<p>Get：</p>
+<p>主要方法就是通过 BluetoothAdapter-&gt;getAddress</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> String <span class="title function_">getAddress</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">try</span>&#123;</span><br><span class="line">        <span class="keyword">return</span> mManagerService.getAddress(mAttributionSource);</span><br><span class="line">    &#125; <span class="keyword">catch</span>(RemoteException e) &#123;</span><br><span class="line">        Log.e(TAG, ``<span class="string">&quot;&quot;</span>``, e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Mock:</p>
+<p>可以看到这个方法主要是通过 IPC 的代理类方式去获取的。<strong>所以 Hook 的话尽可能先 Hook 代理的 IPC 类。先尝试反射 android.bluetooth.IBluetooth$Stub$Proxy，然后 Hook IPC 里面的 getAddress，而不是直接 HookBluetoothAdapter-&gt;getAddress</strong></p>
+<p>因为很多大厂获取设备的指纹的时候会检测这个方法是否被 Hook，检测也很简单，只需要获取这个 art method 结构体以后判断这个方法入口是否被替换。</p>
+<p>比如 Sandhook 之类的常用的 Hook 框架，低版本采用的是 inlinehook 形式，在高版本里面采用的是入口替换，可以直接获取到方法的入口的函数地址，判断一下函数所在的 so 即可。</p>
+<p>所以尽可能 HookIPC 的方法。如果用 XPosed 去修改的话，还需要注意魔改，否则大厂会通过 XposedHelpers-&gt;sHookedMethodCallbacks 变量把你 Hook 的方法进行上报。</p>
+</li>
+<li><p>serial（普通）</p>
+<p>这个变量在高版本里面基本已经拿不到，及时拿到了也是一个 unknow，但是也需要兼容低版本的 Android 。</p>
+</li>
+<li><p>IMEI , IMSI ,ICCID,Line1Number (普通)</p>
+<p>这些基础的 Java 设备指纹字段没啥好说的，百度一下就能找到具体的获取方法，但是修改的时候需要注意，不要直接 Hook，尝试优先 Hook ipc 即可 。</p>
+</li>
+<li><p>Build 相关（次要）：</p>
+<p>Build 里面还是有很多有用的东西，比如手机是否开启 adb ,usb 接口的状态之类的。</p>
+<p>我们主要将 Build 里面分为两部分 ：配置相关和指纹相关。</p>
+<p>指纹相关又分为两部分，单一字段 &#x2F;复合字段。</p>
+<ul>
+<li><p>配置相关</p>
+</li>
+<li><p>指纹相关</p>
+<ul>
+<li>单一字段（只有一个设备信息）</li>
+<li>复合字段（多个单一字段复合而成）</li>
+</ul>
+</li>
+</ul>
+<p>这个单独通过 Java 层去修改是完全不够的，底层走的是 system_property_get 这个方法。还要防止 popen getprop 这种方法去扫描全部的 Build 相关参数。</p>
+</li>
+<li><p>系统默认账号（普通）：</p>
+<p>很多大厂会把这个字段也作为指纹的一部分，所以这个方法也需要处理。</p>
+<p>Get:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AccountManager-&gt;getAccounts</span><br></pre></td></tr></table></figure>
+
+<p>Mock:</p>
+<p>优先 Hook ipc</p>
+</li>
+<li><p>传感器相关（普通）：</p>
+<p>虚拟机和真实设备的最大区别就在于，虚拟机不存在真实的硬件设备支持。因此虚拟机在很多功能上会存在缺失。</p>
+<p>比如：各类传感器要么缺失，要么采集的数值都是 0 或者某个固定值；相机功能异常，无法拍照等。这些都是常见的虚拟机硬件缺失的特征。</p>
+<p>同时，可以使用硬件动态特征检测。它的基本原理是基于硬件的一些动态执行层产生的特征（如：加速度传感器的偏差）来识别虚拟设备。</p>
+<p>举个例子，因为加速度传感器校准结果的不精确性，其产生的最终结果会存在一定的偏差。通过多次快速地查询加速度传感器，我们就可以模拟出同一时刻，加速度传感器返回的结果值。又因为存在机械偏差，所以这些结果值是不同的，那通过这些值，我们就可以计算出该传感器的线性偏差。</p>
+<p>这个函数不需要太多处理，每个手机类型基本都差不多，每次打乱一下返回结果排序顺序即可。</p>
+<p>Get:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SensorManager-&gt;getFullSensorList</span><br></pre></td></tr></table></figure>
+
+<p>Mock:</p>
+<p>优先 Hook ipc</p>
+</li>
+<li><p>Java 层 DRM 相关（重要字段）：</p>
+<p>这个 DRM 是水印相关，主要为了处理不同手机加水印的唯一 ID 核心的是一个叫 deviceUniqueId 的东西，这玩意是一个随机的 32 位字节数组。很多大厂用这个作为核心的设备指纹，不仅在 Java 层进行获取，还有在 Native 层进行获取，在后面 Native 设备指纹会再次介绍到。</p>
+<p>Get:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">MediaDrm-&gt;getPropertyByteArray``MediaDrm-&gt;getPropertyString</span><br></pre></td></tr></table></figure>
+
+<p>Hook 的话很简单，这个方法没有 IPC 底层，有自己的实现，直接 Hook get 的方法即可 。java 层 Hook 是远远不够的，还需要处理 native 层。每次随机 32 位字节数组即可。</p>
+</li>
+<li><p>Java 层网卡信息（普通）：</p>
+<p>大厂应该不会信任 Java 层的 mac，底层都是通过 netlinker 直接获取网卡，或者直接 popen 执行 ip a 进行网卡信息的全量获取。直接在底层处理 netlinker，所以 Java 层不进行处理。任何获取网卡的方法，底层最终走的都是 netlinker 去获取的网卡</p>
+<blockquote>
+<p>直接通过 netlinker 获取网卡，这种方式在安卓 10 上面貌似已经失效了，但是手机 Root 以后是没有限制的（亲测 android 13 开发板获取成功），这种方式还可以用来检测当前手机是否 Root。</p>
+</blockquote>
+<p>但是当执行 ip a 这种命令的时候，或者调用 Java 层原始 API 的时候，底层还是走的 netlinker，直接在底层通过 ptrace 在函数调用执行完毕以后，对寄存器进行 Mock 和 Set 即可</p>
+</li>
+<li><p>文件创建时间（次要）：</p>
+</li>
+</ol>
+<p>很多大厂会收集&#x2F;sdcard&#x2F; 或者相册目录的一些创建时间，作为设备指纹，但是很多文件都是默认的 1970 时间戳，有的少数文件夹创建时间也是很重要的设备标识 。Java 里面 File 对象有文件的创建时间。</p>
+<h3 id="Native-层设备指纹"><a href="#Native-层设备指纹" class="headerlink" title="Native 层设备指纹"></a>Native 层设备指纹</h3><p>聊了挺多 Java 相关的设备指纹，其实 Java 层采集的指纹，并不是关键因素，核心的指纹基本都在 native 层进行处理的。Native 部分会详细介绍包括内核文件，还有一些获取指纹的骚操作 。</p>
+<ol>
+<li><p>Build(system_property_get &amp; system_property_read)(重要)</p>
+<p>之前在 Java 层介绍了，Java 获取最终总的是 native_get，而 native_get 底层走的就是这个 system_property_get 。</p>
+<p>为什么不直接在__system_property_find 函数处理？</p>
+<p>因为 get 和 read 底层走的都是 find 函数，为什么不直接在 find 函数处理呢，find 函数返回的是 prop_info*</p>
+<p>这个指针指向的是系统内存的变量，如果直接对内存变量强制写入可能会导致系统的不稳定，导致出现问题。之前踩过这个坑。所以就只处理了 get 和 find 这两个函数 。</p>
+</li>
+<li><p>Native 获取 DRM ID（重要）</p>
+<p>这个指纹也是很多大厂用作唯一 ID 的核心指纹。处理的话也需要注意，很核心的一个设备指纹 ID。</p>
+</li>
+<li><p>Netlinker 获取网卡信息</p>
+<p>因为之前说过，Linux 底层不管什么样的获取网卡，最终底层直接会走 Netlinker 去获取网卡。</p>
+<p>在 android 10 以下可以绕过系统权限从而获取网卡信息，高版本已经失效了 。</p>
+<p>底层都是 svc 直接调用 recvfrom 或者 recvmsg 去接受 socket 的消息 。所以不处理 svc 的话，无法做到全量修改的。我用的是 ptrace 在 recvfrom 执行完毕以后，读取参数寄存器，将数据修改以后在重新覆盖寄存器即可</p>
+</li>
+<li><p>内核文件相关（重要）：</p>
+<p>内核文件指的是系统的相关文件，很多大厂会直接通过 popen cat 或者直接 fopen 只读的方式去读取文件内容。核心的也就那几个。</p>
+<p>一般读取的时候都是直接 svc openat 底层。</p>
+<p>需要用到 svc 的 IO 重定向，如果这块不处理的话，基本没办法进行 mock 和修改。</p>
+</li>
+</ol>
+<h2 id="APK-签名："><a href="#APK-签名：" class="headerlink" title="APK 签名："></a>APK 签名：</h2><p>目前主要的获取签名就两种办法，比较常用，一般大厂和加固都在使用。这里顺手写一下原理 。</p>
+<h3 id="Java-层直接-通过-binder-和-AMS-通讯获真实签名信息。"><a href="#Java-层直接-通过-binder-和-AMS-通讯获真实签名信息。" class="headerlink" title="Java 层直接 通过 binder 和 AMS 通讯获真实签名信息。"></a>Java 层直接 通过 binder 和 AMS 通讯获真实签名信息。</h3><p>这种方法的好处我就不多说了，直接和 AMS 通讯，获取最真实的签名信息。这么一来你不管你 Hook pms 里面的哪些方法也没啥用。</p>
+<p>hook 获取签名的方法，用这种方式都可以直接绕过。那有没有什么办法可以绕过这种检测呢？</p>
+<h4 id="绕过原理："><a href="#绕过原理：" class="headerlink" title="绕过原理："></a>绕过原理：</h4><p>因为和 AMS 通讯需要用到 Binder，Binder 可以理解成“水管” ，他虽然和 AMS 直接进行通讯，但是还是要经过我们的水管，我们直接对这个水管处理即可 。在通讯时候对水管进行拦截。在 BinderProxy -&gt; transact 的方法里面进行拦截和替换签名信息即可 。</p>
+<h3 id="Native-层-svc-读取-x2F-data-x2F-app-x2F-包名-x2F-base-apk-解析-zip-解析里面的签名文件信息。"><a href="#Native-层-svc-读取-x2F-data-x2F-app-x2F-包名-x2F-base-apk-解析-zip-解析里面的签名文件信息。" class="headerlink" title="Native 层 svc 读取&#x2F;data&#x2F;app&#x2F;包名&#x2F;base.apk 解析 zip 解析里面的签名文件信息。"></a>Native 层 svc 读取&#x2F;data&#x2F;app&#x2F;包名&#x2F;base.apk 解析 zip 解析里面的签名文件信息。</h3><p>Java 层是通过 AMS 通讯获取签名信息，Native 层我们直接用 svc openat 读取 apk 文件 ， 进行手动解析 apk 的签名 。不信任系统 Api 的解析结果。这个也是常用的检测签名办法。这样拿到的结果就是可信的结果。</p>
+<h4 id="绕过原理：-1"><a href="#绕过原理：-1" class="headerlink" title="绕过原理："></a>绕过原理：</h4><p>svc openat 的 IO 重定向，当他读取原始&#x2F;data&#x2F;app&#x2F;包名&#x2F;base.apk 的时候我们将它修改成原始 apk 的路径。</p>
+<p>这么一来他读取到的是原始 apk 路径，而不是被修改的路径，得到的签名也就是原始的签名。底层在处理一下 svc readlink readlintat 防止检测路径被替换。</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/03/03/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E8%AE%BE%E5%A4%87%E6%8C%87%E7%BA%B9%E8%8E%B7%E5%8F%96%E4%B8%8E%E7%BB%95%E8%BF%87/" title="大厂设备指纹获取和对抗" target="_blank" rel="external">https://beichen.link/2023/03/03/Study/逆向知识/设备指纹获取与绕过/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/03/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/frida%E5%8E%9F%E7%90%86%E5%AD%A6%E4%B9%A0/" title="Frida 原理初识"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/03/02/Study/%E7%AE%97%E6%B3%95/%E5%BF%AB%E6%85%A2%E6%8C%87%E9%92%88/" title="指针"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

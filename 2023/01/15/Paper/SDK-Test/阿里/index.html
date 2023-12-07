@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>人脸实名认证-阿里SDK系APP | 北辰的小破站</title>
+  <meta name="description" content="com.alibaba.security.biometrics.face.auth.FaceLivenessActivity    21个    土豆视频.apk    相当于优酷，抓不到包    氧秀直播.apk   饿了么.apk   饿了么商家版.apk   喵街.apk     和淘宝账号联动   我家瑜伽.apk   阿里云盾实人认证，oss，和momo一样(activity对不上)，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="人脸实名认证-阿里SDK系APP">
+<meta property="og:url" content="https://beichen.link/2023/01/15/Paper/SDK-Test/%E9%98%BF%E9%87%8C/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="com.alibaba.security.biometrics.face.auth.FaceLivenessActivity    21个    土豆视频.apk    相当于优酷，抓不到包    氧秀直播.apk   饿了么.apk   饿了么商家版.apk   喵街.apk     和淘宝账号联动   我家瑜伽.apk   阿里云盾实人认证，oss，和momo一样(activity对不上)，">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-01-15T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.747Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Face Security">
+<meta name="twitter:card" content="summary">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/01/15/Paper/SDK-Test/%E9%98%BF%E9%87%8C/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Paper/SDK-Test/阿里" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      人脸实名认证-阿里SDK系APP
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/01/15/Paper/SDK-Test/%E9%98%BF%E9%87%8C/" class="article-date">
+	  <time datetime="2023-01-15T00:00:00.000Z" itemprop="datePublished">2023-01-15</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Paper/">Paper</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/Face-Security/" rel="tag">Face Security</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/01/15/Paper/SDK-Test/%E9%98%BF%E9%87%8C/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 860(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 3(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <ol>
+<li><p>com.alibaba.security.biometrics.face.auth.FaceLivenessActivity    21个</p>
+<table>
+<thead>
+<tr>
+<th>土豆视频.apk    相当于优酷，抓不到包</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>氧秀直播.apk</td>
+</tr>
+<tr>
+<td>饿了么.apk</td>
+</tr>
+<tr>
+<td>饿了么商家版.apk</td>
+</tr>
+<tr>
+<td>喵街.apk     和淘宝账号联动</td>
+</tr>
+<tr>
+<td>我家瑜伽.apk   阿里云盾实人认证，oss，和momo一样(activity对不上)，但此应用需要身份证照片</td>
+</tr>
+<tr>
+<td>饿了么.apk</td>
+</tr>
+<tr>
+<td>喜马拉雅.apk    梆梆壳，一样阿里云盾，但是次数有限制2次</td>
+</tr>
+<tr>
+<td>网易云音乐.apk</td>
+</tr>
+<tr>
+<td>阿里卖家.apk</td>
+</tr>
+<tr>
+<td>盯盯.apk</td>
+</tr>
+<tr>
+<td>爱兑分.apk  360壳，阿里云盾实人认证，oss ，不需要身份证，注销后不可再登录</td>
+</tr>
+<tr>
+<td>趣充.apk</td>
+</tr>
+<tr>
+<td>赫兹.apk   阿里云盾实人认证，oss，和momo一样</td>
+</tr>
+<tr>
+<td>爱心益动.apk</td>
+</tr>
+<tr>
+<td>阿里小号.apk</td>
+</tr>
+<tr>
+<td>盒马.apk   和淘宝账号联动</td>
+</tr>
+<tr>
+<td>淘小铺.apk    打不开</td>
+</tr>
+<tr>
+<td>一刻钟配送.apk    阿里云盾实人认证，oss，和momo一样</td>
+</tr>
+<tr>
+<td>奢社.apk    应用进不去</td>
+</tr>
+<tr>
+<td>CGD.apk   应用跑路</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>com.aliyun.identity.face.ui.FaceActivity   7个</p>
+<table>
+<thead>
+<tr>
+<th>美拍.apk</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>时味短视频.apk</td>
+</tr>
+<tr>
+<td>嗨客短视频.apk</td>
+</tr>
+<tr>
+<td>捞月狗.apk</td>
+</tr>
+<tr>
+<td>美图秀秀.apk</td>
+</tr>
+<tr>
+<td>美颜相机.apk</td>
+</tr>
+<tr>
+<td>铁路12306.apk</td>
+</tr>
+<tr>
+<td>得到.apk</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>com.aliyun.aliyunface.ui.FaceLoadingActivity   27个</p>
+<table>
+<thead>
+<tr>
+<th>龙珠直播.apk     要手持身份证，寄</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>芝嫲视频.apk</td>
+</tr>
+<tr>
+<td>亿园天下.apk   打不开</td>
+</tr>
+<tr>
+<td>炫见.apk</td>
+</tr>
+<tr>
+<td>无忧行.apk</td>
+</tr>
+<tr>
+<td>一亩田.apk</td>
+</tr>
+<tr>
+<td>云听.apk</td>
+</tr>
+<tr>
+<td>猎聘.apk</td>
+</tr>
+<tr>
+<td>开课吧.apk</td>
+</tr>
+<tr>
+<td>乐享农业.apk</td>
+</tr>
+<tr>
+<td>亮点云商.apk</td>
+</tr>
+<tr>
+<td>微博.apk</td>
+</tr>
+<tr>
+<td>Soul.apk    oss  一张图片+一段视频</td>
+</tr>
+<tr>
+<td>偶派.apk</td>
+</tr>
+<tr>
+<td>摩托范.apk</td>
+</tr>
+<tr>
+<td>秒拍.apk   oss 一张图片</td>
+</tr>
+<tr>
+<td>黄河银行.apk</td>
+</tr>
+<tr>
+<td>台州银行.apk</td>
+</tr>
+<tr>
+<td>比心陪练.apk   腾讯系</td>
+</tr>
+<tr>
+<td>乐享农业.apk</td>
+</tr>
+<tr>
+<td>星聚汇.apk</td>
+</tr>
+<tr>
+<td>董车长.apk</td>
+</tr>
+<tr>
+<td>星辰大海.apk</td>
+</tr>
+<tr>
+<td>掌趣生活.apk        广告太多进不去</td>
+</tr>
+<tr>
+<td>佰惠橙选.apk</td>
+</tr>
+<tr>
+<td>金派优选.apk</td>
+</tr>
+<tr>
+<td>小熊易购.apk    应用跑路</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>com.aliyun.aliyunface.ui.ToygerActivity  6个</p>
+<table>
+<thead>
+<tr>
+<th>快看吧.apk   无法注册</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>天津银行.apk</td>
+</tr>
+<tr>
+<td>客汇宝.apk    oss，只有一张图片</td>
+</tr>
+<tr>
+<td>七七商城.apk</td>
+</tr>
+<tr>
+<td>全天候网络竞技.apk</td>
+</tr>
+<tr>
+<td>谷多多.apk</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>com.xhl.alipayfacecertifycomponent.AliFaceVertifyActivity  35个</p>
+<table>
+<thead>
+<tr>
+<th>新重庆.apk</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>看万州.apk</td>
+</tr>
+<tr>
+<td>最江津.apk</td>
+</tr>
+<tr>
+<td>掌上大足.apk</td>
+</tr>
+<tr>
+<td>爱涪陵.apk</td>
+</tr>
+<tr>
+<td>人人长寿.apk</td>
+</tr>
+<tr>
+<td>巫溪.apk</td>
+</tr>
+<tr>
+<td>翠翠秀山.apk</td>
+</tr>
+<tr>
+<td>铜梁.apk</td>
+</tr>
+<tr>
+<td>家在梁平.apk</td>
+</tr>
+<tr>
+<td>巫山.apk</td>
+</tr>
+<tr>
+<td>帅开州.apk</td>
+</tr>
+<tr>
+<td>智慧云阳.apk</td>
+</tr>
+<tr>
+<td>重庆荣昌.apk</td>
+</tr>
+<tr>
+<td>见十.apk</td>
+</tr>
+<tr>
+<td>掌新南岸.apk</td>
+</tr>
+<tr>
+<td>忠义之州.apk</td>
+</tr>
+<tr>
+<td>重庆江北.apk</td>
+</tr>
+<tr>
+<td>幸福万盛.apk</td>
+</tr>
+<tr>
+<td>酉州城事.apk</td>
+</tr>
+<tr>
+<td>今日合川.apk</td>
+</tr>
+<tr>
+<td>重庆垫江.apk</td>
+</tr>
+<tr>
+<td>渝北掌媒.apk</td>
+</tr>
+<tr>
+<td>武隆印象.apk</td>
+</tr>
+<tr>
+<td>重庆渝中.apk</td>
+</tr>
+<tr>
+<td>今日南川.apk</td>
+</tr>
+<tr>
+<td>五彩石柱.apk</td>
+</tr>
+<tr>
+<td>苗乡彭水.apk</td>
+</tr>
+<tr>
+<td>缙享北碚.apk</td>
+</tr>
+<tr>
+<td>永川头条.apk</td>
+</tr>
+<tr>
+<td>大渡口之声.apk</td>
+</tr>
+<tr>
+<td>爱璧山.apk</td>
+</tr>
+<tr>
+<td>沙磁荟.apk</td>
+</tr>
+<tr>
+<td>掌上城口.apk</td>
+</tr>
+<tr>
+<td>奉节头条.apk    渝快办接口，先身份证后人脸，身份证oss 形式，oss key 抓包传输，但人脸为blob形式</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>com.alipay.face.ui.FaceLoadingActivity  20个</p>
+<table>
+<thead>
+<tr>
+<th>蜂鸟众包.apk</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>警察叔叔.apk  类似郑好办加密 ，有blob</td>
+</tr>
+<tr>
+<td>淮安公积金.apk</td>
+</tr>
+<tr>
+<td>苏州公积金.apk</td>
+</tr>
+<tr>
+<td>贵港公积金.apk</td>
+</tr>
+<tr>
+<td>园区社保中心.apk   需要社保信息，寄</td>
+</tr>
+<tr>
+<td>蜻蜓主播.apk   类似郑好办，但图片base64不加密</td>
+</tr>
+<tr>
+<td>学习强国.apk</td>
+</tr>
+<tr>
+<td>爱山东济时通.apk  打不开</td>
+</tr>
+<tr>
+<td>好签.apk   认证要钱</td>
+</tr>
+<tr>
+<td>延强润杨司机.apk   没有人脸功能</td>
+</tr>
+<tr>
+<td>花椒直播.apk    类似郑好办加密，但不blob</td>
+</tr>
+<tr>
+<td>PicoPico.apk</td>
+</tr>
+<tr>
+<td>带带陪玩.apk   打不开，闪退</td>
+</tr>
+<tr>
+<td>高德地图.apk</td>
+</tr>
+<tr>
+<td>好运全程司机.apk   无法注册</td>
+</tr>
+<tr>
+<td>花椒直播.apk</td>
+</tr>
+<tr>
+<td>大象新闻.apk   找不到人脸功能</td>
+</tr>
+<tr>
+<td>奇侠镇.apk  跑路</td>
+</tr>
+<tr>
+<td>億家人.apk</td>
+</tr>
+</tbody></table>
+</li>
+</ol>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/01/15/Paper/SDK-Test/%E9%98%BF%E9%87%8C/" title="人脸实名认证-阿里SDK系APP" target="_blank" rel="external">https://beichen.link/2023/01/15/Paper/SDK-Test/阿里/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/01/15/Paper/SDK-Test/%E8%85%BE%E8%AE%AF/" title="人脸实名认证-百度SDK系APP"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2022/08/26/Paper/%E4%BA%BA%E8%84%B8%E8%AF%86%E5%88%AB-%E8%AE%BA%E6%96%87%E8%B0%83%E7%A0%94/" title="人脸识别-论文前期预调研"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

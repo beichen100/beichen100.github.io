@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>ptrace 反调试 | 北辰的小破站</title>
+  <meta name="description" content="ptrace 系统调用提供了一种方法，这个方法可以让一个进程监视、控制另一个进程的执行，并且可以查看和更改被追踪进程的内存和寄存器。通常用来下断点和调试。 其基本原理是: 当使用了 ptrace 跟踪后，所有发送给被跟踪的子进程的信号(除了 SIGKILL)，都会被转发给父进程，而子进程则会被阻塞，这时子进程的状态就会被系统标注为 TASK_TRACED。而父进程收到信号后，就可以对停止下来的子进">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ptrace 反调试">
+<meta property="og:url" content="https://beichen.link/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/ptrace%E5%8F%8D%E8%B0%83%E8%AF%95%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="ptrace 系统调用提供了一种方法，这个方法可以让一个进程监视、控制另一个进程的执行，并且可以查看和更改被追踪进程的内存和寄存器。通常用来下断点和调试。 其基本原理是: 当使用了 ptrace 跟踪后，所有发送给被跟踪的子进程的信号(除了 SIGKILL)，都会被转发给父进程，而子进程则会被阻塞，这时子进程的状态就会被系统标注为 TASK_TRACED。而父进程收到信号后，就可以对停止下来的子进">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230721141114.png">
+<meta property="article:published_time" content="2023-08-10T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.751Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="逆向知识">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230721141114.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/ptrace%E5%8F%8D%E8%B0%83%E8%AF%95%E5%88%86%E6%9E%90/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/逆向知识/ptrace反调试分析" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      ptrace 反调试
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/ptrace%E5%8F%8D%E8%B0%83%E8%AF%95%E5%88%86%E6%9E%90/" class="article-date">
+	  <time datetime="2023-08-10T00:00:00.000Z" itemprop="datePublished">2023-08-10</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/ptrace%E5%8F%8D%E8%B0%83%E8%AF%95%E5%88%86%E6%9E%90/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 2k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 8(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>ptrace 系统调用提供了一种方法，这个方法可以让一个进程监视、控制另一个进程的执行，并且可以查看和更改被追踪进程的内存和寄存器。通常用来下断点和调试。</p>
+<p>其基本原理是: 当使用了 ptrace 跟踪后，所有发送给被跟踪的子进程的信号(除了 SIGKILL)，都会被转发给父进程，而子进程则会被阻塞，这时子进程的状态就会被系统标注为 TASK_TRACED。而父进程收到信号后，就可以对停止下来的子进程进行检查和修改，然后让子进程继续运行。</p>
+<h2 id="反调试"><a href="#反调试" class="headerlink" title="反调试"></a>反调试</h2><p>首先，从 ptrace 函数出发，其主要用法如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/ptrace.h&gt;</span></span></span><br><span class="line"><span class="type">long</span> <span class="title function_">ptrace</span><span class="params">(<span class="keyword">enum</span> __ptrace_request request, <span class="type">pid_t</span> pid, <span class="type">void</span> *addr, <span class="type">void</span> *data)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>ptrace 有四个参数:</p>
+<ul>
+<li>enum __ptrace_request request：指示了 ptrace 要执行的命令。</li>
+<li>pid_t pid: 指示 ptrace 要跟踪的进程。</li>
+<li>void *addr: 指示要监控的内存地址。</li>
+<li>void *data: 存放读取出的或者要写入的数据。</li>
+</ul>
+<p>对于 enum __ptrace_request request 来说，有三种命令:</p>
+<ul>
+<li><p>PTRACE_TRACEME ：表示本进程将被其父进程跟踪，此时剩下的 pid、addr、data 参数都没有实际意义可以全部为 0, 这个选项只能用在被调试的进程中，也是被调试的进程唯一能用的 request 选项，其他的都只能用父进程调试器使用</p>
+</li>
+<li><p>PTRACE_ATTACH：attach 到一个指定的进程，使其成为当前进程跟踪的子进程，而子进程的行为等同于它进行了一次 PTRACE_TRACEME 操作</p>
+</li>
+<li><p>PTRACE_CONT：继续运行之前停止的子进程，也可以向子进程发送指定的信号</p>
+</li>
+</ul>
+<h3 id="手段-1-进程自己-ptrace-自己"><a href="#手段-1-进程自己-ptrace-自己" class="headerlink" title="手段 1 进程自己 ptrace 自己"></a>手段 1 进程自己 ptrace 自己</h3><p>每个进程同时刻只能被 1 个调试进程 ptrace, 所以主动自己 ptrace 本进程可以使得其他调试器无法调试。实例：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">ptraceCheck</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 调试操作失败，返回-1；成功则返回0，成功时，tracerPid为父进程的Pid</span></span><br><span class="line">    <span class="type">int</span> ck=ptrace(PTRACE_TRACEME, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">if</span>(ck == <span class="number">-1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        LOGA(<span class="string">&quot;进程正在被调试\n&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;<span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        LOGB(<span class="string">&quot;ptrace的返回值为:%d\n&quot;</span>,ck);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">     &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对抗手段：hook ptrace 返回 0</p>
+<h3 id="手段-2-检测-TracerPid"><a href="#手段-2-检测-TracerPid" class="headerlink" title="手段 2 检测 TracerPid"></a>手段 2 检测 TracerPid</h3><p>读取进程的&#x2F;proc&#x2F;{pid}&#x2F;status 文件(进程私有的可以读取，当然不能读取其他进程的文件) ，status 文件的字段信息解释如下：</p>
+<ul>
+<li><p>Name：进程名 | State：表示进程的状态 | Tgid：线程组 ID，一般指进程名</p>
+</li>
+<li><p>Pid：线程 ID，他的值和 gettid 函数的返回值相等 | PPid：父进程的进程 id</p>
+</li>
+<li><p>TracerPid：实现调试功能的进程 ID，值为 0 表示当前进程未被 ptrace，如果不为 0，表示正在被调试, TracerPid 的值是调试程序的进程 id</p>
+</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230721141114.png" alt="20230721141114"></p>
+<p>反调试可以循环读取&#x2F;proc&#x2F;self&#x2F;status 中 tracerPid 的值, 或者获取 PPid，与当前应用进程号做对比，判断是否为应用主进程的子进程进行了 ptrace 操作</p>
+<p>对抗手段：一般检测 TracerPid 都会读取 &#x2F;proc&#x2F;进程号&#x2F;status 这个文件，所以可以直接搜索 &#x2F;status 这种字符串，这里也会用到 getpid, fgets 这种 API,所以也可以通过这两个 api 定位。</p>
+<p>其他手段：</p>
+<ol>
+<li><p>遍历&#x2F;proc&#x2F;self&#x2F;task&#x2F;xx&#x2F;stat 文件，读取当前线程状态是否为 tracing</p>
+</li>
+<li><p>检测&#x2F;proc&#x2F;self&#x2F;fd&#x2F;%s 特征字符串 injector。</p>
+<p>fd 是一个目录，里面包含着当前进程打开的每一个文件的描述符（file descriptor）差不多就是路径啦，这些文件描述符是指向实际文件的一个符号连接，即每个通过这个进程打开的文件都会显示在这里。所以我们可以通过 fd 目录的文件获取进程，从而打开每个文件的路径以及文件内容</p>
+</li>
+<li><p>检测&#x2F;proc&#x2F;self&#x2F;maps 特征字符串</p>
+<p>检测&#x2F;data&#x2F;local&#x2F;tmp 及对应文件的权限 ‘x’ ‘r’</p>
+</li>
+<li><p>检测 libart.so 的 inline hook 特征</p>
+<p>解析 libart.so 中的_ZN3art9ArtMethod12PrettyMethodEb，是否存在 inlinehook 特征</p>
+</li>
+</ol>
+<p>在上述检测逻辑后，部分使用的是直接的函数调用 exit(0)，另外一部分是使用 svc 调用 exit_group，所以仅 hook libc 的 exit 函数是无法做到绕过检测的。</p>
+<h3 id="手段-3-子线程附加父线程反调试"><a href="#手段-3-子线程附加父线程反调试" class="headerlink" title="手段 3 子线程附加父线程反调试"></a>手段 3 子线程附加父线程反调试</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">anti_ptrace</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">pid_t</span> child;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建子进程</span></span><br><span class="line">    <span class="comment">// fork 返回值表示当前进程的执行情况，&gt; 0 表示当前进程是父进程，并且返回新创建子进程的进程id</span></span><br><span class="line">    <span class="comment">// 返回值等于0， 表示当前进程是子进程；返回值 &lt; 0 表示创建子进程失败，返回值为错误码</span></span><br><span class="line">    child = fork();</span><br><span class="line">    <span class="keyword">if</span> (child)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// 等待子进程结束</span></span><br><span class="line">        wait(<span class="literal">NULL</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span>(child == <span class="number">0</span> )&#123;</span><br><span class="line">        <span class="comment">// 获取父进程的pid</span></span><br><span class="line">        <span class="type">pid_t</span> parent = getppid();</span><br><span class="line">        <span class="comment">// ptrace附加父进程</span></span><br><span class="line">        <span class="keyword">if</span> (ptrace(PTRACE_ATTACH, parent, <span class="number">0</span>, <span class="number">0</span>) &lt; <span class="number">0</span>)&#123;</span><br><span class="line">            <span class="comment">// 如果已有线程被调试，那么就进入死循环</span></span><br><span class="line">            <span class="keyword">while</span>(<span class="number">1</span>)&#123;</span><br><span class="line">            sleep(<span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">        <span class="comment">// 释放附加的进程</span></span><br><span class="line">        ptrace(PTRACE_DETACH, parent, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">        <span class="comment">// 结束当前进程</span></span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="手段-4-双进程守护"><a href="#手段-4-双进程守护" class="headerlink" title="手段 4 双进程守护"></a>手段 4 双进程守护</h3><p>基于手段 3，子进程附加父进程，但是这里有个问题：子进程是可以被调试的，也就是可以在子进程中绕过调试或者直接杀死子进程。</p>
+<p>所以升级一下，在子进程中使用 ptrace，将请求类型设为 PTRACE_TRACEME，表示让父进程跟踪自己，而进程在同一时间，只能被一个调试器调试或者跟踪，所以这里就是一个父进程，一个子进程，子进程通过读取父进程的&#x2F;proc&#x2F;{PID}&#x2F;status 文件保护父进程不被调试，同时让父进程跟踪自己，保护自己不被调试，如果 ptrace 失败，说明有调试器已经在调试自己，直接退出</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">readStatus</span><span class="params">()</span> &#123;</span><br><span class="line">    FILE *fd;</span><br><span class="line">    <span class="type">char</span> filename[<span class="number">128</span>];</span><br><span class="line">    <span class="type">char</span> line[<span class="number">128</span>];</span><br><span class="line">    <span class="type">pid_t</span> pid = syscall(__NR_getpid);</span><br><span class="line">    LOGI(<span class="string">&quot;PID : %d&quot;</span>, pid);</span><br><span class="line">    <span class="built_in">sprintf</span>(filename, <span class="string">&quot;/proc/%d/status&quot;</span>, pid);<span class="comment">//读取/proc/pid/status中的TracerPid</span></span><br><span class="line">    <span class="keyword">if</span> (fork() == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="type">int</span> pt = ptrace(PTRACE_TRACEME, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>); <span class="comment">//子进程反调试</span></span><br><span class="line">        <span class="keyword">if</span> (pt == <span class="number">-1</span>)</span><br><span class="line">            <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">        <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">            fd = fopen(filename, <span class="string">&quot;r&quot;</span>);</span><br><span class="line">            <span class="keyword">while</span> (fgets(line, <span class="number">128</span>, fd)) &#123;</span><br><span class="line">                <span class="keyword">if</span> (<span class="built_in">strncmp</span>(line, <span class="string">&quot;TracerPid&quot;</span>, <span class="number">9</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">                    <span class="type">int</span> status = atoi(&amp;line[<span class="number">10</span>]);</span><br><span class="line">                    LOGI(<span class="string">&quot;########## status = %d, %s&quot;</span>, status, line);</span><br><span class="line">                    fclose(fd);</span><br><span class="line">                    syscall(__NR_close, fd);</span><br><span class="line">                    <span class="keyword">if</span> (status != <span class="number">0</span>) &#123;</span><br><span class="line">                        LOGI(<span class="string">&quot;########## FBI WARNING ##########&quot;</span>);</span><br><span class="line">                        LOGI(<span class="string">&quot;######### FIND DEBUGGER #########&quot;</span>);</span><br><span class="line">                        kill(pid, SIGKILL);</span><br><span class="line">                        <span class="keyword">return</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            sleep(CHECK_TIME);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        LOGE(<span class="string">&quot;fork error&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>作为开发而言，大概率不会在主线程进行检测，否则有可能会使程序阻塞卡顿。所以，创建一个线程，进行检测会比较好，一般是使用 pthread_create 函数：创建一个线程，可以指定新线程的运行函数地址，以及传递参数。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">pthread_create</span><span class="params">(<span class="type">pthread_t</span>* <span class="keyword">restrict</span> tidp,<span class="type">const</span> <span class="type">pthread_attr_t</span>* restrict_attr,<span class="type">void</span>* (*start_rtn)(<span class="type">void</span>*),<span class="type">void</span> *<span class="keyword">restrict</span> arg)</span>;</span><br><span class="line"></span><br><span class="line">（<span class="number">1</span>）tidp：事先创建好的<span class="type">pthread_t</span>类型的参数。成功时tidp指向的内存单元被设置为新创建线程的线程ID。</span><br><span class="line"></span><br><span class="line">（<span class="number">2</span>）restrict_attr：用于定制各种不同的线程属性，通常直接设为<span class="literal">NULL</span>。</span><br><span class="line"></span><br><span class="line">（<span class="number">3</span>）start_rtn：新创建线程从此函数开始运行。无参数是arg设为<span class="literal">NULL</span>即可。</span><br><span class="line"></span><br><span class="line">（<span class="number">4</span>）arg：start_rtn函数的参数。无参数时设为<span class="literal">NULL</span>即可。有参数时输入参数的地址。当多于一个参数时应当使用结构体传入。（以下举例）</span><br><span class="line"></span><br><span class="line">（<span class="number">5</span>）返回值：成功返回<span class="number">0</span>，否则返回错误码</span><br></pre></td></tr></table></figure>
+
+<p>对抗方法： patch pthread_create 函数 或者 patch 所有调用 pthread_create 函数的 caller，当然也可以 nop 掉</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> pthread_create = <span class="title class_">Module</span>.<span class="title function_">findExportByName</span>(<span class="literal">null</span>, <span class="string">&quot;pthread_create&quot;</span>);</span><br><span class="line"><span class="keyword">let</span> org_pthread_create = <span class="keyword">new</span> <span class="title class_">NativeFunction</span>(pthread_create, <span class="string">&quot;int&quot;</span>, [</span><br><span class="line">  <span class="string">&quot;pointer&quot;</span>,</span><br><span class="line">  <span class="string">&quot;pointer&quot;</span>,</span><br><span class="line">  <span class="string">&quot;pointer&quot;</span>,</span><br><span class="line">  <span class="string">&quot;pointer&quot;</span>,</span><br><span class="line">]);</span><br><span class="line"><span class="keyword">let</span> my_pthread_create = <span class="keyword">new</span> <span class="title class_">NativeCallback</span>(</span><br><span class="line">  <span class="keyword">function</span> (<span class="params">a, b, c, d</span>) &#123;</span><br><span class="line">    <span class="keyword">let</span> m = <span class="title class_">Process</span>.<span class="title function_">getModuleByName</span>(<span class="string">&quot;libDexHelper.so&quot;</span>);</span><br><span class="line">    <span class="keyword">let</span> base = m.<span class="property">base</span>;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Process</span>.<span class="title function_">getModuleByAddress</span>(c).<span class="property">name</span>);</span><br><span class="line">    <span class="keyword">if</span> (<span class="title class_">Process</span>.<span class="title function_">getModuleByAddress</span>(c).<span class="property">name</span> == m.<span class="property">name</span>) &#123;</span><br><span class="line">      <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;pthread_create&quot;</span>);</span><br><span class="line">      <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="title function_">org_pthread_create</span>(a, b, c, d);</span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="string">&quot;int&quot;</span>,</span><br><span class="line">  [<span class="string">&quot;pointer&quot;</span>, <span class="string">&quot;pointer&quot;</span>, <span class="string">&quot;pointer&quot;</span>, <span class="string">&quot;pointer&quot;</span>]</span><br><span class="line">);</span><br><span class="line"><span class="title class_">Interceptor</span>.<span class="title function_">replace</span>(pthread_create, my_pthread_create);</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/ptrace%E5%8F%8D%E8%B0%83%E8%AF%95%E5%88%86%E6%9E%90/" title="ptrace 反调试" target="_blank" rel="external">https://beichen.link/2023/08/10/Study/逆向知识/ptrace反调试分析/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/bilibili%20%E5%8F%8D%E8%B0%83%E8%AF%95/" title="bilibili 反调试"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/so%E5%8A%A0%E8%BD%BD%E6%B5%81%E7%A8%8B/" title="so 加载流程"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

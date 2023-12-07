@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>ARM32 汇编学习 | 北辰的小破站</title>
+  <meta name="description" content="1.1 处理器架构Android 处理器架构有 7 种：  armeabi 第 5 代 ARM v5TE，使用软件浮点运算，兼容所有 ARM 设备，通用性强，速度慢（只支持 armeabi）  armeabi-v7a 第 7 代 ARM v7，使用硬件浮点运算，具有高级扩展功能（支持 armeabi 和 armeabi-v7a，大部分手机都是这个架构）  arm64-v8a 第 8 代，64 位，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ARM32 汇编学习">
+<meta property="og:url" content="https://beichen.link/2023/07/03/Study/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/%E6%B1%87%E7%BC%96%E5%AD%A6%E4%B9%A0/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="1.1 处理器架构Android 处理器架构有 7 种：  armeabi 第 5 代 ARM v5TE，使用软件浮点运算，兼容所有 ARM 设备，通用性强，速度慢（只支持 armeabi）  armeabi-v7a 第 7 代 ARM v7，使用硬件浮点运算，具有高级扩展功能（支持 armeabi 和 armeabi-v7a，大部分手机都是这个架构）  arm64-v8a 第 8 代，64 位，">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808140802.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808140957.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808183140.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230905152942.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231023103407.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230826214656.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230826222752.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808183559.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230826203245.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230826203449.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230826211255.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230826213800.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230826214051.png">
+<meta property="article:published_time" content="2023-07-03T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.747Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="语言学习">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808140802.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/07/03/Study/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/%E6%B1%87%E7%BC%96%E5%AD%A6%E4%B9%A0/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/语言学习/汇编学习" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      ARM32 汇编学习
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/07/03/Study/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/%E6%B1%87%E7%BC%96%E5%AD%A6%E4%B9%A0/" class="article-date">
+	  <time datetime="2023-07-03T00:00:00.000Z" itemprop="datePublished">2023-07-03</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/07/03/Study/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/%E6%B1%87%E7%BC%96%E5%AD%A6%E4%B9%A0/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 2.1k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 8(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="1-1-处理器架构"><a href="#1-1-处理器架构" class="headerlink" title="1.1 处理器架构"></a>1.1 处理器架构</h2><p>Android 处理器架构有 7 种：</p>
+<ul>
+<li><p>armeabi 第 5 代 ARM v5TE，使用软件浮点运算，兼容所有 ARM 设备，通用性强，速度慢（只支持 armeabi）</p>
+</li>
+<li><p>armeabi-v7a 第 7 代 ARM v7，使用硬件浮点运算，具有高级扩展功能（支持 armeabi 和 armeabi-v7a，大部分手机都是这个架构）</p>
+</li>
+<li><p>arm64-v8a 第 8 代，64 位，包含 AArch32、AArch64 两个执行状态对应 32、64bit（支持 armeabi-v7a、armeabi 和 arm64-v8a）</p>
+</li>
+<li><p>x86 intel 32 位，一般用于平板（支持 armeabi(性能有所损耗) 和 x86）</p>
+</li>
+<li><p>x86_64 intel 64 位，一般用于平板（支持 x86 和 x86_64）</p>
+</li>
+<li><p>mips 基本没见过</p>
+</li>
+<li><p>mips64 基本没见过（支持 mips 和 mips_64）</p>
+</li>
+</ul>
+<p>绝大多数手机都是 ARM 架构，分 32 位和 64 位，下面都以 32 位 ARM 处理器为基础。</p>
+<h2 id="1-2-ARM-处理器-指令集"><a href="#1-2-ARM-处理器-指令集" class="headerlink" title="1.2 ARM 处理器 指令集"></a>1.2 ARM 处理器 指令集</h2><p>ARM 处理器支持 ARM、Thumb、Thumb-2 三种指令集</p>
+<ul>
+<li><p>ARM 指令集：传统 ARM 处理器支持的指令集，长度为 32 位，运行速度也是最快</p>
+</li>
+<li><p>Thumb 指令集：以看作是 ARM 指令压缩形式的子集, 是针对代码密度的问题而提出的, 它具有 16 位的代码密度，不如 ARM 指令的效率高</p>
+</li>
+<li><p>Thumb2 指令集：在前面两者之间取了一个平衡， 兼有二者的优势，指令长度有 16 位、32 位两种，保证效率又节约空间</p>
+</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808140802.png" alt="20230808140802"></p>
+<h2 id="1-3-ARM-架构流水线"><a href="#1-3-ARM-架构流水线" class="headerlink" title="1.3 ARM 架构流水线"></a>1.3 ARM 架构流水线</h2><p>在 ARM7 中有 3 级流水线，“取指–&gt; 译码–&gt; 执行”</p>
+<p>在 ARM9 中有 5 级流水线，“取指–&gt;译码–&gt;执行–&gt;访存 (LS1)–&gt; 回写(LS2)”</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808140957.png" alt="20230808140957"></p>
+<p>不管三级还是五级流水线，第一级流水线执行的时候，第三级流水线在取指。</p>
+<p>而 PC 指向的是要取的指令的地址。在 ARM 状态下，一条指令为 32 位，所以 PC &#x3D; 当前正在运行地址 + 8</p>
+<h2 id="1-4-ARM-常用寄存器"><a href="#1-4-ARM-常用寄存器" class="headerlink" title="1.4 ARM 常用寄存器"></a>1.4 ARM 常用寄存器</h2><p>共有 37 个寄存器，31 个通用+6 个状态寄存器, 可访问的有： R0-R15 16 个 通用寄存器 + 一个状态 寄存器 共 17 个</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808183140.png" alt="20230808183140"></p>
+<p>调用约定：函数调用约定指定函数的前四个参数存储在寄存器 R0-R3 中，当参数个数多于 4 个时，将多余的参数通过数据栈进行传递，入栈顺序与参数顺序正好相反，子程序返回前无需恢复 R0~R3 的值。</p>
+<p>在子程序中，使用 R4 ～ R11 保存局部变量，若使用需要入栈保存，子程序返回前需要恢复这些寄存器；R12 是临时寄存器，使用不需要保存。 子程序返回 32 位的整数，使用 R0 返回；返回 64 位整数时，使用 R0 返回低位，R1 返回高位。</p>
+<p>ARM 架构使用满减堆栈，也就是说堆栈从高地址向低地址增长.这意味着当你向堆栈添加数据时，堆栈指针会向下移动，而当你从堆栈中取出数据时，堆栈指针会向上移动</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230905152942.png" alt="20230905152942"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231023103407.png" alt="20231023103407"></p>
+<h2 id="1-5-寻址方式"><a href="#1-5-寻址方式" class="headerlink" title="1.5 寻址方式"></a>1.5 寻址方式</h2><p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230826214656.png" alt="20230826214656"></p>
+<h2 id="1-6-相关汇编指令"><a href="#1-6-相关汇编指令" class="headerlink" title="1.6 相关汇编指令"></a>1.6 相关汇编指令</h2><h3 id="1-6-1-存储器访问指令"><a href="#1-6-1-存储器访问指令" class="headerlink" title="1.6.1 存储器访问指令"></a>1.6.1 存储器访问指令</h3><h4 id="1-6-1-1-STR-从左到右"><a href="#1-6-1-1-STR-从左到右" class="headerlink" title="1.6.1.1 STR (从左到右)"></a>1.6.1.1 STR (从左到右)</h4><p>寄存器 -&gt; 内存：</p>
+<p>STR R0，[R1] 即 R0 数据放入 R1 的地址内存中<br>STR R8,[R9,#4] 即 R8 数据放入 R9+4 的地址内存中</p>
+<h4 id="1-6-1-2-LDR-从右到左"><a href="#1-6-1-2-LDR-从右到左" class="headerlink" title="1.6.1.2 LDR (从右到左)"></a>1.6.1.2 LDR (从右到左)</h4><p>内存 -&gt; 寄存器：</p>
+<p>LDR R0，[R1] 即 获取 R1 地址内存数据装入 R0<br>LDR R3, [R0,#0x4C] 即将 R0+0x4 指向的内存单元内容读取到 R3 寄存器中</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230826222752.png" alt="20230826222752"></p>
+<p>stp 指令是 str 的变种指令，p 可以理解成 pair 的意思，可以同时操作两个寄存器。</p>
+<p>stp q6, q7, [sp, #-32]! 相当于</p>
+<p>stp q6，q7, [sp,#-32]<br>sub sp,sp,#32</p>
+<h4 id="1-6-1-3-LDM-和-STM"><a href="#1-6-1-3-LDM-和-STM" class="headerlink" title="1.6.1.3 LDM 和 STM"></a>1.6.1.3 LDM 和 STM</h4><p>批量加载&#x2F;存储指令用于在一组寄存器和一块连续的内存单元之间的数据传输。主要作用为现场保护、数据传送。其中，后缀！表示最后</p>
+<p>LDM：将存储器的数据加载到一个寄存器列表 (内存 -&gt; 寄存器)</p>
+<p>LDM R0!, {R1-R3} 即将 R0 指向的存储单元的数据依次加载到 R1,R2,R3 寄存器</p>
+<p>STM：将一个寄存器列表的数据存储到指定的存储器 (寄存器 -&gt; 内存)</p>
+<p>STM R0!, {R1-R3} 即将 R1-R3 的数据存储到 R0 指向的地址上</p>
+<h3 id="1-6-2-数据传送指令"><a href="#1-6-2-数据传送指令" class="headerlink" title="1.6.2 数据传送指令"></a>1.6.2 数据传送指令</h3><h4 id="1-6-2-1-MOV"><a href="#1-6-2-1-MOV" class="headerlink" title="1.6.2.1 MOV"></a>1.6.2.1 MOV</h4><p>MOV 为数据传送指令，用于传输数据</p>
+<p>MOV R0, R1 即将 R1 中的数值传送至 R0 寄存器</p>
+<h3 id="1-6-3-逻辑运算指令"><a href="#1-6-3-逻辑运算指令" class="headerlink" title="1.6.3 逻辑运算指令"></a>1.6.3 逻辑运算指令</h3><h4 id="1-6-3-1-ADD-和-SUB"><a href="#1-6-3-1-ADD-和-SUB" class="headerlink" title="1.6.3.1 ADD 和 SUB"></a>1.6.3.1 ADD 和 SUB</h4><p>ADD、SUB 等的逻辑运算指令用于寄存器中值的运算，举一反三即可</p>
+<p>ADD R1, R2, R3</p>
+<p>SUB R1, R2, R3</p>
+<p>将 R2 和 R3 的值相加存至 R1 中</p>
+<h4 id="1-6-3-2-AND-和-ORR"><a href="#1-6-3-2-AND-和-ORR" class="headerlink" title="1.6.3.2 AND 和 ORR"></a>1.6.3.2 AND 和 ORR</h4><p>ND R1, R2, R3</p>
+<p>ORR R1, R2, R3</p>
+<p>将 R2 和 R3 进行按位与&#x2F;或操作，结果保存至 R1 中</p>
+<h3 id="1-6-4-比较指令"><a href="#1-6-4-比较指令" class="headerlink" title="1.6.4 比较指令"></a>1.6.4 比较指令</h3><h4 id="1-6-4-1-CMP"><a href="#1-6-4-1-CMP" class="headerlink" title="1.6.4.1 CMP"></a>1.6.4.1 CMP</h4><p>CMP 为比较指令，通过减法操作，再根据结果修改标志位，一般修改 CF、OF、SF、ZF，尤其是 Z 标志位。</p>
+<p>CMP R1, R2 即 R1 的值减去 R2 的值，得到相应标志位的改变</p>
+<p>CMP R7, #6<br>BNE loc_1A28</p>
+<p>即将 R7 中的值和 6 进行比较，当 R7 不等于 6 时进行跳转，即 ZF 值为 0 时跳转。</p>
+<h3 id="1-6-5-移位指令"><a href="#1-6-5-移位指令" class="headerlink" title="1.6.5 移位指令"></a>1.6.5 移位指令</h3><h4 id="1-6-5-1-逻辑移位-LSL、LSR"><a href="#1-6-5-1-逻辑移位-LSL、LSR" class="headerlink" title="1.6.5.1 逻辑移位 LSL、LSR"></a>1.6.5.1 逻辑移位 LSL、LSR</h4><p>LSL 是逻辑左移，低位补 0</p>
+<p>LSR 是逻辑右移，高位补 0</p>
+<h4 id="1-6-5-2-算术移位-ASL、ASR"><a href="#1-6-5-2-算术移位-ASL、ASR" class="headerlink" title="1.6.5.2 算术移位 ASL、ASR"></a>1.6.5.2 算术移位 ASL、ASR</h4><p>ASL 算术左移和 LSL 类似，主要是 ASR 有点细微区别</p>
+<p>ASR 算术右移中保持符号位不变，正数的话最高位补 0，负数最高位补 1</p>
+<h3 id="1-6-6-跳转指令"><a href="#1-6-6-跳转指令" class="headerlink" title="1.6.6 跳转指令"></a>1.6.6 跳转指令</h3><h4 id="1-6-6-1-B"><a href="#1-6-6-1-B" class="headerlink" title="1.6.6.1 B"></a>1.6.6.1 B</h4><p>B（Branch）为直接跳转指令</p>
+<h4 id="1-6-6-2-BL"><a href="#1-6-6-2-BL" class="headerlink" title="1.6.6.2 BL"></a>1.6.6.2 BL</h4><p>带链接的跳转，即跳转前会将下一条指令的地址拷贝到 LR 寄存器中，保存好后才会执行跳转，便于找到返回地址。</p>
+<h4 id="1-6-6-3-BX"><a href="#1-6-6-3-BX" class="headerlink" title="1.6.6.3 BX"></a>1.6.6.3 BX</h4><p>带状态切换的跳转，若跳转地址的位[0]为 1，将标志 T 置为 1，目标代码解释为 Thumb 代码；若跳转地址的位[0]为 0，将标志位置为 0，目标代码解释为 ARM 代码。</p>
+<h4 id="1-6-6-4-BLX"><a href="#1-6-6-4-BLX" class="headerlink" title="1.6.6.4 BLX"></a>1.6.6.4 BLX</h4><p>带链接和状态切换的跳转。切换 ARM 和 thumb 指令</p>
+<h2 id="1-7-汇编机器码格式"><a href="#1-7-汇编机器码格式" class="headerlink" title="1.7 汇编机器码格式"></a>1.7 汇编机器码格式</h2><p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808183559.png" alt="20230808183559"></p>
+<h3 id="1-7-1-31–28-条件位"><a href="#1-7-1-31–28-条件位" class="headerlink" title="1.7.1 31–28 条件位"></a>1.7.1 31–28 条件位</h3><p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230826203245.png" alt="20230826203245"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230826203449.png" alt="20230826203449"></p>
+<h3 id="1-7-2-27–26"><a href="#1-7-2-27–26" class="headerlink" title="1.7.2 27–26"></a>1.7.2 27–26</h3><p>为保留位，恒为 00</p>
+<h3 id="1-7-3-25-位"><a href="#1-7-3-25-位" class="headerlink" title="1.7.3 25 位"></a>1.7.3 25 位</h3><p>标志 0-11 位存放的是立即数还是寄存器。若为寄存器则置 0，若为立即数则置 1。</p>
+<h3 id="1-7-4-24–21"><a href="#1-7-4-24–21" class="headerlink" title="1.7.4 24–21"></a>1.7.4 24–21</h3><p>为 opcode，标明指令的类型</p>
+<h3 id="1-7-5-19–16-位"><a href="#1-7-5-19–16-位" class="headerlink" title="1.7.5 19–16 位"></a>1.7.5 19–16 位</h3><p>第一个源操作数寄存器</p>
+<h3 id="1-7-6-15–12"><a href="#1-7-6-15–12" class="headerlink" title="1.7.6 15–12"></a>1.7.6 15–12</h3><p>位目的寄存器</p>
+<h3 id="1-7-7-11-0"><a href="#1-7-7-11-0" class="headerlink" title="1.7.7 11-0"></a>1.7.7 11-0</h3><p>操作数</p>
+<p>参考：<a target="_blank" rel="noopener" href="https://blog.csdn.net/spinchao/article/details/108300557#31__433">https://blog.csdn.net/spinchao/article/details/108300557#31__433</a></p>
+<h2 id="1-8-入栈出栈"><a href="#1-8-入栈出栈" class="headerlink" title="1.8 入栈出栈"></a>1.8 入栈出栈</h2><p>参见：<a target="_blank" rel="noopener" href="https://blog.51cto.com/u_87851/6359554">https://blog.51cto.com/u_87851/6359554</a></p>
+<h2 id="1-9-大小端模式"><a href="#1-9-大小端模式" class="headerlink" title="1.9 大小端模式"></a>1.9 大小端模式</h2><p>大端模式：是指数据的高字节保存在内存的低地址中，而数据的低字节保存在内存的高地址中。</p>
+<p>小端模式：是指数据的高字节保存在内存的高地址中，而数据的低字节保存在内存的低地址中。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230826211255.png" alt="20230826211255"></p>
+<p>小端模式优点：</p>
+<ul>
+<li>内存的低地址处存放低字节，所以在强制转换数据时不需要调整字节的内容（注解：比如把 int 的 4 字节强制转换成 short 的 2 字节时，就直接把 int 数据存储的前两个字节给 short 就行，因为其前两个字节刚好就是最低的两个字节，符合转换逻辑）；</li>
+<li>CPU 做数值运算时从内存中依顺序依次从低位到高位取数据进行运算，直到最后刷新最高位的符号位，这样的运算方式会更高效</li>
+</ul>
+<p>大端模式优点：符号位在所表示的数据的内存的第一个字节中，便于快速判断数据的正负和大小</p>
+<p>其各自的优点就是对方的缺点，正因为两者彼此不分伯仲，再加上一些硬件厂商的坚持，因此在多字节存储顺序上始终没有一个统一的标准</p>
+<p>大小端转换：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230826213800.png" alt="20230826213800"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230826214051.png" alt="20230826214051"></p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/07/03/Study/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/%E6%B1%87%E7%BC%96%E5%AD%A6%E4%B9%A0/" title="ARM32 汇编学习" target="_blank" rel="external">https://beichen.link/2023/07/03/Study/语言学习/汇编学习/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/07/15/Study/%E5%AE%9E%E4%B9%A0/%E5%B0%8F%E7%A8%8B%E5%BA%8F%E5%AE%89%E5%85%A8/" title="小程序安全"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/07/01/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E6%8A%93%E5%8C%85%E5%A5%87%E6%8A%80%E6%B7%AB%E5%B7%A7/" title="抓包奇技淫巧"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

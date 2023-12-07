@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Fart脱壳机原理 | 北辰的小破站</title>
+  <meta name="description" content="现有脱壳技术当前 ART 环境下的脱壳技术还有基于 dex2oat 编译生成 oat 过程的内存中的 dex 的 dump 技术，该方法依然是整体型 dump，无法应对指令抽取型加固,同时，当前一些壳对于动态加载 dex 的流程进行了 hook，这些 dex 也不会走 dex2oat 流程； 以及基于 dex 加载过程中内存中的 DexFile 结构体的 dump 技术。例如，在 ART 下通过">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Fart脱壳机原理">
+<meta property="og:url" content="https://beichen.link/2023/10/09/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/Fart%E8%84%B1%E5%A3%B3%E6%9C%BA%E5%8E%9F%E7%90%86/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="现有脱壳技术当前 ART 环境下的脱壳技术还有基于 dex2oat 编译生成 oat 过程的内存中的 dex 的 dump 技术，该方法依然是整体型 dump，无法应对指令抽取型加固,同时，当前一些壳对于动态加载 dex 的流程进行了 hook，这些 dex 也不会走 dex2oat 流程； 以及基于 dex 加载过程中内存中的 DexFile 结构体的 dump 技术。例如，在 ART 下通过">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231009161439.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231009161506.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231009161534.png">
+<meta property="article:published_time" content="2023-10-09T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.751Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="逆向知识">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231009161439.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/10/09/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/Fart%E8%84%B1%E5%A3%B3%E6%9C%BA%E5%8E%9F%E7%90%86/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/逆向知识/Fart脱壳机原理" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Fart脱壳机原理
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/10/09/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/Fart%E8%84%B1%E5%A3%B3%E6%9C%BA%E5%8E%9F%E7%90%86/" class="article-date">
+	  <time datetime="2023-10-09T00:00:00.000Z" itemprop="datePublished">2023-10-09</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/10/09/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/Fart%E8%84%B1%E5%A3%B3%E6%9C%BA%E5%8E%9F%E7%90%86/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 1.9k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 6(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="现有脱壳技术"><a href="#现有脱壳技术" class="headerlink" title="现有脱壳技术"></a>现有脱壳技术</h2><p>当前 ART 环境下的脱壳技术还有基于 dex2oat 编译生成 oat 过程的内存中的 dex 的 dump 技术，该方法依然是整体型 dump，无法应对指令抽取型加固,同时，当前一些壳对于动态加载 dex 的流程进行了 hook，这些 dex 也不会走 dex2oat 流程；</p>
+<p>以及基于 dex 加载过程中内存中的 DexFile 结构体的 dump 技术。例如，在 ART 下通过 hook OpenMem 函数来实现在壳进行加载 DexFile 时对内存中的 dex 的 dump 的脱壳技术，以及在 2017 年的 DEF CON 25 黑客大会中，Avi Bashan 和 SlavaMakkaveev 提出的通过修改 DexFile 的构造函数 DexFile::DexFile()，以及 OpenAndReadMagic()函数来实现对加壳应用的内存中的 dex 的 dump 来脱壳技术。上面这些脱壳技术均无法实现对指令抽取型壳的完全脱壳。</p>
+<h2 id="FART-脱壳原理以及实现"><a href="#FART-脱壳原理以及实现" class="headerlink" title="FART 脱壳原理以及实现"></a>FART 脱壳原理以及实现</h2><p>FART 脱壳的步骤主要分为三步：</p>
+<p>1.内存中 DexFile 结构体完整 dex 的 dump</p>
+<p>2.主动调用类中的每一个方法，并实现对应 CodeItem 的 dump</p>
+<p>3.通过主动调用 dump 下来的方法的 CodeItem 进行 dex 中被抽取的方法的修复</p>
+<h3 id="1-内存中-DexFile-结构体完整-dex-的-dump"><a href="#1-内存中-DexFile-结构体完整-dex-的-dump" class="headerlink" title="1 内存中 DexFile 结构体完整 dex 的 dump"></a>1 内存中 DexFile 结构体完整 dex 的 dump</h3><p>该步同 Avi Bashan 和 SlavaMakkaveev 在 DefCon 2017 上提出的通过修改 DexFile 的构造函数 DexFile::DexFile()，以及 OpenAndReadMagic()函数来实现对加壳应用的内存中的 dex 的 dump 来脱壳的原理类似。</p>
+<p>不同之处在于 Avi Bashan 和 SlavaMakkaveev 是通过修改系统中 DexFile 中提供的相关函数来实现 dump，实际上壳完全可以自实现一套 Dex 文件的内存加载机制从而绕过这种 dump 方法。</p>
+<p>本文提出的是通过选择合适的时机点获取到应用解密后的 dex 文件最终依附的 Classloader，进而通过 java 的反射机制最终获取到对应的 DexFile 的结构体，并完成 dex 的 dump。接下来主要介绍具体实现细节。</p>
+<p>首先，对于获取 Classloader 的时机点的选择，APP 中的 Application 类中的 attachBaseContext 和 onCreate 函数是 app 中最先执行的方法。壳都是通过替换 APP 的 Application 类并自己实现这两个函数，并在这两个函数中实现 dex 的解密加载，hook 系统中 Class 和 method 加载执行流程中的关键函数，最后通过反射完成关键变量如最终的 Classloader，Application 等的替换从而完成执行权的交付。所有的应用中加载的 dex 文件最终都在应用的 Classloader 中。所以我们只要取到加壳的应用最后修复完，正常加载时的 Classloader 就脱壳成功了。这种脱壳方式就是所谓的整体 dump。</p>
+<p>因此，我们可以选在任意一个在 Application 的 onCreate 函数执行之后才开始被调用的任意一个函数中。众所周知，对于一个正常的应用来说，最终都要由一个个的 Activity 来展示应用的界面并和用户完成交互，那么我们就可以选择在 ActivityThread 中的 performLaunchActivity 函数作为时机，来获取最终的应用的 Classloader。选择该函数还有一个好处在于该函数和应用的最终的 application 同在 ActivityThread 类中，可以很方便获取到该类的成员。</p>
+<p>performLaunchActivity 调用 getDexFilesByClassLoader 函数通过一系列的反射，最终获取到当前 Classloader 中的 mCookie，即 Native 层中的 DexFile，然后完成 dex 的 dump</p>
+<p>上面实现了对 Classloader 中加载的 dex 的 dump，那么如何实现对类中函数的主动调用来实现函数粒度的脱壳呢？下面开始介绍主动调用的设计</p>
+<h3 id="2-类函数的主动调用设计实现"><a href="#2-类函数的主动调用设计实现" class="headerlink" title="2 类函数的主动调用设计实现"></a>2 类函数的主动调用设计实现</h3><p>后来的第二代壳所谓的函数抽取，就是为了防止修复后的 dex 被直接整体 dump 给脱下来，然后将类和函数的关键流程在调用时，才进行解密修复。而 fart 的主动调用所有函数，就会触发解密修复，然后再进行 dump，从而实现函数抽取壳的脱壳。</p>
+<p>获取 classloader 之后，反射获取 mCookie 字段（mCookie 装载的，是 art 中的 DexFile 的对象的内存地址），最后遍历所有类，调用每个类中的所有函数</p>
+<p>对类函数的主动调用链的构造我们或许可以从 JNI 提供的相关函数的源码可以得出参考。JNI 提供了一系列 java 层函数与 Native 层函数交互的接口。当需要在 Native 层中的 c&#x2F;c++函数中调用位于 java 层的函数时，需要先获取到该函数的 jmethodid 然后再通过诸如 jni 中提供的 call 开头的一系列函数来完成对 java 层中函数的调用，最终通过调用 ArtMethod 类中的 Invoke 函数完成对 java 层中的函数的调用。</p>
+<p>由此，我们可以看到 ArtMethod 类中的 Invoke 方法在 jni 中扮演着至关重要的地位。于是，我们可以构造出自己的 invoke 函数，在该函数中再调用 ArtMethod 的 Invoke 方法从而完成主动调用，并在 ArtMethod 的 Invoke 函数中首先进行判断，当发现是我们自己的主动调用时就进行方法体的 dump 并直接返回，从而完成对壳的欺骗，达到方法体的 dump。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231009161439.png" alt="20231009161439"></p>
+<p>可以看到代码非常简洁，首先是对 Java 层传来的 Method 结构体进行了类型转换，转成 Native 层的 ArtMethod 对象，接下来就是调用 ArtMethod 类中 myfartInvoke 实现虚拟调用，并完成方法体的 dump。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231009161506.png" alt="20231009161506"></p>
+<p>这里代码依然很简洁，只是对 ArtMethod 类中的 Invoke 的一个调用包装，不同的是在参数方面，我们直接给 Thread*传递了一个 nullptr，作为对主动调用的标识。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231009161534.png" alt="20231009161534"></p>
+<p>该函数只是在最开头添加了对 Thread*参数的判断，当发现该参数为 nullptr 时，即表示是我们自己构造的主动调用链到达，则此时调用 dumpArtMethod()函数完成对该 ArtMethod 的 CodeItem 的 dump。到这里，我们就完成了内存中 DexFile 结构体中的 dex 的整体 dump 以及主动调用完成对每一个类中的函数体的 dump，下面就是修复被抽取的函数部分。</p>
+<h3 id="3-抽取类函数的修复"><a href="#3-抽取类函数的修复" class="headerlink" title="3 抽取类函数的修复"></a>3 抽取类函数的修复</h3><p>壳在完成对内存中加载的 dex 的解密后，该 dex 的索引区即 stringid，typeid,methodid,classdef 和对应的 data 区中的 string 列表并未加密。而对于 classdef 中类函数的 CodeItem 部分可能被加密存储或者直接指向内存中另一块区域。这里我们只需要使用 dump 下来的 method 的 CodeItem 来解析对应的被抽取的方法即可</p>
+<h2 id="fart-对抗"><a href="#fart-对抗" class="headerlink" title="fart 对抗"></a>fart 对抗</h2><p>一句话概括： 在 DEX 中插入无用类，检测到无用类的加载后随机 kill 自己</p>
+<p>在 DEX 中插入无用类，记录这些类的 debug info offset 作为黑名单；正常运行时不会加载这些无用类（没有任何引用），而当 FART 进行枚举方法主动调用时，会触发这些类的加载，从而导致计数器置 1。计数器递增到达上限后触发 kill self，App 表现为随机的 crash，从而中断枚举过程。</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/10/09/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/Fart%E8%84%B1%E5%A3%B3%E6%9C%BA%E5%8E%9F%E7%90%86/" title="Fart脱壳机原理" target="_blank" rel="external">https://beichen.link/2023/10/09/Study/逆向知识/Fart脱壳机原理/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/10/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E7%AD%BE%E5%90%8D%E5%AF%B9%E6%8A%97/" title="签名对抗"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/10/08/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E9%A3%8E%E6%8E%A7/" title="国内风控的几大隐藏检测特征"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

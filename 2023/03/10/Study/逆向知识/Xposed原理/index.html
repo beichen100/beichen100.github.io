@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Xposed 原理 | 北辰的小破站</title>
+  <meta name="description" content="Xposed 组成   名称 介绍    Xposed Xposed框架Native部分   XposedBridge Xposed向开发者提供的API与相应工具类库   XposedInstaller Xposed框架Android端本地管理，环境框架，以及第三方module资源下载的工具   原理工作流程 xposed的主要接口在XposedBrigde.jar中，核心功能在替换的虚拟机中实现">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Xposed 原理">
+<meta property="og:url" content="https://beichen.link/2023/03/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/Xposed%E5%8E%9F%E7%90%86/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="Xposed 组成   名称 介绍    Xposed Xposed框架Native部分   XposedBridge Xposed向开发者提供的API与相应工具类库   XposedInstaller Xposed框架Android端本地管理，环境框架，以及第三方module资源下载的工具   原理工作流程 xposed的主要接口在XposedBrigde.jar中，核心功能在替换的虚拟机中实现">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303131531221.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303131646557.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303131655798.png">
+<meta property="article:published_time" content="2023-03-10T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.751Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="逆向知识">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303131531221.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/03/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/Xposed%E5%8E%9F%E7%90%86/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/逆向知识/Xposed原理" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Xposed 原理
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/03/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/Xposed%E5%8E%9F%E7%90%86/" class="article-date">
+	  <time datetime="2023-03-10T00:00:00.000Z" itemprop="datePublished">2023-03-10</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/03/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/Xposed%E5%8E%9F%E7%90%86/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 1.7k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 6(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="Xposed-组成"><a href="#Xposed-组成" class="headerlink" title="Xposed 组成"></a>Xposed 组成</h2><table>
+<thead>
+<tr>
+<th align="left"><strong>名称</strong></th>
+<th align="left"><strong>介绍</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Xposed</td>
+<td align="left">Xposed框架Native部分</td>
+</tr>
+<tr>
+<td align="left">XposedBridge</td>
+<td align="left">Xposed向开发者提供的API与相应工具类库</td>
+</tr>
+<tr>
+<td align="left">XposedInstaller</td>
+<td align="left">Xposed框架Android端本地管理，环境框架，以及第三方module资源下载的工具</td>
+</tr>
+</tbody></table>
+<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><h3 id="工作流程"><a href="#工作流程" class="headerlink" title="工作流程"></a>工作流程</h3><ul>
+<li><p>xposed的主要接口在XposedBrigde.jar中，核心功能在替换的虚拟机中实现。</p>
+</li>
+<li><p>app_process是Android App的启动程序（具体形式是zygote fork() 调用app_process作为Android app的载体）</p>
+</li>
+</ul>
+<img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303131531221.png" alt="image-20230313153117079" style="zoom:50%;" />
+
+<h3 id="Zygote"><a href="#Zygote" class="headerlink" title="Zygote"></a>Zygote</h3><p>在Android系统中App进程都是由Zygote进程“孵化”出来的。Zygote进程在启动时会创建一个虚拟机实例，每当它“孵化”一个新的应用程序进程时，都会将这个Dalvik虚拟机实例复制到新的App进程里面去，从而使每个App进程都有一个独立的Dalvik虚拟机实例。</p>
+<p>Zygote进程在启动的过程中，除了会创建一个虚拟机实例之外还会将 Java Rumtime 加载到进程中并注册一些Android核心类的JNI（Java Native Interface，Java本地接口）方法。</p>
+<p>一个App进程被Zygote进程孵化出来的时候，不仅会获得Zygote进程中的虚拟机实例拷贝，还会与Zygote进程一起共享 Java Rumtime ，也就是可以将 XposedBridge.jar 这个Jar包加载到每一个Android App进程中去。</p>
+<p>安装 Xposed Installer 之后，系统 app_process 将被替换，然后利用Java的 Reflection 机制覆写内置方法，实现功能劫持。Xposed Installer 框架中真正起作用的是对方法的Hook和Replace。</p>
+<p><strong>Xposed框架核心思想在于将Java层普通函数注册成本地JNI方法，以此来变相实现hook机制</strong></p>
+<p>在Android系统启动的时候，Zygote进程加载 XposedBridge.jar，将所有需要替换的Method通过 JNI 方法hookMethodNative 指向Native方法 xposedCallHandler，这个方法再通过调用 handleHookedMethod 这个Java方法来调用被劫持的方法转入Hook逻辑。</p>
+<p>上面提到的 hookMethodNative 是 XposedBridge.jar 中的私有的本地方法，它将一个方法对象作为传入参数并修改Dalvik虚拟机中对于该方法的定义，把该方法的类型改变为Native并将其实现指向另外一个B方法。</p>
+<p>换言之，当调用那个被Hook的A方法时，其实调用的是B方法，调用者是不知道的。在hookMethodNative的实现中，会调用 XposedBridge.jar 中的 handleHookedMethod 这个方法来传递参数。handleHookedMethod 这个方法类似于一个统一调度的Dispatch例程，其对应的底层的C++函数是 xposedCallHandler。</p>
+<blockquote>
+<p>而 handleHookedMethod 实现里面会根据一个全局结构 hookedMethodCallbacks 来选择相应的Hook函数并调用他们的 before 和 after 函数，当多模块同时Hook一个方法的时候 Xposed 会自动根据 Module 的优先级来排序。</p>
+<p>调用顺序如下：A.before -&gt; B.before -&gt; original method -&gt; B.after -&gt; A.after。</p>
+<img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303131646557.png" alt="image-20230313164658449" style="zoom:50%;" />
+</blockquote>
+<h2 id="检测"><a href="#检测" class="headerlink" title="检测"></a>检测</h2><p>在做Android App的安全防御中检测点众多， Xposed Installer 检测是必不可少的一环。对于Xposed框架的防御总体上分为两层：Java层和Native层。</p>
+<h3 id="Java-层"><a href="#Java-层" class="headerlink" title="Java 层"></a>Java 层</h3><p>需要说明的是，Java层的检测基本只能检测出基础的 Xposed Installer框架，而不能防护其对App内方法的Hook，如果框架中带有反检测，则Java层检测大多不起作用。</p>
+<ol>
+<li><p>通过PackageManager查看安装列表</p>
+<p>最简单的检测，我们调用Android提供的PackageManager的API来遍历系统中App的安装情况来辨别是否有安装Xposed Installer相关的软件包。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">PackageManager</span> <span class="variable">packageManager</span> <span class="operator">=</span> context.getPackageManager();</span><br><span class="line"><span class="type">List</span> <span class="variable">applicationInfoList</span> <span class="operator">=</span> packageManager.getInstalledApplications(PackageManager.GET_META_DATA);</span><br><span class="line"><span class="keyword">for</span> (ApplicationInfo applicationInfo: applicationInfoList) &#123;</span><br><span class="line">    <span class="keyword">if</span> (applicationInfo.packageName.equals(<span class="string">&quot;de.robv.android.xposed.installer&quot;</span>)) &#123;</span><br><span class="line">        <span class="comment">// is Xposed TODO... &#125;</span></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>通常情况下使用Xposed Installer框架都会屏蔽对其的检测，即Hook掉PackageManager的getInstalledApplications方法的返回值，以便过滤掉de.robv.android.xposed.installer来躲避这种检测。</p>
+</li>
+<li><p>自造异常读取栈</p>
+<p>Xposed Installer框架对每个由Zygote孵化的App进程都会介入，因此在程序方法异常栈中就会出现Xposed相关的“身影”，我们可以通过自造异常Catch来读取异常堆栈的形式，用以检查其中是否存在Xposed的调用方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">Exception</span>(<span class="string">&quot;blah&quot;</span>);</span><br><span class="line">&#125; <span class="keyword">catch</span>(Exception e) &#123;</span><br><span class="line">    <span class="keyword">for</span> (StackTraceElement stackTraceElement: e.getStackTrace()) &#123;</span><br><span class="line">        <span class="comment">// stackTraceElement.getClassName() stackTraceElement.getMethodName() 是否存在Xposed</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>异常堆栈显示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">E/GEnvironment: no such table: preference (code <span class="number">1</span>): <span class="keyword">while</span> compiling: SELECT keyguard_show_livewallpaper FROM preference</span><br><span class="line">...</span><br><span class="line">at com.meituan.test.extpackage.ExtPackageManager.checkUpdate(ExtPackageManager.java:<span class="number">127</span>)</span><br><span class="line">at com.meituan.test.MiFGService$<span class="number">1.</span>run(MiFGService.java:<span class="number">41</span>)</span><br><span class="line">at android.os.Looper.loop(Looper.java:<span class="number">136</span>)</span><br><span class="line">at android.app.ActivityThread.main(ActivityThread.java:<span class="number">5072</span>)</span><br><span class="line">at java.lang.reflect.Method.invokeNative(Native Method)</span><br><span class="line">at java.lang.reflect.Method.invoke(Method.java:<span class="number">515</span>)</span><br><span class="line">...</span><br><span class="line">at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run(ZygoteInit.java:<span class="number">793</span>)</span><br><span class="line">at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:<span class="number">609</span>)</span><br><span class="line">at de.robv.android.xposed.XposedBridge.main(XposedBridge.java:<span class="number">132</span>) <span class="comment">//发现Xposed模块</span></span><br><span class="line">at dalvik.system.NativeStart.main(Native Method)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>检查关键Java方法被变为Native JNI方法</p>
+<p>当一个Android App中的Java方法被莫名其妙地变成了Native JNI方法，则非常有可能被Xposed Hook了。由此可得，检查关键方法是不是变成Native JNI方法，也可以检测是否被Hook。</p>
+<p>通过反射调用Modifier.isNative(method.getModifiers())方法可以校验方法是不是Native JNI方法，Xposed同样可以篡改isNative这个方法的返回值。</p>
+</li>
+<li><p>反射读取XposedHelper类字段</p>
+<p>通过反射遍历XposedHelper类中的fieldCache、methodCache、constructorCache变量，读取HashMap缓存字段，如字段项的key中包含App中唯一或敏感方法等，即可认为有Xposed注入。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303131655798.png" alt="image-20230313165530720"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">boolean</span> <span class="variable">methodCache</span> <span class="operator">=</span> CheckHook(clsXposedHelper, <span class="string">&quot;methodCache&quot;</span>, keyWord);</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="type">boolean</span> <span class="title function_">CheckHook</span><span class="params">(Object cls, String filedName, String str)</span> &#123;</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">result</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line">    String interName;</span><br><span class="line">    Set keySet;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">Field</span> <span class="variable">filed</span> <span class="operator">=</span> cls.getClass().getDeclaredField(filedName);</span><br><span class="line">        filed.setAccessible(<span class="literal">true</span>);</span><br><span class="line">        keySet = filed.get(cls)).keySet();</span><br><span class="line">        <span class="keyword">if</span> (!keySet.isEmpty()) &#123;</span><br><span class="line">            <span class="keyword">for</span> (Object aKeySet: keySet) &#123;</span><br><span class="line">                interName = aKeySet.toString().toLowerCase();</span><br><span class="line">                <span class="keyword">if</span> (interName.contains(<span class="string">&quot;meituan&quot;</span>) || interName.contains(<span class="string">&quot;dianping&quot;</span>) ) &#123;</span><br><span class="line">                    result = <span class="literal">true</span>;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                	&#125; </span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">		...</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h3 id="Native-层"><a href="#Native-层" class="headerlink" title="Native 层"></a>Native 层</h3><p>由上文可知，无论在Java层做何种检测，Xposed都可以通过Hook相关的API并返回指定的结果来绕过检测，只要有方法就可以被Hook。如果仅在Java层检测就显得很徒劳，为了有效提搞检测准确率，就须做到Java和Native层同时检测。</p>
+<p>每个App在系统中都有对应的加载库列表，这些加载库列表在&#x2F;proc&#x2F;下对应的self&#x2F;maps文件中描述，在Native层读取&#x2F;proc&#x2F;self&#x2F;maps文件不失为检测Xposed Installer的有效办法之一。</p>
+<p>由于Xposed Installer通常只能Hook Java层，因此在Native层使用C来解析&#x2F;proc&#x2F;self&#x2F;maps文件，搜检App自身加载的库中是否存在XposedBridge.jar、相关的Dex、Jar和So库等文件。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">bool</span> <span class="title function_">is_xposed</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">   <span class="type">bool</span> rel = <span class="literal">false</span>;</span><br><span class="line">   FILE *fp = <span class="literal">NULL</span>;</span><br><span class="line">   <span class="type">char</span>* filepath = <span class="string">&quot;/proc/self/maps&quot;</span>;</span><br><span class="line">   ...</span><br><span class="line">   <span class="built_in">string</span> xp_name = <span class="string">&quot;XposedBridge.jar&quot;</span>;</span><br><span class="line">   fp = fopen(filepath,<span class="string">&quot;r&quot;</span>)) </span><br><span class="line">   <span class="keyword">while</span> (!feof(fp))                                 </span><br><span class="line">   &#123;</span><br><span class="line">       fgets(strLine,BUFFER_SIZE,fp);                    </span><br><span class="line">       origin_str = strLine;</span><br><span class="line">       str = trim(origin_str);</span><br><span class="line">       <span class="keyword">if</span> (contain(str,xp_name))</span><br><span class="line">       &#123;</span><br><span class="line">           rel = <span class="literal">true</span>; <span class="comment">//检测到Xposed模块</span></span><br><span class="line">           <span class="keyword">break</span>;</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/03/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/Xposed%E5%8E%9F%E7%90%86/" title="Xposed 原理" target="_blank" rel="external">https://beichen.link/2023/03/10/Study/逆向知识/Xposed原理/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/03/14/Study/%E7%AE%97%E6%B3%95/%E6%9A%B4%E5%8A%9B%E9%80%92%E5%BD%92/" title="暴力递归算法的一些尝试"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/03/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/frida%E5%8E%9F%E7%90%86%E5%AD%A6%E4%B9%A0/" title="Frida 原理初识"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

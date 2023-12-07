@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Android 签名机制 | 北辰的小破站</title>
+  <meta name="description" content="一、前置知识签名机制本质是对信息的一种加密措施，为的是保证信息的合法性。在说明签名机制之前，我们先来了解其中涉及到的四个概念：数字摘要、非对称加密、数字签名、数字证书。  数字摘要： 采用单向 Hash 函数将需要加密的明文生成一串固定长度的密文，这一串密文又称为数字指纹，其具有唯一性和不可逆性。 数字摘要的生成取决于 Hash 算法，常用的 Hash 算法有 MD5 、SHA1、SHA256，M">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android 签名机制">
+<meta property="og:url" content="https://beichen.link/2023/03/26/Study/Android%E7%9F%A5%E8%AF%86/Android%E7%AD%BE%E5%90%8D%E6%9C%BA%E5%88%B6/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="一、前置知识签名机制本质是对信息的一种加密措施，为的是保证信息的合法性。在说明签名机制之前，我们先来了解其中涉及到的四个概念：数字摘要、非对称加密、数字签名、数字证书。  数字摘要： 采用单向 Hash 函数将需要加密的明文生成一串固定长度的密文，这一串密文又称为数字指纹，其具有唯一性和不可逆性。 数字摘要的生成取决于 Hash 算法，常用的 Hash 算法有 MD5 、SHA1、SHA256，M">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303291532267.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303291533793.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303291541920.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303291608986.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303291614461.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303291743455.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303291745473.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303291747275.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303291751192.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303291755951.png">
+<meta property="article:published_time" content="2023-03-26T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.747Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Android知识">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303291532267.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/03/26/Study/Android%E7%9F%A5%E8%AF%86/Android%E7%AD%BE%E5%90%8D%E6%9C%BA%E5%88%B6/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/Android知识/Android签名机制" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Android 签名机制
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/03/26/Study/Android%E7%9F%A5%E8%AF%86/Android%E7%AD%BE%E5%90%8D%E6%9C%BA%E5%88%B6/" class="article-date">
+	  <time datetime="2023-03-26T00:00:00.000Z" itemprop="datePublished">2023-03-26</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/03/26/Study/Android%E7%9F%A5%E8%AF%86/Android%E7%AD%BE%E5%90%8D%E6%9C%BA%E5%88%B6/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 2.8k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 9(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="一、前置知识"><a href="#一、前置知识" class="headerlink" title="一、前置知识"></a>一、前置知识</h2><p>签名机制本质是对信息的一种加密措施，为的是保证信息的合法性。在说明签名机制之前，我们先来了解其中涉及到的四个概念：数字摘要、非对称加密、数字签名、数字证书。</p>
+<ol>
+<li><p><strong>数字摘要：</strong> 采用单向 Hash 函数将需要加密的明文生成一串固定长度的密文，这一串密文又称为数字指纹，其具有唯一性和不可逆性。</p>
+<p>数字摘要的生成取决于 Hash 算法，常用的 Hash 算法有 MD5 、SHA1、SHA256，MD5 的长度是128位，SHA1的长度是160位，SHA256的长度为256位。</p>
+</li>
+<li><p>非对称加密</p>
+<p>非对称加密也称为公钥密码。我更愿意用非对称加密这种叫法。因为可以体现出加密和解密使用不同的密钥。</p>
+<p>对称加密中，我们只需要一个密钥，通信双方同时持有。而非对称加密需要4个密钥。通信双方各自准备一对公钥和私钥。其中公钥是公开的，由信息接受方提供给信息发送方。公钥用来对信息加密。私钥由信息接受方保留，用来解密。</p>
+<p>一次信息传输的非对称加、解密过程：</p>
+<ul>
+<li><p>消息接收方准备好公钥和私钥</p>
+</li>
+<li><p>私钥接收方自己留存、公钥发布给消息发送方</p>
+</li>
+<li><p>消息发送方使用接收方公钥对消息进行加密</p>
+</li>
+<li><p>消息接收方用自己的私钥对消息解密</p>
+</li>
+</ul>
+<p>公钥只能用做数据加密。公钥加密的数据，只能用对应的私钥才能解密。这是非对称加密的核心概念。</p>
+</li>
+<li><p><strong>数字签名：</strong> 通过自己私钥对明文进行加密得到的一段数字串，用于保证信息来源的真实性和消息的完整性。</p>
+<p>数字签名技术是将摘要信息用发送者的私钥加密，与原文一起传送给接收者。接收者用发送者的公钥解密被加密的摘要信息，然后用HASH函数对收到的原文产生一个摘要信息，与解密的摘要信息对比。如果相同，则说明收到的信息是完整的，在传输过程中没有被修改，否则说明信息被修改过，因此数字签名能够验证信息的完整性。</p>
+</li>
+<li><p><strong>数字证书：</strong> 校验过程有个前提：接收方必须要知道发送方的公钥和所使用的算法。如果数字签名和公钥一起被篡改，接收方无法得知，还是会校验通过。如何保证公钥的可靠性呢？</p>
+<p>答案是数字证书，数字证书是身份认证机构（CA）颁发的，包含了以下信息：</p>
+<ul>
+<li><p>证书颁发机构</p>
+</li>
+<li><p>证书颁发机构签名</p>
+</li>
+<li><p>证书绑定的服务器域名</p>
+</li>
+<li><p>证书版本、有效期</p>
+</li>
+<li><p>签名使用的加密算法（非对称算法，如RSA）、公钥 等</p>
+</li>
+</ul>
+<p>接收方收到消息后，先向CA验证证书的合法性（根据证书的签名、绑定的域名等信息。CA机构是权威的，可以保证这个过程的可靠性）再进行签名校验。</p>
+<p>Android 签名与传统签名机制有些许不同。</p>
+<p>首先，APK 的数字证书没有通过 CA 机构申请，而是开发者自定义的，且 Android 在安装 APK 时并不会校验证书本身的合法性，只是从中提取公钥和加密算法。正因如此，第三方 APK 在重新签名后依然能在没有安装这个 APK 系统中继续安装。</p>
+<p>此外，Android 在对 APK 签名时并没有直接指定私钥、公钥和数字证书，而是使用 keystore 文件，将这些信息都包含在 keystore 文件中。</p>
+</li>
+</ol>
+<h2 id="二、签名过程"><a href="#二、签名过程" class="headerlink" title="二、签名过程"></a>二、签名过程</h2><p>目前 Android 支持以下四种应用签名方案：</p>
+<ol>
+<li>v1方案：基于 JAR 签名。</li>
+<li>v2方案：Android 7.0 引入，改动大。</li>
+<li>v3方案：Android 9.0 引入，基于 v2 的升级。</li>
+<li>v4方案：Android 11.0 引入，用来支持 ADB 增量 APK 安装。</li>
+</ol>
+<h3 id="V1-方案"><a href="#V1-方案" class="headerlink" title="V1 方案"></a>V1 方案</h3><p>我们如果选中一个任意签名后的 apk 进行解压，会找到一个 META-INF 文件，这个文件里一般会有以 MF、SF 和 RSA 结尾的文件，如图：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303291532267.png" alt="image-20230329153144082"></p>
+<ul>
+<li><p>MANIFEST.MF：保存了 APK 除 META-INF 目录外的所有文件对应的数字摘要信息。在签名过程中，首先会遍历 APK 包下的所有文件，然后<strong>逐个生成 SHA256</strong>（JDK7.0之前采用 SHA1算法)数字摘要信息，再用 base64 进行编码之后将生成的摘要写入 MANIFEST.MF 文件中。</p>
+<img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303291533793.png" alt="image-20230329153338738" style="zoom: 67%;" />
+</li>
+<li><p>*.SF：对前一步生成的 MANIFEST.MF每一项值，使用 SHA256（JDK7.0之前采用 SHA1算法） 算法，用计算二次摘要，其中的值是对清单文件里的 SHA256 再进行 SHA256 后再次 base64 得到。</p>
+<img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303291541920.png" alt="image-20230329154142858" style="zoom:67%;" />
+</li>
+<li><p>*.RAS：这里会把之前生成的 CERT.SF文件，用私钥计算出签名, 然后将签名以及包含公钥信息的数字证书一同写入  CERT.RSA  中保存。</p>
+<p>这里要注意的是， Android APK中的CERT.RSA证书是自签名的，并不需要这个证书是第三方权威机构发布或者认证的，用户可以在本地机器自行生成这个自签名证书。Android 目前不对应用证书进行 CA 认证。</p>
+</li>
+</ul>
+<img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303291608986.png" alt="image-20230329160824908" style="zoom:67%;" />
+
+<p><strong>签名验证过程</strong></p>
+<p>签名验证是发生在apk的安装过程中，一共分为三步：</p>
+<p>（1）检查apk中包含的所有文件，对应的摘要值与MANIFEST.MF文件中记录的值一致。</p>
+<p>（2）使用证书文件（RSA文件）检验签名文件（SF文件）没有被修改过。</p>
+<p>（3）使用签名文件（SF文件）检验MF文件没有被修改过。</p>
+<img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303291614461.png" alt="image-20230329161415371" style="zoom:67%;" />
+
+<p><strong>为什么使用这样的签名流程呢？</strong></p>
+<p>我们假设一下，首先，如果你改变了apk包中的任何文件，那么在apk安装校验时，改变后的文件摘要信息与MANIFEST.MF的检验信息不同，于是验证失败，程序就不能成功安装。</p>
+<p>其次，如果你对更改过的文件相应的算出新的摘要值，然后更改MANIFEST.MF文件里面对应的属性值，那么必定与CERT.SF文件中算出的摘要值不一样，照样验证失败。</p>
+<p>最后，如果你还不死心，继续计算MANIFEST.MF的摘要值，相应的更改CERT.SF里面的值，那么数字签名值必定与CERT.RSA文件中记录的不一样，还是失败。</p>
+<p>那么能不能继续伪造数字签名呢？不可能，因为没有数字证书对应的私钥。</p>
+<h3 id="V2-方案"><a href="#V2-方案" class="headerlink" title="V2 方案"></a>V2 方案</h3><p>V1方案存在以下问题：</p>
+<ul>
+<li><p>覆盖范围不足：Zip 文件中部分内容不在验证范围，例如 META-INF 文件夹；</p>
+</li>
+<li><p>验证性能差：验证程序必须解压所有压缩的条目，这需要花费更多时间和内存</p>
+</li>
+<li><p>存在Janus漏洞：恶意开发人员可以通过Janus漏洞去绕过Android 的v1签名验证机制。</p>
+</li>
+</ul>
+<p>V2 是 Android 签名方案的一大步，它解决了 V1 遗留的签名校验慢和完整性的问题。Android7.0 中开始引入了APK签名方案v2，一种全文件签名方案，该方案能够发现对APK的受保护部分进行所有更改，相比v1来说校验速度更快，覆盖的范围也更广。但是考虑到版本兼容的问题，所以一般常见了v1+v2的混合签名模式。</p>
+<p> V2 的实现原理是对 ZIP 文件进行一定处理。</p>
+<blockquote>
+<p>ZIP 文件结构包括三大部分：<strong>数据区、中央目录和中央结尾记录</strong>，数据区包含了所有的文件记录，中央目录存储了所有本地文件头信息，中央目录结尾存放了中央目录的相关信息。</p>
+<p>在解析 ZIP 文件时，程序首先会找到 ZIP 文件的 <strong>中央目录结尾</strong>，然后在中央目录结尾中找到 <strong>核心目录的起始偏移量</strong> 定位到 <strong>中央目录起始位置</strong>，然后开始遍历中央目录里的 <strong>本地文件头</strong> ，根据本地文件头中的 <strong>文件头的相对位移</strong> 定位到相应的本地文件。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303291743455.png" alt="image-20230329174355315"></p>
+</blockquote>
+<p>V2 是一种全文件签名方案，在使用 V2 方案对 APK 进行签名时，会在 APK 文件中插入一个 <strong>APK 签名分块</strong>，该分块位于 <strong>ZIP 中央目录</strong> 部分之前并紧邻该部分。在<strong>APK 签名分块</strong> 内，v2 签名和签名者身份信息会存储在 APK 签名方案 v2 分块中。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303291745473.png" alt="image-20230329174524353"></p>
+<p>APK Signing Block 结构如下:</p>
+<img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303291747275.png" alt="img" style="zoom: 33%;" />
+
+<p>其中，APK签名方案V2分块才存着签名信息。在解析 APK 文件时，首先要通过以下方法找到 <strong>ZIP 中央目录</strong> 的起始位置：在文件末尾找到 <strong>ZIP 中央目录结尾</strong> 记录，然后从该记录中读取 <strong>中央目录的起始偏移量</strong> 。再往前通过 <strong>magic</strong> 值，可以快速确定中央目录前方可能是 <strong>APK 签名分块</strong>。然后，通过 <strong>size of block</strong> 值，可以高效地找到该分块在文件中的起始位置。</p>
+<p>APK签名方案V2分块具体结构如下:</p>
+<p><img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303291751192.png"></p>
+<ul>
+<li>SignerData（签名者数据）：主要包括签名者的证书，整个APK完整性校验hash，以及一些必要信息。</li>
+<li>Signature（签名）：开发者对SignerData部分数据的签名数据。</li>
+<li>PublicKey（公钥）：用于验签的公钥数据。</li>
+</ul>
+<p><strong>签名流程</strong></p>
+<img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303291755951.png" alt="APK 摘要" style="zoom: 67%;" />
+
+<p>步骤： </p>
+<ol>
+<li>对原始apk文件的 文件信息部分、中央目录部分、EoCD部分，按照 1MB 大小分割为多个小块（Chunks）; </li>
+<li>分别对每一个小块计算其摘要，类似于 V1 签名中的 MANIFEST.MF 文件；</li>
+<li>对(2)中所有摘要计算其摘要，类似于 V1 签名中的 CERT.SF 文件；</li>
+<li>添加X.509开发者数字证书（公钥）</li>
+<li>这样一个签名者的SignerData数据都完成了</li>
+<li>然后使用私钥对SignerData进行签名写到Signature里，把公钥写在PublicKey里</li>
+</ol>
+<p><strong>验证签名步骤</strong></p>
+<p>对 APK 签名方案 v2 分块中的每个 signer，执行以下操作：</p>
+<ol>
+<li>从 signatures 中选择安全系数最高的受支持 signature algorithm ID。安全系数排序取决于各个实现&#x2F;平台版本。</li>
+<li>使用 public key 并对照 signed data 验证 signatures 中对应的 signature。（现在可以安全地解析 signed data 了）<ul>
+<li>验证 digests 和 signatures 中的签名算法 ID 列表（有序列表）是否相同。（这是为了防止删除&#x2F;添加签名）</li>
+<li>使用签名算法所用的同一种摘要算法计算 APK 内容的摘要。</li>
+<li>验证计算出的摘要是否与 digests 中对应的 digest 一致。</li>
+</ul>
+</li>
+</ol>
+<ul>
+<li>验证 certificates 中第一个 certificate 的 SubjectPublicKeyInfo 是否与 public key 相同。</li>
+</ul>
+<ol start="3">
+<li>如果找到了至少一个 signer，并且对于每个找到的 signer，第 2 步都取得了成功，APK 验证将会成功。</li>
+</ol>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/03/26/Study/Android%E7%9F%A5%E8%AF%86/Android%E7%AD%BE%E5%90%8D%E6%9C%BA%E5%88%B6/" title="Android 签名机制" target="_blank" rel="external">https://beichen.link/2023/03/26/Study/Android知识/Android签名机制/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/03/28/Study/Android%E7%9F%A5%E8%AF%86/Android%E6%BC%8F%E6%B4%9E%E7%9F%A5%E8%AF%86/" title="Android 漏洞知识"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/03/25/Study/%E7%AE%97%E6%B3%95/%E7%AE%97%E6%B3%95%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/" title="算法输入输出"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

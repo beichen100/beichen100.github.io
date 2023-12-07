@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>APP逆向难点 | 北辰的小破站</title>
+  <meta name="description" content="一、frida 反调试一般来说，frida检测有如下几个方面：  检测frida-server文件名 检测27042默认端口 双进程保护 检测D-Bus, fridaserver 使用 D-Bus 协议通信，我们为每个开放的端口发送 D-Bus 的认证消息，哪个端口回复了哪个就是 fridaserver。 检测&#x2F;proc&#x2F;pid&#x2F;maps映射文件  前三种可以通过改文">
+<meta property="og:type" content="article">
+<meta property="og:title" content="APP逆向难点">
+<meta property="og:url" content="https://beichen.link/2023/04/05/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/APP%E9%80%86%E5%90%91%E9%A1%B9%E7%9B%AE%E9%9A%BE%E7%82%B9/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="一、frida 反调试一般来说，frida检测有如下几个方面：  检测frida-server文件名 检测27042默认端口 双进程保护 检测D-Bus, fridaserver 使用 D-Bus 协议通信，我们为每个开放的端口发送 D-Bus 的认证消息，哪个端口回复了哪个就是 fridaserver。 检测&#x2F;proc&#x2F;pid&#x2F;maps映射文件  前三种可以通过改文">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202304051737895.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202304051738549.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202304051745387.png">
+<meta property="article:published_time" content="2023-04-05T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.747Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="逆向知识">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202304051737895.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/04/05/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/APP%E9%80%86%E5%90%91%E9%A1%B9%E7%9B%AE%E9%9A%BE%E7%82%B9/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/逆向知识/APP逆向项目难点" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      APP逆向难点
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/04/05/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/APP%E9%80%86%E5%90%91%E9%A1%B9%E7%9B%AE%E9%9A%BE%E7%82%B9/" class="article-date">
+	  <time datetime="2023-04-05T00:00:00.000Z" itemprop="datePublished">2023-04-05</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/04/05/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/APP%E9%80%86%E5%90%91%E9%A1%B9%E7%9B%AE%E9%9A%BE%E7%82%B9/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 1.5k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 6(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h3 id="一、frida-反调试"><a href="#一、frida-反调试" class="headerlink" title="一、frida 反调试"></a>一、frida 反调试</h3><p>一般来说，frida检测有如下几个方面：</p>
+<ul>
+<li>检测frida-server文件名</li>
+<li>检测27042默认端口</li>
+<li>双进程保护</li>
+<li>检测D-Bus, fridaserver 使用 D-Bus 协议通信，我们为每个开放的端口发送 D-Bus 的认证消息，哪个端口回复了哪个就是 fridaserver。</li>
+<li>检测&#x2F;proc&#x2F;pid&#x2F;maps映射文件</li>
+</ul>
+<p>前三种可以通过改文件名、改端口和以spawn模式启动过掉，-f 即spwan，在程序最先启动的时候注入。</p>
+<blockquote>
+<p>ptrace反调试的原理是进程只能被一个进程附加。查看进程 <code>/proc/self/status</code> 目录，会看到 <code>TracerPid</code> 不为0，其值为附加它的父进程 <code>pid</code> ，这里是 <code>zygote</code>进程。</p>
+<p>过掉它的方法很多，下面介绍使用 <code>ptrace</code> 怎么过掉 <code>ptrace</code> :<br>1、使用 <code>ptrace</code> 附加 <code>zygote</code> 进程。<br>2、拦截 <code>zygote</code> 的 <code>fork</code> 调用，在 <code>fork</code> 子进程时候获取当前子进程名称，判断是不是我们想要的那个应用，如果是，就保存子进程 <code>pid</code><br>3、获取到子进程 <code>pid</code> 后，再拦截子进程的系统调用，判断此系统调用是不是 <code>ptrace</code>，并且参数是 <code>PTRACE_TRACEME</code><br>4、拦截到指定系统调用后，修改调用参数，让 <code>ptrace(PTRACE_TRACEME);</code> 执行失败。</p>
+</blockquote>
+<p>检测D-Bus可以通过hook系统库函数，比如strstr、strcmp等等，最后两种检测可以更改frida-server的特征从而达到隐藏的效果</p>
+<p>这里直接使用hluda server，它更改了frida的诸多特征，自己使用时记得把文件名给改了，并且换个端口，不要使用默认端口</p>
+<p>然后以spawn模式启动应用，主要是为了过掉双进程保护</p>
+<p>正常的frida server附加进应用之后它的&#x2F;proc&#x2F;pid&#x2F;maps的文件的变化</p>
+<p><img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202304051737895.png" alt="image-20230405173732774"></p>
+<p>很明显的发现出现了&#x2F;data&#x2F;local&#x2F;tmp&#x2F;re.frida.server&#x2F;***，等等，<code>re.frida.server</code>是什么呢？这是当使用frida server的时候自动创建的，里面存放着frida的功能模块。</p>
+<p>那么当使用hluda server会发生什么变化呢？</p>
+<p><img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202304051738549.png" alt="image-20230405173806430"></p>
+<p>可以发现<code>re.frida.server</code>已经没有了，反而变成了一串没有意义的字符串，并且功能模块文件名也被混淆了，那么为什么还是被检测到了呢？会不会是D-Bus检测呢？别急，认真比对正常的与附加后的&#x2F;proc&#x2F;pid&#x2F;maps文件，发现正常的maps里面是没有&#x2F;data&#x2F;local&#x2F;tmp路径下的模块映射的，但附加了frida之后，不管模块名有没有被混淆，&#x2F;data&#x2F;local&#x2F;tmp路径名总会出现的，见下图：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202304051745387.png" alt="image-20230405174534310"></p>
+<p>因此应用完全有理由去检测maps文件里是否有&#x2F;data&#x2F;local&#x2F;tmp目录下的模块映射，所以我就尝试着伪造一个&#x2F;proc&#x2F;pid&#x2F;maps文件，去掉所有有关&#x2F;data&#x2F;local&#x2F;tmp的映射，并且hook open函数让其打开我伪造的maps文件，具体代码如下：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">main</span>(<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">const</span> openPtr = <span class="title class_">Module</span>.<span class="title function_">getExportByName</span>(<span class="string">&#x27;libc.so&#x27;</span>, <span class="string">&#x27;open&#x27;</span>);</span><br><span class="line">    <span class="keyword">const</span> open = <span class="keyword">new</span> <span class="title class_">NativeFunction</span>(openPtr, <span class="string">&#x27;int&#x27;</span>, [<span class="string">&#x27;pointer&#x27;</span>, <span class="string">&#x27;int&#x27;</span>]);</span><br><span class="line">    <span class="keyword">var</span> readPtr = <span class="title class_">Module</span>.<span class="title function_">findExportByName</span>(<span class="string">&quot;libc.so&quot;</span>, <span class="string">&quot;read&quot;</span>);</span><br><span class="line">    <span class="keyword">var</span> read = <span class="keyword">new</span> <span class="title class_">NativeFunction</span>(readPtr, <span class="string">&#x27;int&#x27;</span>, [<span class="string">&#x27;int&#x27;</span>, <span class="string">&#x27;pointer&#x27;</span>, <span class="string">&quot;int&quot;</span>]);</span><br><span class="line">    <span class="keyword">var</span> fakePath = <span class="string">&quot;/data/data/com.xyz.qingtian/maps&quot;</span>;</span><br><span class="line">    <span class="keyword">var</span> file = <span class="keyword">new</span> <span class="title class_">File</span>(fakePath, <span class="string">&quot;w&quot;</span>);</span><br><span class="line">    <span class="keyword">var</span> buffer = <span class="title class_">Memory</span>.<span class="title function_">alloc</span>(<span class="number">512</span>);</span><br><span class="line">    <span class="title class_">Interceptor</span>.<span class="title function_">replace</span>(openPtr, <span class="keyword">new</span> <span class="title class_">NativeCallback</span>(<span class="keyword">function</span> (<span class="params">pathnameptr, flag</span>) &#123;</span><br><span class="line">        <span class="keyword">var</span> pathname = <span class="title class_">Memory</span>.<span class="title function_">readUtf8String</span>(pathnameptr);</span><br><span class="line">        <span class="keyword">var</span> realFd = <span class="title function_">open</span>(pathnameptr, flag);</span><br><span class="line">        <span class="keyword">if</span> (pathname.<span class="title function_">indexOf</span>(<span class="string">&quot;maps&quot;</span>) &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">while</span> (<span class="built_in">parseInt</span>(<span class="title function_">read</span>(realFd, buffer, <span class="number">512</span>)) !== <span class="number">0</span>) &#123;</span><br><span class="line">                <span class="keyword">var</span> oneLine = <span class="title class_">Memory</span>.<span class="title function_">readCString</span>(buffer);</span><br><span class="line">                <span class="keyword">if</span> (oneLine.<span class="title function_">indexOf</span>(<span class="string">&quot;tmp&quot;</span>) === -<span class="number">1</span>) &#123;</span><br><span class="line">                    file.<span class="title function_">write</span>(oneLine);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">var</span> filename = <span class="title class_">Memory</span>.<span class="title function_">allocUtf8String</span>(fakePath);</span><br><span class="line">            <span class="keyword">return</span> <span class="title function_">open</span>(filename, flag);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">var</span> fd = <span class="title function_">open</span>(pathnameptr, flag);</span><br><span class="line">        <span class="keyword">return</span> fd;</span><br><span class="line">    &#125;, <span class="string">&#x27;int&#x27;</span>, [<span class="string">&#x27;pointer&#x27;</span>, <span class="string">&#x27;int&#x27;</span>]));</span><br><span class="line">&#125;</span><br><span class="line"><span class="title function_">setImmediate</span>(main)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>很惊喜的发现成功过掉了frida检测</p>
+<h3 id="二、抓包"><a href="#二、抓包" class="headerlink" title="二、抓包"></a>二、抓包</h3><p>平时我们碰到的HTTP和HTTPS都在<strong>应用层</strong>，SOCKS在<strong>会话层</strong>，TCP和UDP在<strong>传输层</strong>，IP在<strong>网络层</strong>。</p>
+<h4 id="客户端校验服务端"><a href="#客户端校验服务端" class="headerlink" title="客户端校验服务端"></a>客户端校验服务端</h4><p>FaceBook&#x2F;Twitter这些大厂是如何做到防止Charles&#x2F;Fiddler等抓包工具中间人攻击的呢？<strong>SSL-Pinning</strong>！原理是HTTPS建立时与服务端返回的证书比对一致性，进而识别出中间人攻击后直接在客户端侧中止连接。</p>
+<p><strong>证书锁定</strong>：开发时就将服务端证书一块打包到客户端里，不接受操作系统或浏览器内置的CA根证书对应的任何证书，通过这种授权方式，保障了APP与服务端通信的唯一性和安全性。但是CA签发证书都存在有效期问题，所以缺点是在证书续期后需要将证书重新内置到APP中。</p>
+<p><strong>公钥锁定</strong>：提取证书中的公钥并内置到客户端中，通过与服务器对比公钥值来验证连接的正确性。制作证书密钥时，公钥在证书的续期前后都可以保持不变（即密钥对不变），所以可以避免证书有效期问题，一般推荐这种做法。</p>
+<p>不过由于客户端会做两个证书间的一次性校验，那么就通过hook的方式将此次校验的结果返回true或者干脆不让其做校验，或者Xposed安装JustTrustMe插件，该插件将各种已知的HTTP请求库中用于校验证书的API进行hook并不论是否可信证书都返回正常状态。</p>
+<h4 id="双向校验"><a href="#双向校验" class="headerlink" title="双向校验"></a>双向校验</h4><p>SSL pinning实际上是客户端锁定服务器端的证书, 在要与服务器进行交互的时候, 服务器端会将CA证书发送给客户端, 客户端会调用函数对服务器端的证书进行校验, 与本地的服务器端证书(存放在<code>\\asset</code>目录或<code>\res\raw</code>下)进行比对。</p>
+<p>而双向校验是添加了客户端向服务器发送CA证书, 服务器端对客户端的证书进行校验的部分。</p>
+<p>通过反编译拿到证书加载的位置，关键词<code>PKCS12</code>,获取密码，导入charles - Proxy- SSL Proxying Settings 添加客户端证书，Charles将对任意服务器发送该客户端证书，意味着用app访问所有的服务器。</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/04/05/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/APP%E9%80%86%E5%90%91%E9%A1%B9%E7%9B%AE%E9%9A%BE%E7%82%B9/" title="APP逆向难点" target="_blank" rel="external">https://beichen.link/2023/04/05/Study/逆向知识/APP逆向项目难点/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/04/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/magisk%20root%E5%8E%9F%E7%90%86/" title="magisk root原理"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/04/05/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/AOSP%E9%A1%B9%E7%9B%AE%E9%9A%BE%E7%82%B9/" title="AOSP难点"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

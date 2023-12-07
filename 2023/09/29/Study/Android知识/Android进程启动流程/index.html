@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Android进程启动流程 | 北辰的小破站</title>
+  <meta name="description" content="准备知识本文要介绍的是进程的创建，先简单说说进程与线程的区别。  进程：每个 App 在启动前必须先创建一个进程，该进程是由 Zygote fork 出来的，进程具有独立的资源空间，用于承载 App 上运行的各种 Activity&#x2F;Service 等组件。进程对于上层应用来说是完全透明的，这也是 google 有意为之，让 App 程序都是运行在 Android Runtime。大多数情">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android进程启动流程">
+<meta property="og:url" content="https://beichen.link/2023/09/29/Study/Android%E7%9F%A5%E8%AF%86/Android%E8%BF%9B%E7%A8%8B%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="准备知识本文要介绍的是进程的创建，先简单说说进程与线程的区别。  进程：每个 App 在启动前必须先创建一个进程，该进程是由 Zygote fork 出来的，进程具有独立的资源空间，用于承载 App 上运行的各种 Activity&#x2F;Service 等组件。进程对于上层应用来说是完全透明的，这也是 google 有意为之，让 App 程序都是运行在 Android Runtime。大多数情">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231005103214.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231009145338.png">
+<meta property="article:published_time" content="2023-09-29T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.747Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Android知识">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231005103214.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/09/29/Study/Android%E7%9F%A5%E8%AF%86/Android%E8%BF%9B%E7%A8%8B%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/Android知识/Android进程启动流程" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Android进程启动流程
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/09/29/Study/Android%E7%9F%A5%E8%AF%86/Android%E8%BF%9B%E7%A8%8B%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/" class="article-date">
+	  <time datetime="2023-09-29T00:00:00.000Z" itemprop="datePublished">2023-09-29</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/09/29/Study/Android%E7%9F%A5%E8%AF%86/Android%E8%BF%9B%E7%A8%8B%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 2.3k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 8(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="准备知识"><a href="#准备知识" class="headerlink" title="准备知识"></a>准备知识</h2><p>本文要介绍的是进程的创建，先简单说说进程与线程的区别。</p>
+<ul>
+<li><p>进程：每个 App 在启动前必须先创建一个进程，该进程是由 Zygote fork 出来的，进程具有独立的资源空间，用于承载 App 上运行的各种 Activity&#x2F;Service 等组件。进程对于上层应用来说是完全透明的，这也是 google 有意为之，让 App 程序都是运行在 Android Runtime。大多数情况一个 App 就运行在一个进程中，除非在 AndroidManifest.xml 中配置 Android:process 属性，或通过 native 代码 fork 进程。</p>
+</li>
+<li><p>线程：线程对应用开发者来说非常熟悉，比如每次 new Thread().start()都会创建一个新的线程，该线程并没有自己独立的地址空间，而是与其所在进程之间资源共享。从 Linux 角度来说进程与线程都是一个 task_struct 结构体，除了是否共享资源外，并没有其他本质的区别。</p>
+</li>
+</ul>
+<p>在接下来的文章，会涉及到 system_server 进程和 Zygote 进程，下面简要介绍这两个进程：</p>
+<ul>
+<li><p>system_server 进程：是用于管理整个 Java framework 层，包含 ActivityManager，PowerManager 等各种系统服务;</p>
+</li>
+<li><p>Zygote 进程：是 Android 系统的首个 Java 进程，Zygote 是所有 Java 进程的父进程，包括 system_server 进程以及所有的 App 进程都是 Zygote 的子进程，注意这里说的是子进程，而非子线程</p>
+</li>
+</ul>
+<h2 id="进程创建图"><a href="#进程创建图" class="headerlink" title="进程创建图"></a>进程创建图</h2><p>先来看一张进程创建过程的简要图：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231005103214.png" alt="20231005103214"></p>
+<p>图解：</p>
+<ol>
+<li><p>App 发起进程：当从桌面启动应用，则发起进程便是 Launcher 所在进程；当从某 App 内启动远程进程，则发送进程便是该 App 所在进程。发起进程先通过 binder 发送消息给 system_server 进程；</p>
+</li>
+<li><p>system_server 进程：调用 Process.start()方法，通过 socket 向 zygote 进程发送创建新进程的请求；</p>
+</li>
+<li><p>zygote 进程：在执行 ZygoteInit.main()后便进入 runSelectLoop()循环体内，当有客户端连接时便会执行 ZygoteConnection.runOnce()方法，再经过层层调用后 fork 出新的应用进程；</p>
+<blockquote>
+<p>fork()采用 copy on write 技术，这是 linux 创建进程的标准方法，调用一次，返回两次，返回值有 3 种类型。</p>
+<p>在父进程中，fork 返回新创建的子进程的 pid;<br>在子进程中，fork 返回 0；<br>当出现错误时，fork 返回负数。（当进程数超过上限或者系统内存不足时会出错）</p>
+<p>copy-on-write 原理：<br>写时拷贝是指子进程与父进程的页表都所指向同一个块物理内存，fork 过程只拷贝父进程的页表，并标记这些页表是只读的。<br>父子进程共用同一份物理内存，如果父子进程任一方想要修改这块物理内存，那么会触发缺页异常(page fault)，Linux 收到该中断便会创建新的物理内存，并将两个物理内存标记设置为可写状态，从而父子进程都有各自独立的物理内存。</p>
+<p>Copy On Write 技术好处是什么？</p>
+<ol>
+<li>COW 技术可减少分配和复制大量资源时带来的瞬间延时。</li>
+<li>COW 技术可减少不必要的资源分配。比如 fork 进程时，并不是所有的页面都需要复制，父进程的代码段和只读数据段都不被允许修改，所以无需复制。</li>
+</ol>
+<p>Copy On Write 技术缺点是什么？<br>如果在 fork()之后，父子进程都还需要继续进行写操作，那么会产生大量的分页错误(页异常中断 page-fault)，这样就得不偿失。</p>
+</blockquote>
+<p>fork()的主要工作是寻找空闲的进程号 pid，然后从父进程拷贝进程信息，例如数据段和代码段，fork()后子进程要执行的代码等。</p>
+<p>Zygote 进程是所有 Android 进程的母体，包括 system_server 和各个 App 进程。zygote 利用 fork()方法生成新进程，对于新进程 A 复用 Zygote 进程本身的资源，再加上新进程 A 相关的资源，构成新的应用进程 A。</p>
+</li>
+<li><p>新进程：执行 handleChildProc 方法，最后调用 ActivityThread.main()方法。</p>
+</li>
+</ol>
+<p>参考：<a target="_blank" rel="noopener" href="http://gityuan.com/2016/03/26/app-process-create/">http://gityuan.com/2016/03/26/app-process-create/</a></p>
+<p>ActivityThread 是应用进程的初始化类，它的 main()方法就是应用的入口方法，也就是说应用进程被创建后会调用 ActivityThread.main()方法</p>
+<p>ActivityThread 也是我们常说的主线程，但是这种描述不太准确，ActivityThread 不是线程，只不过它是在运行在主线程（main）的 main()方法中创建的对象，自然它也是运行在主线程中。只能说 ActivityThread 是主线程的一部分，但不并能代表主线程。</p>
+<p>在 ActivityThread 的 main 中：</p>
+<ol>
+<li><p>创建一个调用一个 Looper.prepareMainLooper(),创建一个 Looper 对象，这就是我们 activity 的主线程。</p>
+</li>
+<li><p>创建 ActivityThread 对象，ActivityThread 就是一个普通的 java 类。</p>
+</li>
+<li><p>调用 thread.attach 方法。主要是为了和 ActivityManagerService 进行交互通信。在里面通过 ActivityManagerService 的代理对象 ActivityManagerNative.getDefault()获取代理对象和 ActivityManagerService 通信。代理对象通过传递 ApplicationThread 对象 mAppThread 进行通信。</p>
+</li>
+</ol>
+<p>ApplicationThread 继承自 ApplicationThreadNative（一个实现 binder 的子类）目的是和 ActivityManagerService（AMS）通信。所以 ApplicationThread 仅仅是和 AMS 通信的一个工具类。</p>
+<p>主线程进入消息循环，等待接收来自系统的消息。当收到系统发送来的 bindapplication 的进程间调用时，调用函数 handlebindapplication 来处理该请求</p>
+<p>在 handleBindApplication 函数中第一次进入了 app 的代码世界，该函数功能是启动一个 application，并把系统收集的 apk 组件等相关信息绑定到 application 里.</p>
+<blockquote>
+<p>Application 是维护应用全局状态的基类，Android 系统会在启动应用进程时创建一个 Application 对象（应用只有一个 Application 对象）</p>
+<p>Applicaiton 类的应用场景有：</p>
+<ol>
+<li>初始化应用程序级别的资源，如全局对象、环境配置变量等 数据共享、数据缓存，如设置全局共享变量、方法等</li>
+<li>获取应用程序当前的内存使用情况，及时释放资源，从而避免被系统杀死</li>
+<li>监听应用程序配置信息的改变，如屏幕旋转等</li>
+<li>监听应用程序内 所有 Activity 的生命周期</li>
+</ol>
+</blockquote>
+<p>在创建完 application 对象后，接着调用了 application 的 attachBaseContext 方法，之后调用了 application 的 onCreate 函数。由此可以发现，app 的 Application 类中的 attachBaseContext 和 onCreate 这两个函数是最先获取执行权进行代码执行的。这也是为什么各家的加固工具的主要逻辑都是通过替换 app 入口 Application，并自实现这两个函数，在这两个函数中进行代码的脱壳以及执行权交付的原因。</p>
+<blockquote>
+<p>在 Android 应用程序中，attachBaseContext() 方法是一个回调方法，它在 onCreate() 方法之前被调用，其作用是向应用程序的 Context 对象中添加或修改一些信息。通常，开发人员会在这个方法中执行一些初始化操作，如创建全局对象、设置默认语言等。</p>
+<p>具体来说，attachBaseContext() 方法的主要作用有以下几个方面：</p>
+<ol>
+<li><p>为应用程序的 Context 对象添加一些额外的功能和信息，如修改 Resources 对象以支持多语言、修改 DisplayMetrics 对象以适应不同的屏幕尺寸等。</p>
+</li>
+<li><p>初始化全局变量和对象，例如创建数据库、设置全局的异常处理器等。</p>
+</li>
+<li><p>配置应用程序的一些基本参数，例如设置应用程序的主题、字体大小、默认语言等。</p>
+</li>
+</ol>
+<p>需要注意的是，在 attachBaseContext() 方法中，必须调用父类的 attachBaseContext() 方法，以确保系统在应用程序启动时正确地初始化 Context 对象。例如，在 Activity 类的 attachBaseContext() 方法中，必须调用父类的方法 super.attachBaseContext()。</p>
+<p>总之，attachBaseContext() 方法是 Android 应用程序中非常重要的一个回调方法，通过重写该方法，开发人员可以在应用程序启动时进行一些必要的初始化操作，以确保应用程序的正确运行。</p>
+</blockquote>
+<p>简单第一代壳加固程序脱壳运行的话：</p>
+<ol>
+<li><p>通过反射将 android.app.ActivityThread 中的 mClassLoader 置换为加载解密后的 APK 的 DexClassLoader，该 DexClassLoader 一方面加载了源程序，另一方面以原 mClassLoader 为父节点，这就保证了既加载了源程序又没有放弃原先加载的资源与系统代码。</p>
+</li>
+<li><p>找到源程序的 Application，通过反射建立并运行。这里需要注意的是，现在是加载一个完整的 APK 让它运行起来，一个 APK 运行的时候都是有一个 Application 对象的，这个也是一个程序运行之后的全局类。所以必须找到解密之后的源 Apk 的 Application 类，运行它的 onCreate 方法，这样源 Apk 才能开始它的运行生命周期。</p>
+</li>
+</ol>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231009145338.png" alt="20231009145338"></p>
+<p>根据以上流程图，我们需要在 Android Studio 中新建一个项目，创建一个继承自 Application 的 ProxyApplication 类，并在 attachBaseContext 方法中解密和动态加载源 APK，在 onCreate 方法中找到源 APK 的 Application 类并运行。</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/09/29/Study/Android%E7%9F%A5%E8%AF%86/Android%E8%BF%9B%E7%A8%8B%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/" title="Android进程启动流程" target="_blank" rel="external">https://beichen.link/2023/09/29/Study/Android知识/Android进程启动流程/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/10/08/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E9%A3%8E%E6%8E%A7/" title="国内风控的几大隐藏检测特征"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/09/23/Paper/deepIntent%E5%AD%A6%E4%B9%A0/" title="deepIntent学习"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>System_Server进程注入开发 | 北辰的小破站</title>
+  <meta name="description" content="ptrace通过 ptrace 函数可以跟踪进程，修改被跟踪进程的内存和寄存器值 在注入之前,简单介绍一下需要用到的 ptrace 的部分功能 1.PTRACE_ATTACH attach 到其他进程上,pid 为目标进程的 id ptrace(PTRACE_ATTACH, pid, NULL, 0) 2.PTRACE_DETACH 脱离 attach 的进程,pid 为目标进程的 id ptra">
+<meta property="og:type" content="article">
+<meta property="og:title" content="System_Server进程注入开发">
+<meta property="og:url" content="https://beichen.link/2023/08/15/Study/%E5%AE%9E%E4%B9%A0/System_Server%E8%BF%9B%E7%A8%8B%E6%B3%A8%E5%85%A5%E5%BC%80%E5%8F%91/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="ptrace通过 ptrace 函数可以跟踪进程，修改被跟踪进程的内存和寄存器值 在注入之前,简单介绍一下需要用到的 ptrace 的部分功能 1.PTRACE_ATTACH attach 到其他进程上,pid 为目标进程的 id ptrace(PTRACE_ATTACH, pid, NULL, 0) 2.PTRACE_DETACH 脱离 attach 的进程,pid 为目标进程的 id ptra">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230816132340.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230816142441.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230816142914.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230816143218.png">
+<meta property="article:published_time" content="2023-08-15T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.747Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="实习">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230816132340.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/08/15/Study/%E5%AE%9E%E4%B9%A0/System_Server%E8%BF%9B%E7%A8%8B%E6%B3%A8%E5%85%A5%E5%BC%80%E5%8F%91/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/实习/System_Server进程注入开发" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      System_Server进程注入开发
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/08/15/Study/%E5%AE%9E%E4%B9%A0/System_Server%E8%BF%9B%E7%A8%8B%E6%B3%A8%E5%85%A5%E5%BC%80%E5%8F%91/" class="article-date">
+	  <time datetime="2023-08-15T00:00:00.000Z" itemprop="datePublished">2023-08-15</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/08/15/Study/%E5%AE%9E%E4%B9%A0/System_Server%E8%BF%9B%E7%A8%8B%E6%B3%A8%E5%85%A5%E5%BC%80%E5%8F%91/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 1.2k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 5(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="ptrace"><a href="#ptrace" class="headerlink" title="ptrace"></a>ptrace</h2><p>通过 ptrace 函数可以跟踪进程，修改被跟踪进程的内存和寄存器值</p>
+<p>在注入之前,简单介绍一下需要用到的 ptrace 的部分功能</p>
+<p>1.PTRACE_ATTACH</p>
+<p>attach 到其他进程上,pid 为目标进程的 id <code>ptrace(PTRACE_ATTACH, pid, NULL, 0)</code></p>
+<p>2.PTRACE_DETACH</p>
+<p>脱离 attach 的进程,pid 为目标进程的 id <code>ptrace(PTRACE_DETACH, pid, NULL, 0)</code></p>
+<p>3.PTRACE_POKETEXT</p>
+<p>向对应进程写入数据,pid 为目标进程 id,dest 为地址,val 为写入的数据 <code>ptrace(PTRACE_POKETEXT, pid, dest, val)</code></p>
+<p>4.PTRACE_PEEKTEXT</p>
+<p>读取对应进程的数据,pid 为目标进程 id,dest 为地址 <code>ptrace(PTRACE_PEEKTEXT, pid, dest, 0)</code></p>
+<p>5.PTRACE_SETREGS&#x2F;PTRACE_GETREGS</p>
+<p>设置&#x2F;读取寄存器,pid 为目标进程地址 <code>ptrace(PTRACE_SETREGS, pid, NULL, regs)</code></p>
+<p>6.PTRACE_CONT</p>
+<p>继续执行,pid 为目标进程地址 <code>ptrace(PTRACE_CONT, pid, 0, signal)</code></p>
+<h2 id="进程注入的实现"><a href="#进程注入的实现" class="headerlink" title="进程注入的实现"></a>进程注入的实现</h2><p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230816132340.png" alt="20230816132340"></p>
+<h3 id="Step-1-attach-到目标进程-：ptraceAttach-pid"><a href="#Step-1-attach-到目标进程-：ptraceAttach-pid" class="headerlink" title="Step 1 attach 到目标进程 ：ptraceAttach(pid);"></a>Step 1 attach 到目标进程 ：ptraceAttach(pid);</h3><p>这里其实不光要 attach 到目标进程,还得保存目前寄存器状态,为了一会儿恢复现场.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">pt_regs</span> <span class="title">currentRegs</span>, <span class="title">orgRegs</span>;</span></span><br><span class="line"><span class="comment">// 获取远程进程的寄存器值</span></span><br><span class="line"><span class="keyword">if</span> (ptraceGetregs(pid, &amp;currentRegs) == <span class="number">-1</span>) &#123;</span><br><span class="line">    perror(<span class="string">&quot;get reg error&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//然后将其保存到 orgRegs 中</span></span><br><span class="line"><span class="built_in">memcpy</span>(&amp;orgRegs, &amp;currentRegs, <span class="keyword">sizeof</span>(currentRegs));</span><br></pre></td></tr></table></figure>
+
+<h3 id="Step-2-在目标进程中调用-mmap-申请一段空间"><a href="#Step-2-在目标进程中调用-mmap-申请一段空间" class="headerlink" title="Step 2 在目标进程中调用 mmap 申请一段空间"></a>Step 2 在目标进程中调用 mmap 申请一段空间</h3><p>这里申请空间就是用来在后续调用 dlopen 和 dlsym 时写入参数用的,这一步执行完以后,就可以在进程中看到自己申请到的空间了</p>
+<p>为了调用 mmap 函数，我们需要获取远程进程中的 mmap 函数地址，可通过计算系统库基地址-偏移得出</p>
+<p>同一系统库 (例如 mmap 所在的系统库 libc.so) 的 mmap 地址与 libc.so 基地址的偏移量，在当前进程和远程进程 (被注入进程) 中是相同的</p>
+<p>所以，只要获取到当前进程的 libc 基地址 (假设用变量 local_handle 表示)、当前进程 mmap 地址 (local_addr)、远程进程 libc.so 基地址 (remote_handle)，即可根据如下公式获取远程 mmap 地址 (remote_addr)：</p>
+<p><code>remote_addr = local_addr + remote_handle - local_handle</code></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230816142441.png" alt="20230816142441"></p>
+<p>接下来首先获取 libc.so 基地址 (local_handle&#x2F;remote_handle) 和当前进程 mmap 函数地址 (local_addr)。</p>
+<h4 id="获取-libc-so-基地址"><a href="#获取-libc-so-基地址" class="headerlink" title="获取 libc.so 基地址"></a>获取 libc.so 基地址</h4><p>获取进程中 libc.so 模块基地址 (local_handle&#x2F;remote_handle) 的方法为:</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230816142914.png" alt="20230816142914"></p>
+<p>即在&#x2F;proc&#x2F;{pid}&#x2F;maps 路径中找到模块名，其中 pid 替换为目标进程的进程 id,对应的行首地址即为模块的基地址。如果在当前进程中读取当前进程的模块基地址，可读取&#x2F;proc&#x2F;self&#x2F;maps 路径下的模块地址即可。通过该方法可求得 local_handle&#x2F;remote_handle 的值。</p>
+<h4 id="获取当前进程-mmap-函数地址"><a href="#获取当前进程-mmap-函数地址" class="headerlink" title="获取当前进程 mmap 函数地址"></a>获取当前进程 mmap 函数地址</h4><p>获取当前进程的 mmap 函数地址，有两种方法：</p>
+<p>方法一：通过 dlopen&#x2F;dlsym 的方式获取，如下图：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230816143218.png" alt="20230816143218"></p>
+<p>方法二：根据 elf 文件内容格式获取符号相对基地址的偏移量，加上当前进程中 libc.so 基地址，即可求得当前进程函数地址。</p>
+<h3 id="申请操作"><a href="#申请操作" class="headerlink" title="申请操作"></a>申请操作</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">long</span> parameters[<span class="number">6</span>];</span><br><span class="line">    parameters[<span class="number">0</span>] = <span class="number">0</span>;  <span class="comment">// 设置为NULL表示让系统自动选择分配内存的地址</span></span><br><span class="line">    parameters[<span class="number">1</span>] = <span class="number">0x1000</span>; <span class="comment">// 映射内存的大小</span></span><br><span class="line">    parameters[<span class="number">2</span>] = PROT_READ | PROT_WRITE | PROT_EXEC;  <span class="comment">// 表示映射内存区域可读可写可执行</span></span><br><span class="line">    parameters[<span class="number">3</span>] = MAP_ANONYMOUS | MAP_PRIVATE; <span class="comment">// 建立匿名映射</span></span><br><span class="line">    parameters[<span class="number">4</span>] = <span class="number">-1</span>; <span class="comment">//  若需要映射文件到内存中，则为文件的fd</span></span><br><span class="line">    parameters[<span class="number">5</span>] = <span class="number">0</span>; <span class="comment">//文件映射偏移量</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ptraceCallWrapper(pid, <span class="string">&quot;mmap&quot;</span>, remoteMmapAddr, parameters, <span class="number">6</span>, &amp;currentRegs) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;call target mmap error\n&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">uint8_t</span> *mmapBase = (<span class="type">uint8_t</span> *) ptraceRetval(&amp;currentRegs);</span><br><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;mmap ret is %x\n&quot;</span>, mmapBase);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>ptraceCallWrapper 实际上执行了 ptrace_call 函数，ptrace_call 首先会将调用的函数 (mmap) 所需的参数 (parameters) 从右到左压入堆栈，同时写入返回地址到对应寄存器中，并同步修改栈顶指针。将堆栈和寄存器值都设置完毕后，通过调用 ptrace 函数，并传入参数 PTRACE_CONT 使 mmap 函数得以执行</p>
+<h3 id="Step-3-将注入的-so-路径写入目标进程地址中"><a href="#Step-3-将注入的-so-路径写入目标进程地址中" class="headerlink" title="Step 3 将注入的 so 路径写入目标进程地址中"></a>Step 3 将注入的 so 路径写入目标进程地址中</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ptrace_write_data(pid, mmapBase, hookSoPath, <span class="built_in">strlen</span>(hookSoPath) + <span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+
+<h3 id="Step-4-调用-dlopen-加载-hooker-so"><a href="#Step-4-调用-dlopen-加载-hooker-so" class="headerlink" title="Step 4 调用 dlopen,加载 hooker.so"></a>Step 4 调用 dlopen,加载 hooker.so</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">parameters[<span class="number">0</span>] = (<span class="type">long</span>) mmapBase;</span><br><span class="line">parameters[<span class="number">1</span>] = RTLD_NOW | RTLD_GLOBAL;</span><br><span class="line"><span class="comment">//通过ptrace调用</span></span><br><span class="line"><span class="keyword">if</span> (ptraceCallWrapper(pid, <span class="string">&quot;dlopen&quot;</span>, remoteDlopen, parameters, <span class="number">2</span>, &amp;currentRegs) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;call target dlopen error&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里就将 hooker.so 加载上去了,执行 cat proc&#x2F;pid&#x2F;map 就能看到</p>
+<h3 id="Step-5-调用-dlsym-获取-hooker-so-中的-hookentry-符号"><a href="#Step-5-调用-dlsym-获取-hooker-so-中的-hookentry-符号" class="headerlink" title="Step 5 调用 dlsym,获取 hooker.so 中的 hookentry 符号"></a>Step 5 调用 dlsym,获取 hooker.so 中的 hookentry 符号</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">const</span> <span class="type">char</span> *targetFuncName = <span class="string">&quot;hookEntry&quot;</span>;</span><br><span class="line">   ptraceWriteData(pid, mmapBase + FUNCTION_NAME_ADDR_OFFSET, targetFuncName, <span class="built_in">strlen</span>(targetFuncName) + <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">   parameters[<span class="number">0</span>] = (<span class="type">long</span>) targetSoHandle;</span><br><span class="line">   parameters[<span class="number">1</span>] = (<span class="type">long</span>) (mmapBase + FUNCTION_NAME_ADDR_OFFSET);</span><br><span class="line"></span><br><span class="line">   <span class="keyword">if</span> (ptraceCallWrapper(pid, <span class="string">&quot;dlsym&quot;</span>, targetDlsymAddr, parameters, <span class="number">2</span>, &amp;currentRegs) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">       <span class="built_in">printf</span>(<span class="string">&quot;call target dlsym error\n&quot;</span>);</span><br><span class="line">       <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="type">void</span> *hookFuncAddr = (<span class="type">void</span> *) (ptraceRetval(&amp;currentRegs));</span><br><span class="line">   <span class="built_in">printf</span>(<span class="string">&quot;hook func addr is %x\n&quot;</span>, ptraceRetval(&amp;currentRegs));</span><br></pre></td></tr></table></figure>
+
+<h3 id="Step-6-调用-hookentry"><a href="#Step-6-调用-hookentry" class="headerlink" title="Step 6 调用 hookentry"></a>Step 6 调用 hookentry</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (ptraceCallWrapper(pid, targetFuncName, hookFuncAddr, parameters, <span class="number">0</span>, &amp;currentRegs) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;call target %s error&quot;</span>, targetFuncName);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/08/15/Study/%E5%AE%9E%E4%B9%A0/System_Server%E8%BF%9B%E7%A8%8B%E6%B3%A8%E5%85%A5%E5%BC%80%E5%8F%91/" title="System_Server进程注入开发" target="_blank" rel="external">https://beichen.link/2023/08/15/Study/实习/System_Server进程注入开发/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/08/25/Study/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/python%E7%9F%A5%E8%AF%86/" title="Python学习"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/08/15/Study/%E5%AE%9E%E4%B9%A0/%E6%B3%A8%E5%85%A5%E5%BC%80%E5%8F%91%E4%B9%8Bfake_dlopen/" title="Fake dlopen"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

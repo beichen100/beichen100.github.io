@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>FakeLocation原理及重打包 ( 一 ) | 北辰的小破站</title>
+  <meta name="description" content="fakelocation 重打包及原理一 结论在 Android 系统中，获取地理位置信息需调用 Android 系统的位置服务，而位置服务运行在包含了大量系统服务程序的 system_server 进程中，地理位置信息服务程序在 system_server 中的服务名为：LocationManagerService。 Fake Location Hook 了 LocationManagerSer">
+<meta property="og:type" content="article">
+<meta property="og:title" content="FakeLocation原理及重打包 ( 一 )">
+<meta property="og:url" content="https://beichen.link/2023/08/10/Study/%E5%AE%9E%E4%B9%A0/FakeLocation%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="fakelocation 重打包及原理一 结论在 Android 系统中，获取地理位置信息需调用 Android 系统的位置服务，而位置服务运行在包含了大量系统服务程序的 system_server 进程中，地理位置信息服务程序在 system_server 中的服务名为：LocationManagerService。 Fake Location Hook 了 LocationManagerSer">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718141047.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230713194618.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230713140336.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230713141110.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230710141421.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230713142621.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230713125154.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230713125323.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230713125403.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230713213550.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230713223005.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230717173522.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718143408.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718101618.png">
+<meta property="article:published_time" content="2023-08-10T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.747Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="实习">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718141047.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/08/10/Study/%E5%AE%9E%E4%B9%A0/FakeLocation%E5%88%86%E6%9E%90/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/实习/FakeLocation分析" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      FakeLocation原理及重打包 ( 一 )
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/08/10/Study/%E5%AE%9E%E4%B9%A0/FakeLocation%E5%88%86%E6%9E%90/" class="article-date">
+	  <time datetime="2023-08-10T00:00:00.000Z" itemprop="datePublished">2023-08-10</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/08/10/Study/%E5%AE%9E%E4%B9%A0/FakeLocation%E5%88%86%E6%9E%90/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 2k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 8(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="fakelocation-重打包及原理"><a href="#fakelocation-重打包及原理" class="headerlink" title="fakelocation 重打包及原理"></a>fakelocation 重打包及原理</h2><h3 id="一-结论"><a href="#一-结论" class="headerlink" title="一 结论"></a>一 结论</h3><p>在 Android 系统中，获取地理位置信息需调用 Android 系统的位置服务，而位置服务运行在包含了大量系统服务程序的 system_server 进程中，地理位置信息服务程序在 system_server 中的服务名为：LocationManagerService。</p>
+<p>Fake Location Hook 了 LocationManagerService 服务中的相关函数。当 App 向 LocationManagerService 发起获取地理位置信息请求时，被劫持的 LocationManagerService 向 App 返回预先设置的地理位置信息，通过这种方式完成地理位置信息篡改。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718141047.png" alt="20230718141047"></p>
+<p>这也是 Fake Location 的特别之处。不同于市面上传统的改定位工具，通过劫持相关 App（将定位信息注入到目标 App）实现篡改定位，Fake Location 则是直接劫持“系统位置服务”，因不在目标应用进程空间，更加隐蔽而难以检测。</p>
+<p>由于 FakeLocation 自签名验证较为复杂，现在还不具备对 APP 做重打包的能力，故采取其他办法，使用 magisk 的相关模块达到改包名类似的效果。</p>
+<p>经过验证，通过使用 magisk、Lsposed 的相关模块就能屏蔽掉美团 APP 的应用列表获取功能，将 FakeLocation 的命中标签<strong>从 3 减至 1</strong>，命中的逻辑应该是检测了 FakeLocation 运行时的 so 相关</p>
+<h3 id="二-逆向分析过程"><a href="#二-逆向分析过程" class="headerlink" title="二 逆向分析过程"></a>二 逆向分析过程</h3><h4 id="1-脱壳过程"><a href="#1-脱壳过程" class="headerlink" title="1 脱壳过程"></a>1 脱壳过程</h4><p>首先脱壳，frida-dexdump 搞定,但发现脱壳不完全，始终差一部分。</p>
+<p>frida_dump 也是脱不完全：<a target="_blank" rel="noopener" href="https://github.com/lasting-yang/frida_dump">https://github.com/lasting-yang/frida_dump</a></p>
+<p>老工具 drizzleDumper 根本跑不完，1w+ dex 文件了</p>
+<p>vmos 上的反射大师、ditor3.5、fdex2 都试过了，能脱，但是应该都脱不完全（因为没搜到 umeng）</p>
+<p>接下来尝试 tweakme 能不能重打包,pixel3 打开卡死，自已手机及 vmos 安装后显示主界面后闪退</p>
+<p>反编译后的代码很多混淆</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230713194618.png" alt="20230713194618"></p>
+<h4 id="2-签名验证分析"><a href="#2-签名验证分析" class="headerlink" title="2 签名验证分析"></a>2 签名验证分析</h4><p>mt、nt 管理器、太极均无法过掉签名验证</p>
+<p>发现 libsafety.so 里的 sq 函数有签名验证的功能, java 层会调用 sq 函数</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230713140336.png" alt="20230713140336"></p>
+<p>而且 libsafety.so 的 JNI_Onload 函数里会判断 sq 的返回结果，如果是-1 就会 kill 进程</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230713141110.png" alt="20230713141110"></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> __fastcall <span class="title function_">sq</span><span class="params">(JNIEnv *a1)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">int</span> v2; <span class="comment">// r0</span></span><br><span class="line">  <span class="type">void</span> *v3; <span class="comment">// r6</span></span><br><span class="line">  jclass v4; <span class="comment">// r9</span></span><br><span class="line">  jclass v5; <span class="comment">// r10</span></span><br><span class="line">  jmethodID v6; <span class="comment">// r0</span></span><br><span class="line">  <span class="type">int</span> v7; <span class="comment">// r8</span></span><br><span class="line">  jmethodID v8; <span class="comment">// r6</span></span><br><span class="line">  jstring v9; <span class="comment">// r5</span></span><br><span class="line">  <span class="type">void</span> *v10; <span class="comment">// r11</span></span><br><span class="line">  <span class="type">int</span> v11; <span class="comment">// r5</span></span><br><span class="line">  _jfieldID *v12; <span class="comment">// r0</span></span><br><span class="line">  <span class="type">void</span> *v13; <span class="comment">// r10</span></span><br><span class="line">  jobject v14; <span class="comment">// r9</span></span><br><span class="line">  jobject v15; <span class="comment">// r11</span></span><br><span class="line">  jmethodID v16; <span class="comment">// r0</span></span><br><span class="line">  <span class="type">void</span> *v17; <span class="comment">// r8</span></span><br><span class="line">  <span class="type">const</span> <span class="type">char</span> *v18; <span class="comment">// r5</span></span><br><span class="line">  <span class="type">const</span> <span class="type">char</span> *v19; <span class="comment">// r6</span></span><br><span class="line">  jclass v21; <span class="comment">// [sp+4h] [bp-3Ch]</span></span><br><span class="line">  <span class="type">void</span> *v22; <span class="comment">// [sp+8h] [bp-38h]</span></span><br><span class="line">  <span class="type">void</span> *v23; <span class="comment">// [sp+Ch] [bp-34h]</span></span><br><span class="line">  <span class="type">void</span> *v24; <span class="comment">// [sp+10h] [bp-30h]</span></span><br><span class="line">  <span class="type">void</span> *v25; <span class="comment">// [sp+14h] [bp-2Ch]</span></span><br><span class="line">  <span class="type">void</span> *v26; <span class="comment">// [sp+18h] [bp-28h]</span></span><br><span class="line">  jclass v27; <span class="comment">// [sp+1Ch] [bp-24h]</span></span><br><span class="line">  jclass v28; <span class="comment">// [sp+20h] [bp-20h]</span></span><br><span class="line"></span><br><span class="line">  v2 = j_getGlobalContext();</span><br><span class="line">  <span class="keyword">if</span> ( !v2 )</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-2</span>;</span><br><span class="line">  v3 = (<span class="type">void</span> *)v2;</span><br><span class="line">  v4 = (*a1)-&gt;FindClass(a1, <span class="string">&quot;android/content/Context&quot;</span>);</span><br><span class="line">  v5 = (*a1)-&gt;FindClass(a1, <span class="string">&quot;android/content/pm/PackageManager&quot;</span>);</span><br><span class="line">  v28 = (*a1)-&gt;FindClass(a1, <span class="string">&quot;android/content/pm/PackageInfo&quot;</span>);</span><br><span class="line">  v27 = (*a1)-&gt;FindClass(a1, <span class="string">&quot;android/content/pm/Signature&quot;</span>);</span><br><span class="line">  v6 = (*a1)-&gt;GetMethodID(a1, v4, <span class="string">&quot;getPackageManager&quot;</span>, <span class="string">&quot;()Landroid/content/pm/PackageManager;&quot;</span>);</span><br><span class="line">  v26 = v3;</span><br><span class="line">  v7 = _JNIEnv::CallObjectMethod(a1, v3, v6);</span><br><span class="line">  v8 = (*a1)-&gt;GetMethodID(a1, v5, <span class="string">&quot;getPackageInfo&quot;</span>, <span class="string">&quot;(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;&quot;</span>);</span><br><span class="line">  v9 = (*a1)-&gt;NewStringUTF(a1, <span class="string">&quot;com.lerist.fakelocation&quot;</span>);</span><br><span class="line">  v10 = (<span class="type">void</span> *)_JNIEnv::CallObjectMethod(a1, v7, v8);</span><br><span class="line">  <span class="keyword">if</span> ( ((<span class="type">int</span> (__fastcall *)(JNIEnv *))(*a1)-&gt;ExceptionCheck)(a1)</span><br><span class="line">    &amp;&amp; ((*a1)-&gt;ExceptionClear(a1),</span><br><span class="line">        v9 = (*a1)-&gt;NewStringUTF(a1, <span class="string">&quot;assenti-com.lerist.fakelocation&quot;</span>),</span><br><span class="line">        v10 = (<span class="type">void</span> *)_JNIEnv::CallObjectMethod(a1, v7, v8),</span><br><span class="line">        ((<span class="type">int</span> (__fastcall *)(JNIEnv *))(*a1)-&gt;ExceptionCheck)(a1)) )</span><br><span class="line">  &#123;</span><br><span class="line">    (*a1)-&gt;ExceptionClear(a1);</span><br><span class="line">    v11 = <span class="number">-1</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">  &#123;</span><br><span class="line">    v25 = v4;</span><br><span class="line">    v22 = v9;</span><br><span class="line">    v23 = (<span class="type">void</span> *)v7;</span><br><span class="line">    v24 = v5;</span><br><span class="line">    v12 = (_jfieldID *)((<span class="type">int</span> (__fastcall *)(JNIEnv *, jclass, <span class="type">const</span> <span class="type">char</span> *, <span class="type">const</span> <span class="type">char</span> *, <span class="type">int</span>))(*a1)-&gt;GetFieldID)(</span><br><span class="line">                         a1,</span><br><span class="line">                         v28,</span><br><span class="line">                         <span class="string">&quot;signatures&quot;</span>,</span><br><span class="line">                         <span class="string">&quot;[Landroid/content/pm/Signature;&quot;</span>,</span><br><span class="line">                         <span class="number">64</span>);</span><br><span class="line">    v13 = v10;</span><br><span class="line">    v14 = (*a1)-&gt;GetObjectField(a1, v10, v12);</span><br><span class="line">    v15 = (*a1)-&gt;GetObjectArrayElement(a1, v14, <span class="number">0</span>);</span><br><span class="line">    v21 = (*a1)-&gt;GetObjectClass(a1, v15);</span><br><span class="line">    v16 = (*a1)-&gt;GetMethodID(a1, v21, <span class="string">&quot;toCharsString&quot;</span>, <span class="string">&quot;()Ljava/lang/String;&quot;</span>);</span><br><span class="line">    v17 = (<span class="type">void</span> *)_JNIEnv::CallObjectMethod(a1, v15, v16);</span><br><span class="line">    v18 = (*a1)-&gt;GetStringUTFChars(a1, v17, <span class="number">0</span>);</span><br><span class="line">    (*a1)-&gt;DeleteLocalRef(a1, v26);</span><br><span class="line">    (*a1)-&gt;DeleteLocalRef(a1, v25);</span><br><span class="line">    (*a1)-&gt;DeleteLocalRef(a1, v24);</span><br><span class="line">    (*a1)-&gt;DeleteLocalRef(a1, v28);</span><br><span class="line">    (*a1)-&gt;DeleteLocalRef(a1, v27);</span><br><span class="line">    (*a1)-&gt;DeleteLocalRef(a1, v23);</span><br><span class="line">    (*a1)-&gt;DeleteLocalRef(a1, v22);</span><br><span class="line">    (*a1)-&gt;DeleteLocalRef(a1, v13);</span><br><span class="line">    (*a1)-&gt;DeleteLocalRef(a1, v14);</span><br><span class="line">    (*a1)-&gt;DeleteLocalRef(a1, v15);</span><br><span class="line">    (*a1)-&gt;DeleteLocalRef(a1, v21);</span><br><span class="line">    v19 = v18;</span><br><span class="line">    v11 = <span class="built_in">strcmp</span>(v18, RELEASE_SIGN);   <span class="comment">// 签名值写死在so文件里</span></span><br><span class="line">    (*a1)-&gt;ReleaseStringUTFChars(a1, v17, v19);</span><br><span class="line">    (*a1)-&gt;DeleteLocalRef(a1, v17);</span><br><span class="line">    <span class="keyword">if</span> ( v11 )</span><br><span class="line">      v11 = <span class="number">-1</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> v11;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>hook libc 的 kill 函数，发现确实是这样</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230710141421.png" alt="20230710141421"></p>
+<p>但是用 tweakMe patch 后的 apk，sq 返回值正常为 0，猜想可能 tweakMe 的签名重定向起作用了</p>
+<p>为了验证，hook 了 strcmp 函数，发现比对结果一样，说明就是 tweakMe 签名重定向，这样的话 libsafety.so 应该已经过掉了</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230713142621.png" alt="20230713142621"></p>
+<p>assets 目录下的其他 so 文件，很多也有 sq 函数，同样的实现</p>
+<p>jadx 打开脱壳的 dex 文件，显示不全，日志报错是因为 dex 的 checksum 不对，解决办法就是不开启 jadx 的 dex checksum 验证：<a target="_blank" rel="noopener" href="https://github.com/skylot/jadx/issues/1525">https://github.com/skylot/jadx/issues/1525</a></p>
+<p>根据网上帖子的介绍，一个 fakelocation 的老版本有 umeng 的签名校验，但是我根本没在代码里搜到相关 umeng 的东西：<a target="_blank" rel="noopener" href="https://www.52pojie.cn/thread-1449780-1-1.html">https://www.52pojie.cn/thread-1449780-1-1.html</a></p>
+<p>问过了帖子原作者，他已经忘了细节，不能提供帮助</p>
+<p>xposed 的算法助手开启拦截应用退出选项，可使得 tweakMe patch 的最新版 fake location 不闪退</p>
+<p>猜想这个选项可能是 hook 了 system 类，下一步准备 frida hook system 类试试，看一下堆栈</p>
+<p>hook 的时候出现了一个很奇怪的报错，process crashed，代码应该没写错</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230713125154.png" alt="20230713125154"></p>
+<p>搞了很久，问题应该是 Remote updates to the Android Art Runtime change the ClassLinker pointer offset，解决办法：<a target="_blank" rel="noopener" href="https://github.com/frida/frida/issues/2254">https://github.com/frida/frida/issues/2254</a></p>
+<p>第一步：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230713125323.png" alt="20230713125323"></p>
+<p>第二步重启后：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230713125403.png" alt="20230713125403"></p>
+<p>解决后继续 hook system.exit(), setImmediate(hook_system()) 后没发现 system.exit 调用就闪退了</p>
+<p>再继续试试 hook killProcess(), 同样没调用就闪退</p>
+<p>说明还有其他的退出方法没找到</p>
+<p>到现在（7.16 周四晚）仍未过掉 app 的签名验证，初步判断后续想要重打包 app 难度较大，并且 app 本身还有服务端的校验，在想是不是可以通过其他方式如使用面具的随机包名功能改 App 的包名</p>
+<p>app 内提供随机包名服务，但是是付费从服务端拉一个专属 apk 安装包</p>
+<h4 id="3-寻找-apk-关键逻辑"><a href="#3-寻找-apk-关键逻辑" class="headerlink" title="3 寻找 apk 关键逻辑"></a>3 寻找 apk 关键逻辑</h4><p>已脱壳的 dex 里好像没看到最关键的 hook 逻辑，不排除是有些 class 混淆太严重的原因。而且主要是前面提到的 umeng 代码没找到的原因，让我觉得肯定是没脱完壳，接下来放弃过签名，转而分析 App 伪造伪造的原理。</p>
+<h5 id="3-1-首先-hook-dlopen-看看"><a href="#3-1-首先-hook-dlopen-看看" class="headerlink" title="3-1 首先 hook dlopen 看看"></a>3-1 首先 hook dlopen 看看</h5><p>app 从启动到开启模拟位置选项，加载的 so 文件如下：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230713213550.png" alt="20230713213550"></p>
+<p>有点少，因为 assets 里面还有好多 so 都没看到加载</p>
+<p>其中，libBaiduMapSDK_base_v5_2_0.so, ibBaiduMapSDK_map_v5_2_0.so,liblocSDK7b.so 全是与百度定位相关的 SDK 的 so 文件，不重要。</p>
+<p>libjiagu_64.so, libjgdtc.so 与 360 加固相关，不管。</p>
+<h5 id="3-2-hook-runtime-exec-打印调用栈"><a href="#3-2-hook-runtime-exec-打印调用栈" class="headerlink" title="3-2 hook runtime.exec 打印调用栈"></a>3-2 hook runtime.exec 打印调用栈</h5><p>看到脱壳代码里面有执行 shell 命令的，所以 hook runtime.exec 看看。但是函数名字全部混淆了，追不到源码</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230713223005.png" alt="20230713223005"></p>
+<h5 id="3-3-hook-android-log-print"><a href="#3-3-hook-android-log-print" class="headerlink" title="3-3 hook _android_log_print"></a>3-3 hook _android_log_print</h5><p>so 文件里有很多使用_android_log_print 的 log 输出，hook 看看。但是没有有意思的东西，应该是会有的，很奇怪，估计是 hook 代码写的有问题</p>
+<h5 id="3-4-hook-unlink-和-FilterOutputStream-write"><a href="#3-4-hook-unlink-和-FilterOutputStream-write" class="headerlink" title="3-4 hook unlink 和 FilterOutputStream.write"></a>3-4 hook unlink 和 FilterOutputStream.write</h5><p>尝试 hook unlink 和 java.io.FilterOutputStream.write 函数，看看删除了哪些文件，因为代码里看起来有 rm 的命令，同时 system_dex 目录又很可疑，但也没看到删除了什么 dex 文件，也没删除 so 文件</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230717173522.png" alt="20230717173522"></p>
+<p>注：process.getInputStream 是用来读取控制台命令结果的, process.getOutputStream 是用来往控制台写入参数的</p>
+<p>结果看到了 busybox 执行命令啥的，也注入了很多 so 文件</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718143408.png" alt="20230718143408"></p>
+<p>补充: fakelocation 很多的文件操作都需要在手机重启后才会进行，前面的结果是正常运行但是没重启的时候进行的，重启后发现反编译代码里展现的全部命令，记录在 log_FilterOutputStream.txt 里</p>
+<h5 id="3-5-hook-open-函数"><a href="#3-5-hook-open-函数" class="headerlink" title="3-5 hook open 函数"></a>3-5 hook open 函数</h5><p>发现 app 打开了 apk 安装包里没有的 so 文件</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718101618.png" alt="20230718101618"></p>
+<p>最后在&#x2F;data&#x2F;0&#x2F;user&#x2F;com&#x2F;lerist.fakelocation&#x2F;files 里找到了 libfakeloc.so 文件，发现居然是 apk 文件，反编译后找到了 类 com.lerist.inject.fakelocation.InjectDex</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/08/10/Study/%E5%AE%9E%E4%B9%A0/FakeLocation%E5%88%86%E6%9E%90/" title="FakeLocation原理及重打包 ( 一 )" target="_blank" rel="external">https://beichen.link/2023/08/10/Study/实习/FakeLocation分析/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/08/15/Study/Android%E6%BC%8F%E6%B4%9E/Bundle%E9%A3%8E%E6%B0%B4/" title="Bundle 风水"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/08/10/Study/%E5%AE%9E%E4%B9%A0/FakeLocation%E5%8E%9F%E7%90%86/" title="FakeLocation原理及重打包 ( 二 )"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Bundle 风水 | 北辰的小破站</title>
+  <meta name="description" content="Parcelable 接口Android 提供了独有的 Parcelable 接口来实现序列化的方法，只要实现这个接口，一个类的对象就可以实现序列化并可以通过 Intent 进行传输，Intent 也是一个 Parcelable 类，下面示例是 Parcelable 的典型用法。 123456789101112131415161718192021222324252627282930public c">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Bundle 风水">
+<meta property="og:url" content="https://beichen.link/2023/08/15/Study/Android%E6%BC%8F%E6%B4%9E/Bundle%E9%A3%8E%E6%B0%B4/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="Parcelable 接口Android 提供了独有的 Parcelable 接口来实现序列化的方法，只要实现这个接口，一个类的对象就可以实现序列化并可以通过 Intent 进行传输，Intent 也是一个 Parcelable 类，下面示例是 Parcelable 的典型用法。 123456789101112131415161718192021222324252627282930public c">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230829174506.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230829174602.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230829115534.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230829115832.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230829120401.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230829121132.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230829180426.png">
+<meta property="article:published_time" content="2023-08-15T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.747Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Android漏洞">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230829174506.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/08/15/Study/Android%E6%BC%8F%E6%B4%9E/Bundle%E9%A3%8E%E6%B0%B4/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/Android漏洞/Bundle风水" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Bundle 风水
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/08/15/Study/Android%E6%BC%8F%E6%B4%9E/Bundle%E9%A3%8E%E6%B0%B4/" class="article-date">
+	  <time datetime="2023-08-15T00:00:00.000Z" itemprop="datePublished">2023-08-15</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/08/15/Study/Android%E6%BC%8F%E6%B4%9E/Bundle%E9%A3%8E%E6%B0%B4/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 3.7k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 14(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="Parcelable-接口"><a href="#Parcelable-接口" class="headerlink" title="Parcelable 接口"></a>Parcelable 接口</h2><p>Android 提供了独有的 Parcelable 接口来实现序列化的方法，只要实现这个接口，一个类的对象就可以实现序列化并可以通过 Intent 进行传输，Intent 也是一个 Parcelable 类，下面示例是 Parcelable 的典型用法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MyParcelable</span> <span class="keyword">implements</span> <span class="title class_">Parcelable</span> &#123;</span><br><span class="line">     <span class="keyword">private</span> <span class="type">int</span> mData;</span><br><span class="line"></span><br><span class="line">     <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">describeContents</span><span class="params">()</span> &#123;</span><br><span class="line">         <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">     &#125;</span><br><span class="line"></span><br><span class="line">     <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">writeToParcel</span><span class="params">(Parcel out, <span class="type">int</span> flags)</span> &#123;</span><br><span class="line">         out.writeInt(mData);</span><br><span class="line">     &#125;</span><br><span class="line"></span><br><span class="line">     <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">readFromParcel</span><span class="params">(Parcel reply)</span> &#123;</span><br><span class="line">         mData = in.readInt();</span><br><span class="line">     &#125;</span><br><span class="line"></span><br><span class="line">     <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> Parcelable.Creator&lt;MyParcelable&gt; CREATOR</span><br><span class="line">             = <span class="keyword">new</span> <span class="title class_">Parcelable</span>.Creator&lt;MyParcelable&gt;() &#123;</span><br><span class="line">         <span class="keyword">public</span> MyParcelable <span class="title function_">createFromParcel</span><span class="params">(Parcel in)</span> &#123;</span><br><span class="line">             <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">MyParcelable</span>(in);</span><br><span class="line">         &#125;</span><br><span class="line"></span><br><span class="line">         <span class="keyword">public</span> MyParcelable[] newArray(<span class="type">int</span> size) &#123;</span><br><span class="line">             <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">MyParcelable</span>[size];</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;;</span><br><span class="line"></span><br><span class="line">     <span class="keyword">private</span> <span class="title function_">MyParcelable</span><span class="params">(Parcel in)</span> &#123;</span><br><span class="line">         mData = in.readInt();</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中，关键的 writeToParcel 和 readFromParcel 方法，分别调用 Parcel 类中的一系列 write 方法和 read 方法实现序列化和反序列化。</p>
+<p>可序列化的 Parcelable 对象一般不单独进行序列化传输，需要通过 Bundle 对象携带。 Bundle 的内部实现实际是 Hashmap，以 Key-Value 键值对的形式存储数据。</p>
+<p>例如， Android 中进程间通信频繁使用的 Intent 对象中可携带一个 Bundle 对象，利用 putExtra(key, value)方法，可以往 Intent 的 Bundle 对象中添加键值对(Key Value)。Key 为 String 类型，而 Value 则可以为各种数据类型，包括 int、Boolean、String 和 Parcelable 对象等等，Parcel 类中维护着这些类型信息。</p>
+<p>下图是序列化后的数据在 Bundle 中 的简单示意图（注意对于 ByteArray 类型的 Value 还需要增加 value 长度的字段）：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230829174506.png" alt="20230829174506"></p>
+<p>另外，&#x2F;frameworks&#x2F;base&#x2F;core&#x2F;java&#x2F;android&#x2F;os&#x2F;Parcel.java 中维护着各种数据类型在 Bundle 中的值分别是什么，下面是部分信息：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">VAL_NULL</span> <span class="operator">=</span> -<span class="number">1</span>;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">VAL_STRING</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">VAL_INTEGER</span> <span class="operator">=</span> <span class="number">1</span>;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">VAL_MAP</span> <span class="operator">=</span> <span class="number">2</span>;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">VAL_BUNDLE</span> <span class="operator">=</span> <span class="number">3</span>;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">VAL_PARCELABLE</span> <span class="operator">=</span> <span class="number">4</span>;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">VAL_SHORT</span> <span class="operator">=</span> <span class="number">5</span>;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">VAL_LONG</span> <span class="operator">=</span> <span class="number">6</span>;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">VAL_FLOAT</span> <span class="operator">=</span> <span class="number">7</span>;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>当所有数据都被序列化装载进 Bundle 后，接下来则需要依次在 Bundle 头部写入携带所有数据的长度、Bundle 魔数 (0x4C444E42) 和键值对的数量。下面是完整的 Bundle 简单结构图：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230829174602.png" alt="20230829174602"></p>
+<p>简单举个例子，我要传递一个 Bundle 对象携带 2 个键值对，分别是：</p>
+<ul>
+<li>上述 MyParcelable 类对象（其具有 int 类型的成员变量 mData）；</li>
+<li>以及一个 key-value 为 “CSDN”:”Tr0e” 的字符串键值对 ；</li>
+</ul>
+<p>那么可以这么写：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Bundle</span> <span class="variable">myBundle</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Bundle</span>();</span><br><span class="line"><span class="comment">// 相当于new 一个 parcel</span></span><br><span class="line"><span class="type">Parcel</span> <span class="variable">bndlData</span> <span class="operator">=</span> Parcel.obtain();</span><br><span class="line"><span class="type">Parcel</span> <span class="variable">pcelData</span> <span class="operator">=</span> Parcel.obtain();</span><br><span class="line"><span class="comment">//Bundle对象将携带的键值对数量为2</span></span><br><span class="line">pcelData.writeInt(<span class="number">2</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">//第一个键值对的key值，直接写入字符串，省略了key的长度</span></span><br><span class="line">pcelData.writeString(<span class="string">&quot;test&quot;</span>);</span><br><span class="line">pcelData.writeInt(<span class="number">4</span>); <span class="comment">//value类型VAL_PACELABLE，4代表为对象</span></span><br><span class="line">pcelData.writeString(<span class="string">&quot;com.Tr0e.MyParcelable&quot;</span>); <span class="comment">//name of Class Loader，加载类</span></span><br><span class="line">pcelData.writeInt(<span class="number">1</span>); <span class="comment">//mData</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//写入第二个键值对，key为CSDN，直接写入字符串，省略了key的长度</span></span><br><span class="line">pcelData.writeString(<span class="string">&quot;CSDN&quot;</span>);</span><br><span class="line">pcelData.writeInt(<span class="number">0</span>); <span class="comment">//VAL_STRING代表value类型为字符串</span></span><br><span class="line">pcelData.writeString(<span class="string">&quot;Tr0e&quot;</span>); <span class="comment">//value值</span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="variable">length</span> <span class="operator">=</span> pcelData.dataSize();</span><br><span class="line">bndlData.writeInt(length); <span class="comment">//Bundle对象携带的数据总长度</span></span><br><span class="line">bndlData.writeInt(<span class="number">0x4c444E42</span>); <span class="comment">//Bundle魔数</span></span><br><span class="line">bndlData.appendFrom(pcelData, <span class="number">0</span>, length);</span><br><span class="line">bndlData.setDataPosition(<span class="number">0</span>);</span><br><span class="line">myBundle.readFromParcel(bndlData);</span><br><span class="line">Log.d(TAG, myBundle.toString());</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>而反序列化过程则完全是一个对称的逆过程，将依次读入 Bundle 携带所有数据的长度、Bundle 魔数(0x4C444E42)、键值对。读键值对的时候，调用对象的 readFromParcel 方法，从 Bundle 读取相应长度的数据，重新构建这个对象。</p>
+<h2 id="前置知识：LaunchAnyWhere-漏洞"><a href="#前置知识：LaunchAnyWhere-漏洞" class="headerlink" title="前置知识：LaunchAnyWhere 漏洞"></a>前置知识：LaunchAnyWhere 漏洞</h2><p>这是一个 AccountManagerService 的漏洞，利用这个漏洞，我们可以任意调起任意未导出的 Activity，突破进程间组件访问隔离的限制。这个漏洞影响 2.3 ~ 4.3 的安卓系统。</p>
+<p>普通应用（记为 AppA）去请求添加某类账户时，会调用 AccountManager.addAccount,然后 AccountManager 会去查找提供账号的应用（记为 AppB）的 Authenticator 类，调用 Authenticator.addAccount 方法；AppA 再根据 AppB 返回的 Intent 去调起 AppB 的账户登录界面。</p>
+<h3 id="关于-AccountManagerService"><a href="#关于-AccountManagerService" class="headerlink" title="关于 AccountManagerService"></a>关于 AccountManagerService</h3><p>AccountManagerService 同样也是系统服务之一，暴露给开发者的的接口是 AccountManager。该服务用于管理用户各种网络账号。这使得一些应用可以获取用户网络账号的 token，并且使用 token 调用一些网络服务。很多应用都提供了账号授权功能，比如微信、支付宝、邮件 Google 服务等等。</p>
+<p>关于 AccountManager 的使用，可以参考 Launchanywhere 的 Demo：github.com&#x2F;stven0king&#x2F;…<br>由于各家账户的登陆方法和 token 获取机制肯定存在差异，所以 AccountManager 的身份验证也被设计成可插件化的形式：由提供账号相关的应用去实现账号认证。提供账号的应用可以自己实现一套登陆 UI，接收用户名和密码；请求自己的认证服务器返回一个 token；将 token 缓存给 AccountManager。<br>可以从“设置-&gt; 添加账户”中看到系统内可提供网络账户的应用：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230829115534.png" alt="20230829115534"></p>
+<p>如果应用想要出现在这个页面里，应用需要声明一个账户认证服务 AuthenticationService：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">service</span> <span class="attr">android:name</span>=<span class="string">&quot;.AuthenticationService&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:exported</span>=<span class="string">&quot;true&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:enabled</span>=<span class="string">&quot;true&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">intent-filter</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">action</span> <span class="attr">android:name</span>=<span class="string">&quot;android.accounts.AccountAuthenticator&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">intent-filter</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta-data</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:name</span>=<span class="string">&quot;android.accounts.AccountAuthenticator&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:resource</span>=<span class="string">&quot;@xml/authenticator&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">service</span>&gt;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>并在服务中提供一个 Binder:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">AuthenticationService</span> <span class="keyword">extends</span> <span class="title class_">Service</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> AuthenticationService.AccountAuthenticator mAuthenticator;</span><br><span class="line">    <span class="keyword">private</span> AuthenticationService.AccountAuthenticator <span class="title function_">getAuthenticator</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (mAuthenticator == <span class="literal">null</span>)</span><br><span class="line">            mAuthenticator = <span class="keyword">new</span> <span class="title class_">AuthenticationService</span>.AccountAuthenticator(<span class="built_in">this</span>);</span><br><span class="line">        <span class="keyword">return</span> mAuthenticator;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onCreate</span><span class="params">()</span> &#123;</span><br><span class="line">        mAuthenticator = <span class="keyword">new</span> <span class="title class_">AuthenticationService</span>.AccountAuthenticator(<span class="built_in">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> IBinder <span class="title function_">onBind</span><span class="params">(Intent intent)</span> &#123;</span><br><span class="line">        Log.d(<span class="string">&quot;tanzhenxing33&quot;</span>, <span class="string">&quot;onBind&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> getAuthenticator().getIBinder();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">AccountAuthenticator</span> <span class="keyword">extends</span> <span class="title class_">AbstractAccountAuthenticator</span> &#123;</span><br><span class="line">        <span class="comment">/****部分代码省略****/</span></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> Bundle <span class="title function_">addAccount</span><span class="params">(AccountAuthenticatorResponse response, String accountType, String authTokenType, String[] requiredFeatures, Bundle options)</span> <span class="keyword">throws</span> NetworkErrorException &#123;</span><br><span class="line">            Log.d(<span class="string">&quot;tanzhenxing33&quot;</span>, <span class="string">&quot;addAccount: &quot;</span>);</span><br><span class="line">            <span class="keyword">return</span> testBundle();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="漏洞原理"><a href="#漏洞原理" class="headerlink" title="漏洞原理"></a>漏洞原理</h3><p>普通应用（记为 AppA）去请求添加某类账户时，会调用 AccountManager.addAccount,然后 AccountManager 会去查找提供账号的应用（记为 AppB）的 Authenticator 类，调用 Authenticator.addAccount 方法；AppA 再根据 AppB 返回的 Intent 去调起 AppB 的账户登录界面。</p>
+<p>这个过程如图所示：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230829115832.png" alt="20230829115832"></p>
+<p>我们可以将这个流程转化为一个比较简单的事实：</p>
+<ol>
+<li>AppA 请求添加一个特定类型的网络账号</li>
+<li>系统查询到 AppB 可以提供一个该类型的网络账号服务，系统向 AppB 发起请求</li>
+<li>AppB 返回了一个 intent 给系统，系统把 intent 转发给 appA</li>
+<li>AccountManagerResponse 在 AppA 的进程空间内调用 startActivity(intent)调起一个 Activity;并且 AccountManagerResponse 是 FrameWork 中的代码， AppA 对这一调用毫不知情。</li>
+</ol>
+<p>这种设计的本意是，AccountManagerService 帮助 AppA 查找到 AppB 账号登陆页面，并呼起这个登陆页面。而问题在于，AppB 可以任意指定这个 intent 所指向的组件，AppA 将在不知情的情况下由 AccountManagerResponse 调用起了一个 Activity. 如果 AppA 是一个 system 权限应用，比如 Settings，那么 AppA 能够调用起任意 AppB 指定的未导出 Activity。</p>
+<h3 id="如何利用"><a href="#如何利用" class="headerlink" title="如何利用"></a>如何利用</h3><p>上文已经提到过，如果假设 AppA 是 Settings，AppB 是攻击程序。那么只要能让 Settings 触发 addAcount 的操作，就能够让 AppB launchAnyWhere。而问题是，怎么才能让 Settings 触发添加账户呢？如果从“设置-&gt;添加账户”的页面去触发，则需要用户手工点击才能触发，这样攻击的成功率将大大降低，因为一般用户是很少从这里添加账户的，用户往往习惯直接从应用本身登陆。</p>
+<p>不过现在就放弃还太早，其实 Settings 早已经给我们留下触发接口。只要我们调用 com.android.settings.accounts.AddAccountSettings，并给 Intent 带上特定的参数，即可让 Settings 触发 launchAnyWhere：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Intent</span> <span class="variable">intent1</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Intent</span>();</span><br><span class="line">intent1.setComponent(<span class="keyword">new</span> <span class="title class_">ComponentName</span>(<span class="string">&quot;com.android.settings&quot;</span>, <span class="string">&quot;com.android.settings.accounts.AddAccountSettings&quot;</span>));</span><br><span class="line">intent1.setAction(Intent.ACTION_RUN);</span><br><span class="line">intent1.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);</span><br><span class="line">String authTypes[] = &#123;<span class="string">&quot;自己的账号类型&quot;</span>&#125;;</span><br><span class="line">intent1.putExtra(<span class="string">&quot;account_types&quot;</span>, authTypes);</span><br><span class="line">AuthenticatorActivity.<span class="built_in">this</span>.startActivity(intent1);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>这个过程如图 Step 0 所示：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230829120401.png" alt="20230829120401"></p>
+<p>主要的攻击对象还是应用中未导出的 Activity，特别是包含了一些 intenExtra 的 Activity</p>
+<p>利用这种类型的漏洞，可以绕过 pin 码认证界面，直接重置手机系统 pin 码，或者绕过原有的锁屏校验，直接重置手机的锁屏密码。</p>
+<h3 id="修复"><a href="#修复" class="headerlink" title="修复"></a>修复</h3><p>安卓 4.4 已经修复了这个漏洞，检查了 Step3 中返回的 intent 所指向的 Activity 和 AppB 是否是有相同签名，避免了 luanchAnyWhere 的可能。</p>
+<p>因为 AppA 是根据 AppB 返回的 Intent 去调起 AppB 的账户登录界面，应该只能访问 AppB 的 Activity</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230829121132.png" alt="20230829121132"></p>
+<p>这个补丁在当时是没什么问题，但是等到 2017 年，有海外的研究人员在一份恶意样本中发现，可以利用 Parcelable 反序列化绕过这个补丁，由于 Google 的补丁是在 system_server 中检查 Intent，并且又通过 AIDL 传给 Settings 之后启动界面，这其中跨越了进程边界，也就涉及到两次次序列化和反序列化的过程，那么我们如果通过 Parcelable 反序列化漏洞的字节错位，通过精确的布局，使得 system_server 在检查 Intent 时找不到这个 Intent，而在错位后 Settings 却刚好可以找到，这样就可以实现补丁的绕过并再次实现 LaunchAnyWhere，研究人员将发现的这种漏洞利用方式命名为 Bundle mismatch。</p>
+<h2 id="CVE-2017-13288"><a href="#CVE-2017-13288" class="headerlink" title="CVE-2017-13288"></a>CVE-2017-13288</h2><h3 id="漏洞利用"><a href="#漏洞利用" class="headerlink" title="漏洞利用"></a>漏洞利用</h3><p>CVE-2017-13288 漏洞出现在 PeriodicAdvertisingReport 类中，对比 writeToParcel 和 readFromParcel 函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// /frameworks/base/core/java/android/bluetooth/le/PeriodicAdvertisingReport.java</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">writeToParcel</span><span class="params">(Parcel dest, <span class="type">int</span> flags)</span> &#123;</span><br><span class="line">    dest.writeInt(syncHandle);</span><br><span class="line">    dest.writeLong(txPower);  <span class="comment">// long</span></span><br><span class="line">    dest.writeInt(rssi);</span><br><span class="line">    dest.writeInt(dataStatus);</span><br><span class="line">    <span class="keyword">if</span> (data != <span class="literal">null</span>) &#123;</span><br><span class="line">        dest.writeInt(<span class="number">1</span>);      <span class="comment">// flag</span></span><br><span class="line">        dest.writeByteArray(data.getBytes());</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        dest.writeInt(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">readFromParcel</span><span class="params">(Parcel in)</span> &#123;</span><br><span class="line">    syncHandle = in.readInt();</span><br><span class="line">    txPower = in.readInt();   <span class="comment">// int</span></span><br><span class="line">    rssi = in.readInt();</span><br><span class="line">    dataStatus = in.readInt();</span><br><span class="line">    <span class="keyword">if</span> (in.readInt() == <span class="number">1</span>) &#123;    <span class="comment">// flag</span></span><br><span class="line">        data = ScanRecord.parseFromBytes(in.createByteArray());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>在对 txPower 这个 int 类型成员变量进行操作时，写入为 long，读出却为 int，因此经历一次不匹配的序列化和反序列化后 txPower 之后的成员变量都会错位 4 字节。</p>
+<p>那么如何借此错位来绕过 checkKeyIntent 检查并实现 LaunchAnyWhere 提权攻击呢？请看下图：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230829180426.png" alt="20230829180426"></p>
+<ol>
+<li><p><strong>第一次序列化</strong>：在包含 Autherticator 类 App 中构造恶意 Bundle，其携带两个键值对。第一个键值对携带一个 PeriodicAdvertisingReport 对象，并将恶意 KEY_INTENT 的内容放在 data 这个 ByteArray 类型的成员中；第二个键值可任意写入一个键值对。注意由于这一次序列化需要精确控制内容，我们不希望发生不匹配（下文会解释），因此将 PeriodicAdvertisingReport 对象 writeToParcel 时，要和其 readFromParcel 对应。也就是说，toPower 在写入时数据类型应该是 int，而不是 long(按照类定义应该是写入 long)。</p>
+</li>
+<li><p><strong>第一次反序列化：</strong>在 system_server 反序列化过程中生成了 PeriodicAdvertisingReport 对象，且 syncHandle、txPower、rssi、dataStatus 这些 int 型的数据均通过 readInt 读入为 1，同时由于接下来的 flag 也为 1，将 KEY_INTENT 的内容读入到 data 中。此时，KEY_INTENT 作为第一个键值对的 value，而不是一个单独的键值对，因此可以逃避 checkKeyIntent 检查。到这里来说，一切过程正常，除了以 int 写入 txPower</p>
+</li>
+<li><p><strong>第二次序列化：</strong>然后 system_server 将这个 Bundle 序列化，此时 txPower 变量使用 writeLong(这个时候是系统自动按照类原生定义操作) 写入 Bundle，因此会占据 8 个字节，前 4 字节为 1，后 4 字节为 0，而 txPower 后面的内容则原封不动地写入。</p>
+</li>
+<li><p><strong>第二次反序列化：</strong>最后在 Settings 反序列化过程中，读出 txPower 变量调用的是 readInt() 方法，因此 txPower 读出为 1，后面接着 rssi 却读出为 0，这里发生了四字节的错位。接下来 dataStatus 读入为 1，flag 读入为 1，所以 Settings 认为后面还有 ByteArray 类型的 data，但读入的长度域却为 1，因此把后面 KEY_INTENT 的 4 字节 length（ByteArray 4 字节对齐）当做 data。至此，第一个键值对反序列化完毕。最后，原本第一次序列化过程中位于 ByteArray 数组中的恶意 KEY_INTENT 经过两轮序列化与反序列化后，成功作为一个新的独立键值对堂而皇之地出现了</p>
+</li>
+</ol>
+<p>最终的结果就是取得 Settings 应用的 system 权限发送任意 intent，实现启动任意 Activity 的能力。</p>
+<blockquote>
+<p>【注意】由于 system_server 会进行恶意 Intent 的检查，所以第一次反序列化后我们传递的 Bundle 数据不能被解析出恶意 Intent 的键值对（checkKeyIntent 函数进行签名检查时会不通过）<br>关键是通过第二次序列化与反序列化时发生错位、进而在 Settings 中暴露出恶意 Intent。</p>
+</blockquote>
+<p>具体的 poc 程序参见：</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_39190897/article/details/128058136">https://blog.csdn.net/weixin_39190897/article/details/128058136</a></p>
+<h3 id="修复方法"><a href="#修复方法" class="headerlink" title="修复方法"></a>修复方法</h3><p>Google 提出了一种简单粗暴的缓释方案，即直接从 Bundle 类中下手。虽然 Bundle 本身是 ArrayMap 结构，但在反序列化时候即便只需要获取其中一个 key，也需要把整个 Bundle 反序列化一遍。这其中的主要原因在于序列化数据中每个元素的大小是不固定的，且由元素的类型决定，如果不解析完前面的所有数据，就不知道目标元素在什么地方。</p>
+<p>为此在 21 年左右，AOSP 中针对 Bundle 提交了一个称为 LazyBundle(9ca6a5) 的 patch。其主要思想为针对一些长度不固定的自定义类型，比如 Parcelable、Serializable、List 等结构或容器，会在序列化时将对应数据的大小添加到头部。这样在反序列化时遇到这些类型的数据，可以仅通过检查头部去选择性跳过这些元素的解析，而此时 sMap 中对应元素的值会设置为 LazyValue，在实际用到这些值的时候再去对特定数据进行反序列化。</p>
+<p>这个 patch 可以在一定程度上缓释针对 Bundle 风水的攻击，而且在提升系统健壮性也有所助益，因为即便对于损坏的 Parcel 数据，如果接收方没有使用到对应的字段，就可以避免异常的发生。对于之前的 Bundle 解析策略，哪怕只调用了 size 方法，也会触发所有元素的解析从而导致异常。 在这个 patch 中 unparcel 还增加了一个 boolean 参数 itemwise，如果为 true 则按照传统方式解析每个元素，否则就会跳过 LazyValue 的解析。</p>
+<p>使用 appshark：<a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/282588">https://www.anquanke.com/post/id/282588</a></p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/08/15/Study/Android%E6%BC%8F%E6%B4%9E/Bundle%E9%A3%8E%E6%B0%B4/" title="Bundle 风水" target="_blank" rel="external">https://beichen.link/2023/08/15/Study/Android漏洞/Bundle风水/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/08/15/Study/%E5%AE%9E%E4%B9%A0/%E6%B3%A8%E5%85%A5%E5%BC%80%E5%8F%91%E4%B9%8Bfake_dlopen/" title="Fake dlopen"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/08/10/Study/%E5%AE%9E%E4%B9%A0/FakeLocation%E5%88%86%E6%9E%90/" title="FakeLocation原理及重打包 ( 一 )"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

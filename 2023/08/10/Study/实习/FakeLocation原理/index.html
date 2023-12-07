@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>FakeLocation原理及重打包 ( 二 ) | 北辰的小破站</title>
+  <meta name="description" content="fakelocation 重打包及原理一 结论二 逆向分析过程三 原理分析1 概况在 Android 系统中，获取地理位置信息需调用 Android 系统的位置服务，而位置服务运行在包含了大量系统服务程序的 system_server 进程中，地理位置信息服务程序在 system_server 中的服务名为：LocationManagerService。 Fake Location Hook 了">
+<meta property="og:type" content="article">
+<meta property="og:title" content="FakeLocation原理及重打包 ( 二 )">
+<meta property="og:url" content="https://beichen.link/2023/08/10/Study/%E5%AE%9E%E4%B9%A0/FakeLocation%E5%8E%9F%E7%90%86/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="fakelocation 重打包及原理一 结论二 逆向分析过程三 原理分析1 概况在 Android 系统中，获取地理位置信息需调用 Android 系统的位置服务，而位置服务运行在包含了大量系统服务程序的 system_server 进程中，地理位置信息服务程序在 system_server 中的服务名为：LocationManagerService。 Fake Location Hook 了">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718141047.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231207165700.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718113043.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718113017.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718124325.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718125209.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718125541.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718130104.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718131033.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718131218.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718131448.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718133657.png">
+<meta property="article:published_time" content="2023-08-10T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.747Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="实习">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718141047.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/08/10/Study/%E5%AE%9E%E4%B9%A0/FakeLocation%E5%8E%9F%E7%90%86/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/实习/FakeLocation原理" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      FakeLocation原理及重打包 ( 二 )
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/08/10/Study/%E5%AE%9E%E4%B9%A0/FakeLocation%E5%8E%9F%E7%90%86/" class="article-date">
+	  <time datetime="2023-08-10T00:00:00.000Z" itemprop="datePublished">2023-08-10</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/08/10/Study/%E5%AE%9E%E4%B9%A0/FakeLocation%E5%8E%9F%E7%90%86/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 996(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 3(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="fakelocation-重打包及原理"><a href="#fakelocation-重打包及原理" class="headerlink" title="fakelocation 重打包及原理"></a>fakelocation 重打包及原理</h2><h3 id="一-结论"><a href="#一-结论" class="headerlink" title="一 结论"></a>一 结论</h3><h3 id="二-逆向分析过程"><a href="#二-逆向分析过程" class="headerlink" title="二 逆向分析过程"></a>二 逆向分析过程</h3><h3 id="三-原理分析"><a href="#三-原理分析" class="headerlink" title="三 原理分析"></a>三 原理分析</h3><h4 id="1-概况"><a href="#1-概况" class="headerlink" title="1 概况"></a>1 概况</h4><p>在 Android 系统中，获取地理位置信息需调用 Android 系统的位置服务，而位置服务运行在包含了大量系统服务程序的 system_server 进程中，地理位置信息服务程序在 system_server 中的服务名为：LocationManagerService。</p>
+<p>Fake Location Hook 了 LocationManagerService 服务中的相关函数。当 App 向 LocationManagerService 发起获取地理位置信息请求时，被劫持的 LocationManagerService 向 App 返回预先设置的地理位置信息，通过这种方式完成地理位置信息篡改。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718141047.png" alt="20230718141047"></p>
+<p>这也是 Fake Location 的特别之处。不同于市面上传统的改定位工具，通过劫持相关 App（将定位信息注入到目标 App）实现篡改定位，Fake Location 则是直接劫持“系统位置服务”，因不在目标应用进程空间，更加隐蔽而难以检测。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231207165700.png" alt="20231207165700"></p>
+<h4 id="2-原理细节"><a href="#2-原理细节" class="headerlink" title="2 原理细节"></a>2 原理细节</h4><p>Fake Location 的核心功能都在 前面找到的 libfakeloc.so 这个 apk 文件中，libfakeloc.so 加载后 libfakeloc_init.so init 方法会执行类 com.lerist.inject.fakelocation.InjectDex 的 init 方法。</p>
+<p>在这个方法里，Fake Location 向 system_service 添加了一些系统服务，用于和 fakeLocation 跨进程通信。</p>
+<p>可以看到，InjectDex.init 方法向 system_service 添加了一些系统服务</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718113043.png" alt="20230718113043"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718113017.png" alt="20230718113017"></p>
+<p>由于混淆太难看懂了，我只找了关键函数分析。</p>
+<p>在劫持的 getLastLocation 中，首先判断是否需要改定位(当有用户使用了 Fake Location 的位置模拟功能时则需要篡改)。如果需要改定位，直接调用 getLastLocation_bak(getLastLocation_bak 是原 getLastLocation 的备份)，构造一个 Location 对象(伪造的位置信息)，填充伪造的经纬度信息并返回，达到篡改位置信息目的。如果不需要改定位，则调用原本的 getLastLocation 函数并返回正常的地理位置信息。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718124325.png" alt="20230718124325"></p>
+<p>伪造的位置对象由 getTempLocation 提供，进入函数体发现伪造的位置被 f82 定义，继续追</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718125209.png" alt="20230718125209"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718125541.png" alt="20230718125541"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718130104.png" alt="20230718130104"></p>
+<p>过程比较乱，mo61 函数里面调用了 init 函数，hook 系统函数初始化</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718131033.png" alt="20230718131033"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718131218.png" alt="20230718131218"></p>
+<p>hook 函数很重要，会 hook 系统服务类的关键函数，完成地理位置篡改。 com.android.server.LocationManagerService 里的很多函数都是与位置信息相关</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718131448.png" alt="20230718131448"></p>
+<p>hook 函数的实现得到 native 层了，在 liblhooker.so 里 Java_com_lerist_lib_lhooker_LHooker_hookMethodNative</p>
+<p>关键代码在这，应该是替换了 art_method 的 trampoline 跳板地址来实现函数的替换 hook</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230718133657.png" alt="20230718133657"></p>
+<h3 id="四-测评结果"><a href="#四-测评结果" class="headerlink" title="四 测评结果"></a>四 测评结果</h3><p>由于 FakeLocation 自签名验证较为复杂，现在还不具备对 APP 做重打包的能力，故采取其他办法。</p>
+<p>经过验证，通过使用 magisk、Lsposed 的相关模块就能屏蔽掉美团 APP 的应用列表获取功能，将 FakeLocation 的命中标签<strong>从 3 减至 1</strong>，命中的逻辑应该是检测了 FakeLocation 运行时的 so 相关</p>
+<h4 id="1-之前"><a href="#1-之前" class="headerlink" title="1 之前"></a>1 之前</h4><p>在 12.11 版本的美团上开启 FakeLocation，命中 3 个标签：</p>
+<ul>
+<li>fake_location_risk_apps_detect</li>
+<li>android_app_location_riskapps</li>
+<li>android_execution_inject_mock_localtion_so</li>
+</ul>
+<p>前两个猜测是通过包名检测的，最后一个经过询问应该是检测了 so</p>
+<h4 id="2-现在"><a href="#2-现在" class="headerlink" title="2 现在"></a>2 现在</h4><p>在同样版本的美团上启用 magisk 的 Zygisk-LSPosed 模块，开启 LSPosed。</p>
+<p>然后在 LSPosed 上启用隐藏列表模块以及隐秘空间模块(只开启一个也行)，并重启。</p>
+<ul>
+<li>隐藏列表模块在黑名单模板管理里添加 FakeLocation 应用，然后在应用管理里勾选对美团 APP 生效。<a target="_blank" rel="noopener" href="https://github.com/Xposed-Modules-Repo/com.tsng.hidemyapplist">https://github.com/Xposed-Modules-Repo/com.tsng.hidemyapplist</a></li>
+<li>隐秘空间模块将 FakeLocation 隐藏，并在致盲选项里勾选美团 APP。<a target="_blank" rel="noopener" href="https://github.com/GeekTR/PrivacySpace">https://github.com/GeekTR/PrivacySpace</a></li>
+</ul>
+<p>启用后，再开启 FakeLocation，美团后台只命中了 android_execution_inject_mock_localtion_so 这一个标签。</p>
+<p>并且，magsik 开启最新版(0.7.3)的 Shamiko 模块，关闭遵守排除列表，在配置排除列表内勾选美团，就能隐藏 magisk 的命中。</p>
+<p>验证了低版本 12.8、12.5 版本的美团 APP，均命中 android_execution_inject_mock_localtion_so，其他两个标签未命中。</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/08/10/Study/%E5%AE%9E%E4%B9%A0/FakeLocation%E5%8E%9F%E7%90%86/" title="FakeLocation原理及重打包 ( 二 )" target="_blank" rel="external">https://beichen.link/2023/08/10/Study/实习/FakeLocation原理/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/08/10/Study/%E5%AE%9E%E4%B9%A0/FakeLocation%E5%88%86%E6%9E%90/" title="FakeLocation原理及重打包 ( 一 )"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/OLLVM/" title="Ollvm 介绍"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

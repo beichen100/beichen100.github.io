@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Native Hook | 北辰的小破站</title>
+  <meta name="description" content="Native 流派可以分为三大类：  GOT&#x2F;PLT HookGOT&#x2F;PLT Hook 主要是用于替换某个 SO 的外部调用，通过将外部函数调用跳转成我们的目标函数。GOT&#x2F;PLT Hook 可以说是一个非常经典的 Hook 方法，它非常稳定，可以达到部署到生产环境的标准。  Trap HookTrap Hook 也可以称为断点 Hook，其原理类似于调试器，可以 H">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Native Hook">
+<meta property="og:url" content="https://beichen.link/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/Native%20hook/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="Native 流派可以分为三大类：  GOT&#x2F;PLT HookGOT&#x2F;PLT Hook 主要是用于替换某个 SO 的外部调用，通过将外部函数调用跳转成我们的目标函数。GOT&#x2F;PLT Hook 可以说是一个非常经典的 Hook 方法，它非常稳定，可以达到部署到生产环境的标准。  Trap HookTrap Hook 也可以称为断点 Hook，其原理类似于调试器，可以 H">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230725150207.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230725135133.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230725150909.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230725151014.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230725140803.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230725141739.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230725143547.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230725144317.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808103137.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808123707.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808123757.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808124347.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808124430.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808125453.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808125828.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808125914.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808130411.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808130450.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808130556.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808134852.png">
+<meta property="og:image" content="https://img2023.cnblogs.com/blog/2817923/202303/2817923-20230325192102246-1649372514.png">
+<meta property="og:image" content="https://img2023.cnblogs.com/blog/2817923/202303/2817923-20230325192303332-377910268.png">
+<meta property="article:published_time" content="2023-08-10T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.751Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="逆向知识">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230725150207.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/Native%20hook/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/逆向知识/Native hook" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Native Hook
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/Native%20hook/" class="article-date">
+	  <time datetime="2023-08-10T00:00:00.000Z" itemprop="datePublished">2023-08-10</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/Native%20hook/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 5.9k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 21(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>Native 流派可以分为三大类：</p>
+<ul>
+<li><p>GOT&#x2F;PLT Hook<br>GOT&#x2F;PLT Hook 主要是用于替换某个 SO 的外部调用，通过将外部函数调用跳转成我们的目标函数。GOT&#x2F;PLT Hook 可以说是一个非常经典的 Hook 方法，它非常稳定，可以达到部署到生产环境的标准。</p>
+</li>
+<li><p>Trap Hook<br>Trap Hook 也可以称为断点 Hook，其原理类似于调试器，可以 Hook 函数内部的调用。兼容性非常好，但是效率比较低，不适合 Hook 调用非常频繁的函数。</p>
+</li>
+<li><p>Inline Hook<br>Inline Hook 也可以 Hook 函数内部的调用，它直接将函数开始（Prologue）处的指令更替为跳转指令，使得原函数直接跳转到 Hook 的目标函数函数，并保留原函数的调用接口以完成后续再调用回来的目的。</p>
+</li>
+</ul>
+<p>与 GOT&#x2F;PLT Hook 相比，Inline Hook 可以不受 GOT&#x2F;PLT 表的限制，几乎可以 Hook 任何函数。不过其实现十分复杂。</p>
+<h2 id="1-elf-文件"><a href="#1-elf-文件" class="headerlink" title="1.elf 文件"></a>1.elf 文件</h2><p>ELF 全称 “Executable and Linkable Format”，即可执行可链接文件格式，目前常见的 Linux、 Android 可执行文件、共享库（.so）、目标文件（ .o）以及 Coredump 文件均为此格式。</p>
+<ul>
+<li><p>目标文件：是指程序源代码经过汇编编译器编译的但未进行链接的二进制文件，一般以 .o 为结尾标识，链接器对 .o 文件进行链接处理，最终生成可执行文件(executable file)或者共享库(shared object file).</p>
+</li>
+<li><p>当程序运行过程中异常终止或者崩溃，操作系统会将程序当时的状态记录下来，保持在一个文件里，这就是 core dump.</p>
+</li>
+<li><p>可重定位目标文件：包含二进制代码和数据，其形式可以和其他目标文件进行合并，创建一个可执行目标文件。比如 linux 下的.o 文件</p>
+</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230725150207.png" alt="20230725150207"></p>
+<ol>
+<li>预处理阶段：预处理器（cpp）根据以字符#开头的命令修改原始的 C 程序，结果得到另一个 C 程序，通常以.i 作为文件扩展名。主要是进行文本替换、宏展开、删除注释这类简单工作。 命令行：gcc -E hello.c hello.i</li>
+<li>编译阶段：将文本文件 hello.i 翻译成 hello.s，包含相应的汇编语言程序</li>
+<li>汇编阶段：将.S 文件翻译成机器指令，然后把这些指令打包成一种可重定位目标程序的格式，并把结果保存在目标文件.o 中（汇编——&gt;机器）。 命令行：gcc -c hello.c hello.o</li>
+<li>链接阶段：hello 程序调用了 printf 函数，链接器就把 printf.o 文件并入 hello.o 文件中，得到 hello 可执行文件，然后加载到存储器中由系统执行。</li>
+</ol>
+<h3 id="1-1-elf-文件结构"><a href="#1-1-elf-文件结构" class="headerlink" title="1.1 elf 文件结构"></a>1.1 elf 文件结构</h3><p>常见的 ELF 文件大致结构如下：分两种视角，链接视角和执行视角</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230725135133.png" alt="20230725135133"></p>
+<p>ELF 文件参与程序的连接 (建立一个程序) 和程序的执行(运行一个程序)，所以可以从不同的角度来看待 elf 格式的文件：</p>
+<ul>
+<li><p>如果用于编译和链接（可重定位文件），则编译器和链接器将把 elf 文件看作是节头表描述的节的集合, 程序头表可选。</p>
+</li>
+<li><p>如果用于加载执行（可执行文件），则加载器则将把 elf 文件看作是程序头表描述的段的集合，一个段可能包含多个节，节头表可选。</p>
+</li>
+</ul>
+<p>ELF 文件中的内容至少有编译后的机器指令代码、数据。除了这些内容以外，ELF 文件中还包括了其他的信息，比如符号表、调试信息、字符串等。</p>
+<p>一般 ELF 文件将这些信息按不同的属性，以 Section 的形式存储，根据其内容在内存中是否可读写等，在 ELF 中把权限相同、又连在一起的 section 叫做 segment，操作系统正是按照“segment”来映射可执行文件的。</p>
+<p>典型的 section 如下：</p>
+<ul>
+<li>.text 已编译程序的二进制代码</li>
+<li>.rodata 只读数据段，比如常量</li>
+<li>.data 已初始化的全局变量和静态变量</li>
+<li>.bss 未初始化的全局变量和静态变量，所有被初始化为 0 的全局变量和静态变量</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230725150909.png" alt="20230725150909"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230725151014.png" alt="20230725151014"></p>
+<h3 id="1-2-elf-头部"><a href="#1-2-elf-头部" class="headerlink" title="1.2 elf 头部"></a>1.2 elf 头部</h3><p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230725140803.png" alt="20230725140803"></p>
+<p>用来描述整个文件的组织。节区部分包含链接视图的大量信息：指令、数据、符号表、重定位信息等。</p>
+<p>文件的最开始几个字节给出如何解释文件的提示信息。这些信息独立于处理器，也独立于文件中的其余内容。ELF Header 部分可以用以下的数据结构表示:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">char</span>    e_ident[EI_NIDENT];    <span class="comment">/* magic number and other info */</span></span><br><span class="line">    Elf64_Quarter    e_type;            <span class="comment">/* file type */</span></span><br><span class="line">    Elf64_Quarter    e_machine;        <span class="comment">/* machine type */</span></span><br><span class="line">    Elf64_Half       e_version;        <span class="comment">/* version number */</span></span><br><span class="line">    Elf64_Addr       e_entry;         <span class="comment">/* entry point virtual address */</span></span><br><span class="line">    Elf64_Off        e_phoff;         <span class="comment">/* Program head table file offset */</span></span><br><span class="line">    Elf64_Off        e_shoff;         <span class="comment">/* Section header table file offset */</span></span><br><span class="line">    Elf64_Half       e_flags;         <span class="comment">/* Processor flags */</span></span><br><span class="line">    Elf64_Quarter    e_ehsize;        <span class="comment">/* sizeof elf header */</span></span><br><span class="line">    Elf64_Quarter    e_phentsize;     <span class="comment">/* Program header entry size */</span></span><br><span class="line">    Elf64_Quarter    e_phnum;         <span class="comment">/* Number of program headers */</span></span><br><span class="line">    Elf64_Quarter    e_shentsize;     <span class="comment">/* Section header entry size */</span></span><br><span class="line">    Elf64_Quarter    e_shnum;         <span class="comment">/* Number of section headers */</span></span><br><span class="line">    Elf64_Quarter    e_shstrndx;      <span class="comment">/* Section header string table index */</span></span><br><span class="line">&#125; Elf64_Ehdr;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230725141739.png" alt="20230725141739"></p>
+<h3 id="1-3-program-header-table"><a href="#1-3-program-header-table" class="headerlink" title="1.3 program header table"></a>1.3 program header table</h3><p>描述 segment 的结构叫做 program header table，在可执行文件或者共享目标文件里它描述了各个 segment 在 elf 文件里的位置，以及在程序执行过程中系统需要准备的其他信息，用来告诉系统如何创建进程映像。用来构造进程映像的目标文件必须具有程序头部表，可重定位文件不需要这个表。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230725143547.png" alt="20230725143547"></p>
+<h3 id="1-4-section-header-table"><a href="#1-4-section-header-table" class="headerlink" title="1.4 section header table"></a>1.4 section header table</h3><p>包含了描述文件节区的信息，每个节区在表中都有一项，每一项给出诸如节区名称、节区大小这类信息。用于链接的目标文件必须包含节区头部表，其他目标文件可以有，也可以没有这个表。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230725144317.png" alt="20230725144317"></p>
+<h2 id="2-GOT-和-PLT-HOOK"><a href="#2-GOT-和-PLT-HOOK" class="headerlink" title="2.GOT 和 PLT HOOK"></a>2.GOT 和 PLT HOOK</h2><p>GOT&#x2F;PLT HOOK 是 ELF 文件函数 hook 的一种实现机制，GOT&#x2F;PLT Hook 主要用于实现替换某个 SO 的外部调用，它的优点是非常稳定，因此在生产环境通常使用这种实现方案。</p>
+<p>示例：使用了 PLT Hook 将 libart.so 中的外部函数 pthread_create 替换成自己的方法</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808103137.png" alt="20230808103137"></p>
+<p>GOT&#x2F;PLT Hook 的方案命名 主要是因为该方案主要是通过修改 ELF 文件结构中的 GOT (The Global Offset Table) 和 PLT(The Procedure Linkage Table) 段的地址来实现的</p>
+<ul>
+<li><p>The Global Offset Table (GOT): 是一个存储外部库函数的表。简单来说就是在数据段的地址表，作用是用来记录代码中引用到的外部符号的地址映射。这里的符号包括，变量、函数等。假定我们有一些代码段的指令引用一些地址变量，编译器会引用 GOT 表来替代直接引用绝对地址，因为绝对地址在编译期是无法知道的，只有重定位后才会得到，GOT 自己本身将会包含函数引用的绝对地址。</p>
+</li>
+<li><p>The Procedure Linkage Table (PLT)：由代码片段组成的，每个代码片段都跳转到 GOT 表中的一个具体的函数调用。PLT 不同于 GOT，它位于代码段，动态库的每一个外部函数都会在 PLT 中有一条记录，每一条 PLT 记录都是一小段可执行代码。 一般来说，外部代码都是在调用 PLT 表里的记录，然后 PLT 的相应记录会跳转到 GOT 表中的一个具体的函数调用。我们一般把这种设定叫作“蹦床”（Trampoline）。</p>
+</li>
+</ul>
+<ol>
+<li><p>外部函数调用在在编译期是无法知道的，编译器会引用 GOT 表来替代直接引用绝对地址。只有重定位后才会得到，GOT 自己本身将会包含函数引用的绝对地址。</p>
+</li>
+<li><p>外部函数 func 在编译时会转为 func@plt，并在 PLT 表中插入一条记录。PLT 表中都是一段段可执行代码，这里面会跳到 GOT 表中进行解析，解析完毕后动态链接器会将这个实际地址填入 GOT 中。</p>
+</li>
+<li><p>当第一次调用发生后，之后再调用函数 func 就高效简单很多。程序仍然会先调用 PLT，然后 PLT 也会跳到 GOT 中。GOT 此时由于已经存储了实际地址，可以直接指向 func，这样就高效的完成了函数调用。</p>
+</li>
+<li><p>PLT 和 GOT 记录是一一对应的，并且 GOT 表第一次解析后会包含调用函数的实际地址。既然这样，那 PLT 的意义究竟是什么呢？PLT 从某种意义上赋予我们一种懒加载的能力。很多函数可能在程序执行完时都不会被用到，比如错误处理函数或一些用户很少用到的功能模块等，那么一开始把所有函数都链接好实际就是一种浪费。为了提升动态链接的性能，我们可以使用 PLT 来实现延迟绑定的功能。当动态库首次被加载时，所有的函数地址并没有被解析。此时 plt 跳到 got 表，但是 got 表也是空的，所以 GOT 表中初始对应的指令又会跳回到源函数对应 PLT 表位置中的第二条指令，去跳转到 GOT 表中保存了 dl_runtime_resolve 地址的位置. 当执行 dl_runtime_resolve 解析出动态库函数的地址后,会将真实的地址写回到 GOT 表中,这样第二次调用该函数时就需要经过动态库解析了.</p>
+</li>
+</ol>
+<p>业界通常会根据修改 PLT 记录或者 GOT 记录区分为 GOT Hook 和 PLT Hook，但其本质原理十分接近。GOT&#x2F;PLT Hook 主要是通过解析 SO 文件，将待 hook 函数在 got 表的地址替换为自己函数的入口地址，这样目标进程每次调用待 hook 函数时，实际上是执行了我们自己的函数。但是他们只能 Hook 动态库之间的调用的函数，并且无法 Hook 未导出的私有函数</p>
+<blockquote>
+<p>注：导出表指将当前动态库的一些函数符号保留，供外部调用，导入表中的函数实际是在该动态库中调用外部的导出函数</p>
+<p>例如导入表存放的是一些其他 so 的函数，例如 libc 的 open，而导出表存放的是一些共其他 so 调用的函数，比如自己 so 中编写的函数，而无论导入表还是导出表基本都是针对导出函数，针对非导出函用 inlinehook 更常用一些</p>
+</blockquote>
+<p>PLT 具体实现参见 xHook 的实现 <a target="_blank" rel="noopener" href="https://github.com/iqiyi/xHook/blob/master/docs/overview/android_plt_hook_overview.zh-CN.md">https://github.com/iqiyi/xHook/blob/master/docs/overview/android_plt_hook_overview.zh-CN.md</a></p>
+<p>微信 Matrix 开源库的 ELF Hook，它使用的是 GOT Hook，主要使用它来做性能监控。（微信 Matrix 里面的 hook 已经换成了爱奇艺的 xHook 了）</p>
+<p>爱奇艺开源的的 xHook，它使用的也是 PLT Hook。<a target="_blank" rel="noopener" href="https://github.com/iqiyi/xHook">https://github.com/iqiyi/xHook</a></p>
+<p>以上参考文章：</p>
+<p><a target="_blank" rel="noopener" href="https://blog.yorek.xyz/android/3rd-library/xhook/#4-elf-xhook">https://blog.yorek.xyz/android/3rd-library/xhook/#4-elf-xhook</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.yorek.xyz/android/paid/master/native_hook/#_1">https://blog.yorek.xyz/android/paid/master/native_hook/#_1</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/0ac63c3744dd">https://www.jianshu.com/p/0ac63c3744dd</a></p>
+<p>这种 Hook 方法也不是万能的，因为它只能替换导入函数的方式。有时候我们不一定可以找到这样的外部调用函数。如果想 Hook 函数的内部调用，这个时候就需要用到 Inline Hook 了。</p>
+<h2 id="3-Inline-hook"><a href="#3-Inline-hook" class="headerlink" title="3.Inline hook"></a>3.Inline hook</h2><p>Inline hook 是终极 hook 手段，通过直接修改运行时内存的方式替换指令，完全手工的完成 hook 及跳回操作，理论上可以实现任意位置的 hook，不过手写指令时需要考虑 abi 兼容等众多因素，实现难度较高</p>
+<p>指令级别的 hook 跟高级语言层面的实现方式在感官上有很大区别，高级语言中不管借助什么手段，只需将 hook 代码织入到目标代码之中即可，但这种方式在指令级别是行不通的，见下图：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808123707.png" alt="20230808123707"></p>
+<p>操作系统将程序指令成段装载到内存里，我们手动把若干指令插入到某个位置就是改动了程序装载后的内存结构，这意味着程序需要重新做地址重定位才能正常运行，这本该由链接器完成的工作换成人工来计算几乎是不可能的，所以这肯定不是实现 hook 的正确方式。</p>
+<p>为了保持内存结构不变，正确的方法是使用指令替换而不是指令插入的方式来实现 hook，见下图：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808123757.png" alt="20230808123757"></p>
+<p>假设目标方法内有 ins0, ins1, ins2 三条指令，首先将起始指令（两条指令）替换为等长的跳转指令 jump_ins（一条 LDR,一条要跳转的地址），jump_ins 负责跳转到 hook 方法执行。</p>
+<p>而 hook 操作后，往往还需要保留调用原方法的能力以保证功能可用性，所以 hook 方法内还有一个跳转指令来调回原方法继续执行（jump ins1），调回前需要先补充执行目标方法已被替换的原始指令（图中 ins0），保证原方法完整性。</p>
+<p>综上，inline hook 需要完成的工作就是图中绿色的部分，即跳转指令的替换、补充执行原指令、跳回原方法继续执行这三步。</p>
+<h3 id="3-1-跳转指令"><a href="#3-1-跳转指令" class="headerlink" title="3.1 跳转指令"></a>3.1 跳转指令</h3><p>先简单熟悉下 ARM 的常用指令集</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808124347.png" alt="20230808124347"></p>
+<p>以 B 开头的指令是专门的跳转指令，不过在这里不适用 inline hook 的场景，因为它们只用来完成 32MB 以内的相对地址的跳转，而我们无法保证 hook 方法在这个范围内。</p>
+<p>如何实现绝对地址的跳转呢？回忆下，还记得 PC 这个特殊地位的寄存器吗？它存储着程序当前执行的指令地址，换句话说，CPU 执行的指令是从 PC 指向的地址取出来的，那么我们将一个目标地址写入 PC 就实现了绝对地址的跳转，对应的是写入寄存器的指令：LDR。查询文档，LDR 指令格式如下：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808124430.png" alt="20230808124430"></p>
+<p>大括号内的可选参数暂时不管，指令格式可归纳为 LDR Rd, <destication address>，其中 Rd 为目标寄存器，中括号内为得出一个绝对地址的表达式，表达式内部可能用到 Rn 和 Rm 两个寄存器作为操作数，也可能是一个立即数。</p>
+<p>假设想要跳转的地址是 0x11111111，那么将该地址写入 PC 的指令就是 LDR PC, 0x11111111，可随即遇到一个问题，ARM 下每条指令的长度是 32 位，而地址长度也是 32 位，将一个绝对地址写入一个指令里显然是不可能的，像 LDR PC, 0x11111111 这样的指令是无法写入内存的。那么该如何在一条指令的空间里写入一个绝对地址的表达式呢？</p>
+<h3 id="3-2-寄存器间接寻址"><a href="#3-2-寄存器间接寻址" class="headerlink" title="3.2 寄存器间接寻址"></a>3.2 寄存器间接寻址</h3><p>注意到一个寄存器的容量也是 32 位，刚好能装下一个绝对地址，所以可以把目标地址先存到某个寄存器（Rm）中，然后执行 LDR PC, Rm 就实现了绝对地址的跳转，这种以某个寄存器作为基准的寻址方式叫做寄存器间接寻址。</p>
+<p>再进一步，在实际开发中我们发现 PC 寄存器就是一个天然的铆点，并且想要跳转的目标地址往往离程序当前执行到的地址不远，所以索性用 PC 加上一个偏移量来表达一个绝对地址，格式为：LDR PC, [PC, offset]，这种寻址方式又叫 PC 相对寻址。使用 PC 相对寻址，我们可以用 8 个字节（即 2 条指令的长度）来完成一个绝对地址的跳转操作：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808125453.png" alt="20230808125453"></p>
+<p>0x00006000 位置的指令含义为当 CPU 执行到此时，将该地址加 4 字节-即 0x00006004 地址内的内容写入到 PC 中，而内容就是我们事先写入的目标地址。</p>
+<p>到此跳转指令似乎完成了，可实际上还需要做一个调整，由于 ARM 下 CPU 遵循三级流水的执行流程，PC 并不指向当前指令，见下图：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808125828.png" alt="20230808125828"></p>
+<p>三级流水可以近似理解为三线程并行。三级流水将 CPU 运行拆解为三个步骤：取指、转译、执行。</p>
+<p>取指单元在取出一条指令后，会交给下游-转译单元进行翻译，转而继续取下一条指令，无需等待该指令后续的步骤。</p>
+<p>三个单元有各自的流水线，这样造成的结果就是 PC（即取指单元）总是指向正在执行的指令往后两条指令的地址位置，如图当 CPU 执行 ADD 指令时，Fetch 已取到了 CMP 指令，领先了 ADD 两条指令的距离。依据此，需要对上面的跳转指令做如下调整：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808125914.png" alt="20230808125914"></p>
+<p>可以看到，从 PC+4 变成了 PC-4，PC-4 其实是[PC-8]+4。即当 CPU 执行到 0x00006000 时 PC 已经指向了 0x00006000+2*4 的位置，需要先减去 8 字节才得到当前执行位置，再加 4 字节便得到 0x00006004。</p>
+<p>将指令写入内存时需要翻译为机器码，根据文档，LDR 命令的机器码格式为：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808130411.png" alt="20230808130411"></p>
+<p>根据文档将指令 LDR PC, [PC, -4]翻译为 32 位的二进制机器码：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808130450.png" alt="20230808130450"></p>
+<p>其中 28-31 位表示执行条件，1110 代表总是执行，26-27 位 01 表示 LDR，后面到 20 位是 6 个独立标志位，其中第 23 位 U 为 0 表示做减法，Rn 表示基准寄存器编号，1111 即为 15，表示 r15，也就是 PC，Rd 表示目标寄存器，也是 PC，0-11 位用来存储立即数，100 就是 4，这就是 LDR PC, [PC, -4]的机器码，转换成 16 进制是 0xe51ff004。最终得到跳转 hook 方法地址的程序内容如下：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808130556.png" alt="20230808130556"></p>
+<p>跳回指令和跳转指令格式一样，只是将目标地址从 hook 方法的起始地址改为原函数继续执行的地址，其中 return address &#x3D; 目标方法起始地址 + 替换指令长度 &#x3D; 目标方法起始地址 + 8 字节</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230808134852.png" alt="20230808134852"></p>
+<h3 id="3-3-指令修复"><a href="#3-3-指令修复" class="headerlink" title="3.3 指令修复"></a>3.3 指令修复</h3><p>完成了跳转和跳回指令，剩下的操作就只有补充执行原函数中被替换的原始指令了。这步是 inline hook 最复杂的一步，也是 inline hook 的难度所在。</p>
+<p>以上流程看似一切正常，cpu 的现场都被保存和恢复了, 但是如果说被替换的两条指令，在恢复执行的时候，有用到 pc 寄存器的值，这两条指令的执行位置是在 stub 跳板函数中，并不是原函数，所以 pc 的值并不是预期的值，这种情况就要进行执行指令修复。</p>
+<p>回忆下前面提到的 PC 相对寻址，实际上这种寻址方式应用相当广泛，带来的结果就是指令往往与当前的 PC 值强绑定。当我们手动修改程序流程，跳到 hook 方法再回头执行原始指令时，PC 已不再是原始指令预期的值，毫无疑问会执行异常。所以执行原始指令前要进行指令修复，修复方法就是将指令中 PC 的值修改为预期的值（注意并不是修改 PC，只是修改指令中的表示 PC 值的那几位数据）。</p>
+<p>指令修复需要涵盖 PC 相关的所有指令类型，这里只用 ADD 指令来举例说明：</p>
+<p>ADD Rd, [PC, Rm]</p>
+<p>对上面指令进行修复，可以预见指令的机器码中第一个操作数那几位肯定是 1111（即 r15&#x3D;PC），我们需要将其改为一个其他寄存器 Rx，而 Rx 中存入该指令预期的 PC 值，即指令被替换前的 PC 值。这样就完成了加法指令的修复，其他类型指令的修复方式大同小异，基本思想都是 PC 值替换</p>
+<p>参考：<br><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/2684e251124d">https://www.jianshu.com/p/2684e251124d</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/spinchao/article/details/108300557#31__433">https://blog.csdn.net/spinchao/article/details/108300557#31__433</a></p>
+<h3 id="3-4-Inline-hook-检测"><a href="#3-4-Inline-hook-检测" class="headerlink" title="3.4 Inline hook 检测"></a>3.4 Inline hook 检测</h3><p>Inline Hook 根据使用场景不同，其跳转方式主要有以下 5 种：</p>
+<p><img src="https://img2023.cnblogs.com/blog/2817923/202303/2817923-20230325192102246-1649372514.png" alt="Alt text"></p>
+<p>故 InlineHook 的检测思路为：对函数的指定偏移处指令进行检测，若满足上述机器码特征，则可断定存在 InlineHook。</p>
+<p>以对 timeGetTime 的检测为例：</p>
+<p><img src="https://img2023.cnblogs.com/blog/2817923/202303/2817923-20230325192303332-377910268.png" alt="Alt text"></p>
+<p>这是网上找的 x86 上的检测方案，但是应该可行性不高，因为这种指令太多了，根本不能判断是不是 inline hook 的操作。</p>
+<p>arm32 上由于这种跳转指令有固定的格式，如 LDR PC, [PC, #-4] 然后紧接着 destination address，这样紧连着的两条指令反而特征更特别一点。</p>
+<p>当然还有其他检测方案，比如说对比内存中的.text 段和文件中的.text 的 crc 是否相等，大致流程：</p>
+<ul>
+<li><p>解析&#x2F;proc&#x2F;self&#x2F;maps</p>
+</li>
+<li><p>匹配到你需要检测的 so 文件，获取其的加载基地址和文件路径</p>
+</li>
+<li><p>通过 mmap 将文件映射到内存，然后把内容传给 ELF 解析工具，获取其.text 段的偏移和大小</p>
+</li>
+<li><p>通过偏移+加载基地址 和 偏移+mmap 返回值 以及.text 段大小来计算 crc，并比对</p>
+</li>
+</ul>
+<h3 id="3-5-SandHook"><a href="#3-5-SandHook" class="headerlink" title="3.5 SandHook"></a>3.5 SandHook</h3><p>简单的来说就是 inline hook。</p>
+<p>将目标方法的前 (arm32-2&#x2F;arm64-4) 行代码拷贝出来，换上跳转代码跳到一个汇编写的二级跳板，二级跳板再确定当前方法需要 Hook 之后，跳转到 Hook 方法。</p>
+<p>除此之外，考虑到 N 以上方法有可能是解释执行，手动调用 JIT 有可能编译失败 (很少见)，也保留了 ArtMethod 入口替换的逻辑 (类似 YAHFA)。</p>
+<p>使用场景：本进程的 Hook 不是我们想要的。我们想要将 Hook 作用于其他进程则必须将 Hook 逻辑注入到目标进程。</p>
+<ul>
+<li>Root 注入</li>
+<li>非 Root 注入，沙箱环境</li>
+<li>代码植入</li>
+</ul>
+<h4 id="3-5-1-Root-注入"><a href="#3-5-1-Root-注入" class="headerlink" title="3.5.1 Root 注入"></a>3.5.1 Root 注入</h4><ol>
+<li><p>全局注入，一般选择注入 Zygote 进程</p>
+<p>原版 Xposed 修改了 app_process 的源码，在其中加入加载 Xposed 框架的逻辑</p>
+<p>Edxposed 依赖 “Riru”，Riru 伪造了 <code>libmemtrack.so</code>，在其中加入了加载 “模块” 逻辑，libmemtrack 是 Zygote 的必备库，这个库比较简单，所以成为了目标</p>
+<p>使用 Zygote 的注入，所有 android 进程都将附带 Xposed 的 lib，所以为 “全局注入”</p>
+</li>
+<li><p>单进程注入，ptrace</p>
+<p>使用 ptrace，核心在于找到 mmap&#x2F;dlopen&#x2F;dlsym 等函数在目标进程的地址</p>
+<p>问题在于无法绕过目标进程的反调试保护，另外容易错过 Hook 时机，也可以注入 Zygote</p>
+</li>
+</ol>
+<h4 id="3-5-2-非-Root-注入"><a href="#3-5-2-非-Root-注入" class="headerlink" title="3.5.2 非 Root 注入"></a>3.5.2 非 Root 注入</h4><p>一般基于沙箱 app，如 VirtualAPP 实现</p>
+<p>在不使用 xposed 的情况下，核心在于利用同 UID 免 Root 使用 ptrace，步骤和上面 Root 注入相同</p>
+<p>如果沙箱在加载内部 app 进程时主动加载 Xposed 插件，这样就不会错过 Hook 时机，也不存在反调试问题，然而稳定性取决于沙箱本身的稳定性</p>
+<p>类似 VirtualXposed</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/asLody/SandVXposed">https://github.com/asLody/SandVXposed</a></p>
+<h4 id="3-5-3-代码植入"><a href="#3-5-3-代码植入" class="headerlink" title="3.5.3 代码植入"></a>3.5.3 代码植入</h4><p>解包目标 apk，植入 Xposed 代码，重打包</p>
+<p>需要 Hook 处理 apk 完整性检查，签名验证，处理加壳</p>
+<p>类似太极</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/Native%20hook/" title="Native Hook" target="_blank" rel="external">https://beichen.link/2023/08/10/Study/逆向知识/Native hook/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/ArtMethod%20Hook/" title="ArtMethod Hook"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/08/05/Study/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/NDK%E5%BC%80%E5%8F%91/" title="NDK开发学习"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

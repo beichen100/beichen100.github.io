@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>ArtMethod Hook | 北辰的小破站</title>
+  <meta name="description" content="1. ArtMethod 结构先给出 ArtMethod 结构主要的字段。英文是源码，中文是个人注释。版本：android-9.0.0_r30： 123456789101112131415161718192021222324252627282930313233343536373839404142class ArtMethod &amp;#123; …………protect:  &#x2F;&#x2F; The class we">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ArtMethod Hook">
+<meta property="og:url" content="https://beichen.link/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/ArtMethod%20Hook/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="1. ArtMethod 结构先给出 ArtMethod 结构主要的字段。英文是源码，中文是个人注释。版本：android-9.0.0_r30： 123456789101112131415161718192021222324252627282930313233343536373839404142class ArtMethod &amp;#123; …………protect:  &#x2F;&#x2F; The class we">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230811195153.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/%E5%BA%94%E7%94%A8%E5%B1%82%E7%9A%84%E6%89%80%E6%9C%89APP%E9%83%BD%E6%98%AF%E4%BB%8Ezygote%E5%AD%B5%E5%8C%96%E8%80%8C%E6%9D%A5.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814125117.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814125558.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814130617.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814130901.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814131734.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814145706.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814145949.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814150437.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814150839.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814151017.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814150601.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814152339.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814152542.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814152932.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814153227.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814153328.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814153359.png">
+<meta property="article:published_time" content="2023-08-10T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.751Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="逆向知识">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230811195153.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/ArtMethod%20Hook/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/逆向知识/ArtMethod Hook" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      ArtMethod Hook
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/ArtMethod%20Hook/" class="article-date">
+	  <time datetime="2023-08-10T00:00:00.000Z" itemprop="datePublished">2023-08-10</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/ArtMethod%20Hook/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 7.1k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 27(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="1-ArtMethod-结构"><a href="#1-ArtMethod-结构" class="headerlink" title="1. ArtMethod 结构"></a>1. ArtMethod 结构</h2><p>先给出 ArtMethod 结构主要的字段。英文是源码，中文是个人注释。版本：android-9.0.0_r30：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">ArtMethod</span> &#123;</span><br><span class="line"> …………</span><br><span class="line">protect:</span><br><span class="line"></span><br><span class="line">  <span class="comment">// The class we are a part of.</span></span><br><span class="line">  GcRoot&lt;mirror::Class&gt; declaring_class_;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//可以理解为该函数的标志位，如函数为public,private,static,native等。</span></span><br><span class="line">  std::atomic&lt;std::<span class="type">uint32_t</span>&gt; access_flags_;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//加固代码替换点。</span></span><br><span class="line">  <span class="comment">//里面指向code_item指针,code_item存储的实际是dex当中的字节码.其用处本来是适配dalvik解释器，即无法编译成机器码的，用解释器来执行。</span></span><br><span class="line"> <span class="comment">//</span></span><br><span class="line">  <span class="type">uint32_t</span> dex_code_item_offset_;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Index into method_ids of the dex file associated with this method.</span></span><br><span class="line">  <span class="comment">//主要作为寻址替换用</span></span><br><span class="line">  <span class="type">uint32_t</span> dex_method_index_;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// The hotness we measure for this method. Not atomic, as we allow</span></span><br><span class="line">  <span class="comment">// missing increments: if the method is hot, we will see it eventually.</span></span><br><span class="line">  <span class="comment">//方法被记录的频率热度，用在Android N+混合编译部分，根据该值来判断是否使用JIT编译。</span></span><br><span class="line">  <span class="type">uint16_t</span> hotness_count_;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  <span class="keyword">struct</span> <span class="title class_">PtrSizedFields</span> &#123;</span><br><span class="line">    <span class="comment">// Depending on the method type, the data is</span></span><br><span class="line">    <span class="comment">//   - native method: pointer to the JNI function registered to this method</span></span><br><span class="line">    <span class="comment">//                    or a function to resolve the JNI function,</span></span><br><span class="line">    <span class="comment">//   - conflict method: ImtConflictTable,</span></span><br><span class="line">    <span class="comment">//   - abstract/interface method: the single-implementation if any,</span></span><br><span class="line">    <span class="comment">//   - proxy method: the original interface method or constructor,</span></span><br><span class="line">    <span class="comment">//   - other methods: the profiling data.</span></span><br><span class="line"></span><br><span class="line">    <span class="type">void</span>* data_;</span><br><span class="line">   <span class="comment">//这个字段顾名思义，根据方法类型，会充当不同作用，是不是可以理解为以前几个指针的复合……</span></span><br><span class="line">    <span class="comment">// Method dispatch from quick compiled code invokes this pointer which may cause bridging into the interpreter.</span></span><br><span class="line">    <span class="type">void</span>* entry_point_from_quick_compiled_code_;</span><br><span class="line">  &#125; ptr_sized_fields_;</span><br><span class="line"></span><br><span class="line">  …………</span><br><span class="line">  ｝</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-ArtMethod-Invoke"><a href="#2-ArtMethod-Invoke" class="headerlink" title="2. ArtMethod::Invoke"></a>2. ArtMethod::Invoke</h2><p>在我们使用 Android-Studio 编译应用时，实际上是通过 Java 编译器先将 .java 代码编译为对应的 Java 字节码，即 .class 类文件；然后用 dx(在新版本中是 d8) 将 Java 字节码转换为 Dalvik 字节码，并将所有生成的类打包到统一的 DEX 文件中，最终和资源文件一起 zip 压缩为 .apk 文件。</p>
+<p>在安装用户的 APK 时，Android 系统主要通过 PackageManager 对应用进行解包和安装。其中在处理 DEX 文件时候，会通过 installd 进程调用对应的二进制程序对字节码进行优化，这对于 Dalvik 虚拟机而言使用的是 dexopt 程序，而 ART 中使用的是 dex2oat 程序。</p>
+<p>dexopt 将 dex 文件优化为 odex 文件，即 optimized-dex 的缩写，其中包含的是优化后的 Dalvik 字节码，称为 quickend dex；</p>
+<p>dex2oat 基于 LLVM，优化后生成的是对应平台的二进制代码，以 oat 格式保存，oat 的全称为 Ahead-Of-Time。oat 文件实际上是以 ELF 格式进行存储的，并在其中 oatdata 段(section) 包含了原始的 DEX 内容。</p>
+<p>ART 对于 Java 方法实现了两种执行模式，一种是像 Dalvik 虚拟机一样解释执行字节码，姑且称为解释模式；另一种是快速模式，即直接调用通过 OAT 编译后的本地代码。</p>
+<p>当 ART 运行时尚未启动或者指定强制使用解释执行时，虚拟机执行函数使用的是解释模式，ART 可以在启动时指定 -Xint 参数强制使用解释执行，但即便指定了使用解释执行模式，还是有一些情况无法使用解释执行，比如:</p>
+<ol>
+<li>当所执行的方法是 Native 方法时，这时只有二进制代码，不存在字节码，自然无法解释执行；</li>
+<li>当所执行的方法无法调用，比如 access_flag 判定无法访问或者当前方法是抽象方法时；</li>
+<li>当所执行的方式是代理方法时，ART 对于代理方法有单独的本地调用方式；</li>
+</ol>
+<p>Android 中的 Java 方法在 ART 中执行都会通过 ArtMethod::Invoke 进行调用，在其内部(判断目标 Java 方法属性)要么通过解释器直接解释执行(配合 JIT)；要么通过 GetEntryPointFromQuickCompiledCode 获取 native 代码进行执行，当然后者在某些场景下依然会回退到解释器，但入口都是固定的，即 entry_point_from_quick_compiled_code 所指向的 quick 代码。如果当前解释执行遇到 native 方法时，这种情况一般是遇到了 JNI 函数，这时则通过 method-&gt;GetEntryPointFromJni() 获取对应地址进行跳转，所跳转的地址为 entry_point_from_quick_compiled_code</p>
+<p>Invoke 的核心逻辑如下:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">ArtMethod::Invoke</span><span class="params">(Thread* self, <span class="type">uint32_t</span>* args, <span class="type">uint32_t</span> args_size, JValue* result, <span class="type">const</span> <span class="type">char</span>* shorty)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (UNLIKELY(!runtime-&gt;IsStarted() || (self-&gt;IsForceInterpreter() &amp;&amp; !IsNative() &amp;&amp; !IsProxyMethod() &amp;&amp; IsInvokable()))) &#123;</span><br><span class="line">        <span class="keyword">if</span> (IsStatic()) &#123;</span><br><span class="line">            art::interpreter::EnterInterpreterFromInvoke(</span><br><span class="line">                self, this, nullptr, args, result, <span class="comment">/*stay_in_interpreter=*/</span> <span class="literal">true</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            mirror::Object* receiver = reinterpret_cast&lt;StackReference&lt;mirror::Object&gt;*&gt;(&amp;args[<span class="number">0</span>])-&gt;AsMirrorPtr();</span><br><span class="line">            art::interpreter::EnterInterpreterFromInvoke(self, this, receiver, args + <span class="number">1</span>, result, <span class="comment">/*stay_in_interpreter=*/</span> <span class="literal">true</span>);</span><br><span class="line">        &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (!IsStatic()) &#123;</span><br><span class="line">        (*art_quick_invoke_stub)(this, args, args_size, self, result, shorty);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        (*art_quick_invoke_static_stub)(this, args, args_size, self, result, shorty);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>因此，不管是解释模式还是其他模式，只要目标方法有 native 代码，那么该方法的代码地址都是会保存在 entry<em>point_from_quick_compiled_code</em> 字段，只不过这个字段的含义在不同的场景中略有不同。</p>
+<p>所以我们若想要实现 ART Hook，理论上只要找到对应方法在内存中的 ArtMethod 地址，然后替换其 entrypoint 的值即可。</p>
+<p>所以想要 hook，可以</p>
+<ul>
+<li><p>修改目标 Java 方法属性，令所有调用都走 quick 分支，即：修改 accessflags 将方法 native 化，然后将 entry_point_from_quick_compiled_code 修改为指向我们自己的实现，从而实现劫持；</p>
+<blockquote>
+<p>Android 7.0 之前的 hook 流程：获取函数的入口，得到函数结构体，替换 accessflags 将方法 native 化，保存原函数信息在 entry_point_from_jni(Android 8.0 后消失)，替换 entry_point_from_quick_compiled_code。调用被 hook 的方法时，首先会跳转替换的方法，然后跳转到 entry_point_fromjni 所指向的原方法</p>
+</blockquote>
+</li>
+<li><p>类似于上述方法，不过不修改指针的值，而是修改 stub code；</p>
+</li>
+</ul>
+<p>但对于系统类方法的调用，ART 会直接优化成汇编跳转而绕过 ArtMethod 方法的查找过程，比如 TextView.setText(), 这个时候方法 1 只是修改 entry_point_from_quick_compiled_code 就不合理了，因为实际的调用地址被写死了。</p>
+<p>frida 实际上是使用了我们上述的第 2 种 Hook 思路，即修改 stub code 为我们的劫持代码，这种方式一般称之为 dynamic callee-side rewriting，优点是即便对于 OAT 极致优化的系统类方法也同样有效。</p>
+<p>参考：<br><a target="_blank" rel="noopener" href="https://www.ctfiot.com/19168.html">https://www.ctfiot.com/19168.html</a><br><a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-248898.htm">https://bbs.kanxue.com/thread-248898.htm</a></p>
+<h2 id="3-epic-hook"><a href="#3-epic-hook" class="headerlink" title="3. epic hook"></a>3. epic hook</h2><p>参考：<a target="_blank" rel="noopener" href="https://weishu.me/2017/11/23/dexposed-on-art/">https://weishu.me/2017/11/23/dexposed-on-art/</a></p>
+<p>首先以 epic hook 框架为例，简单介绍下 ART 上的方法调用原理（此处不讨论解释模式，所有 entrypoint 均指 compiled_code_entry_point)。</p>
+<p>在 ART 中，每一个 Java 方法在虚拟机（注：ART 与虚拟机虽有细微差别，但本文不作区分，两者含义相同，下同）内部都由一个 ArtMethod 对象表示（native 层，实际上是一个 C++对象），这个 native 的 ArtMethod 对象包含了此 Java 方法的所有信息，比如名字，参数类型，方法本身代码的入口地址（entrypoint)等；暂时放下 trampoline 以及 interpreter 和 jit 不谈，一个 Java 方法的执行非常简单：</p>
+<ul>
+<li>想办法拿到这个 Java 方法所代表的 ArtMethod 对象</li>
+<li>取出其 entrypoint，然后跳转到此处开始执行</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230811195153.png" alt="20230811195153"></p>
+<h3 id="3-1-entrypoint-replacement"><a href="#3-1-entrypoint-replacement" class="headerlink" title="3.1 entrypoint replacement"></a>3.1 entrypoint replacement</h3><p>从上面讲述的 ART 方法调用原理可以得到一种很自然的 Hook 办法————直接替换 entrypoint。通过把原方法对应的 ArtMethod 对象的 entrypoint 替换为目标方法的 entrypoint，可以使得原方法被调用过程中取 entrypoint 的时候拿到的是目标方法的 entry，进而直接跳转到目标方法的 code 段；从而达到 Hook 的目的。</p>
+<p>不过这种方案能够生效有一个前提：方法调用必须是先拿到 ArtMethod，再去取 entrypoint 然后跳转实现调用。</p>
+<p>但是很多情况下，第一步是不必要的：当系统知道你要调用的这个方法的 entrypoint 是什么，直接写死在汇编代码里，这样方法调用的时候就不会有取 ArtMethod 这个动作，从而不会去拿被替换的 entrypoint，导致 Hook 失效。这种调用很典型的例子就是系统函数，如 Android 5.0 上 调用 TextView.setText(Charsequence)。如果你调用系统函数，ART 编译器知道系统每一个函数入口的绝对地址，根本没有必要再去查找方法，因此生成的代码中没有任何查找过程。所以，从原理上讲，如果要支持系统方法的 Hook，这种方案在很多情况下是行不通的。</p>
+<h3 id="3-2-callee-side-dynamic-rewriting"><a href="#3-2-callee-side-dynamic-rewriting" class="headerlink" title="3.2 callee side dynamic rewriting"></a>3.2 callee side dynamic rewriting</h3><p>既然替换入口的方式无法达到 Hook 所有类型方法的目的，那么如果不替换入口，而是直接修改入口里面指向的代码呢？（这种方式有个高大上的学名：callee side dynamic rewriting)</p>
+<p>通俗地讲，dynamic callee-side rewriting 其实就是修改 entrypoint 所指向的代码。但是有个基本问题：Hook 函数和原函数的代码长度基本上是不一样的，Hook 函数通常比原函数长很多。如果直接把 Hook 函数的代码段 copy 到原函数 entrypoint 所指向的代码段，很可能没地儿放。因此，通常的做法是写一段 trampoline。也就是把原函数 entrypoint 所指向代码的开始几个字节修改为一小段固定的代码，这段代码的唯一作用就是跳转到新的位置开始执行，如果这个「新的位置」就是 Hook 函数，那么基本上就实现了 Hook；这种跳板代码我们一般称之为 trampoline&#x2F;stub，这种形式有点像 inline hook</p>
+<p>对于 epic 这种 hook 框架，如果我们要 Hook android.util.Log.i 这个方法，那么首先需要找到这个方法的 entrypoint，可以通过这个方法的 ArtMethod 对象得到，然后进入 entrypoint 指向的代码地址，直接修改内存，把这个代码片段的前 8 个字节修改为一段跳转指令，与 inline hook 类似：如</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dff800f0  ; ldr pc, [pc]</span><br><span class="line"><span class="number">7f</span>132450  ; trampoline address</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>这样，在执行 Log.i 这个函数的时候，会通过这第一段跳板直接跳转到 0x7f132450 这个地址开始执行。这个地址是我们预先分配好的一段内存，也是一段跳转函数，我们姑且称之为二段跳板。在接下来的二段跳板中，我们开始准备 hook 预备逻辑：判断是否需要执行 Hook 的，如果不需要，跳转到原函数的控制流，进而达到调用原函数的目的，否则直接跳转到另外一个 Java 方法的入口开始执行。</p>
+<h2 id="4-frida-hook"><a href="#4-frida-hook" class="headerlink" title="4. frida hook"></a>4. frida hook</h2><h3 id="4-1-hook-原理"><a href="#4-1-hook-原理" class="headerlink" title="4.1 hook 原理"></a>4.1 hook 原理</h3><p>frida 实际上又有 ART hook，又有 inline hook</p>
+<p>frida 针对 ART 运行时的 hook 前面做了一点说明，因为针对的 Android 版本不同，具体代码还是有很多变动。以其中一个版本为例：</p>
+<p>首先获取到原始的 ArtMethod 指针，然后修改它的</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">patchArtMethod(</span><br><span class="line">  replacementMethodId,</span><br><span class="line">  &#123;</span><br><span class="line">    jniCode: impl,</span><br><span class="line">    accessFlags:</span><br><span class="line">      ((originalFlags &amp;</span><br><span class="line">        ~(</span><br><span class="line">          kAccCriticalNative |</span><br><span class="line">          kAccFastNative |</span><br><span class="line">          kAccNterpEntryPointFastPathFlag</span><br><span class="line">        )) |</span><br><span class="line">        kAccNative) &gt;&gt;&gt;</span><br><span class="line">      <span class="number">0</span>,</span><br><span class="line">    quickCode: api.artClassLinker.quickGenericJniTrampoline,</span><br><span class="line">    interpreterCode: api.artInterpreterToCompiledCodeBridge,</span><br><span class="line">  &#125;,</span><br><span class="line">  vm</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p>jniCode 替换为用户指定的 js 函数封装而成的 NativeFunction，并将 accessFlags 设置为 kAccNative，即 JNI 方法。</p>
+<p>quickCode 和 interpreterCode 分别是 Quick 模式和解释器模式的入口，替换为了前面查找保存的 trampoline，令 Quick 模式跳转到 JNI 入口，解释器模式跳转到 Quick 代码，这样就实现了该方法的拦截，每次执行都会当做 JNI 函数执行到 jniCode 即我们替换的代码中。</p>
+<p>如前文所说，对于系统函数而言，其地址已知，因此调用方被优化后很可能直接就调转到了对应的 native 地址，而不会通过 entrypoint 去查找。因此 frida 采用的方法是直接修改目标方法的 quickCode 内容，将其替换为一段跳板代码，然后再间接跳转到我们的劫持实现中。</p>
+<h3 id="4-2-检测-frida"><a href="#4-2-检测-frida" class="headerlink" title="4.2 检测 frida"></a>4.2 检测 frida</h3><h4 id="maps-检测法"><a href="#maps-检测法" class="headerlink" title="maps 检测法"></a>maps 检测法</h4><p>在字符串的检测方案中，大部分用的都是这种，但是这种也很容易被感知，它的代码结构如下,主要就是检测 maps 文件中是否有 frida-agent 字符串，当然这种取自 maps 的方式太容易被感知了，随便 hook 一下就知道我们遍历了 maps</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">anti</span><span class="params">()</span>&#123;</span><br><span class="line"><span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">    sleep(<span class="number">1</span>);</span><br><span class="line">    <span class="type">char</span> line[<span class="number">1024</span>];</span><br><span class="line"></span><br><span class="line">    FILE *fp = fopen(<span class="string">&quot;/proc/self/maps&quot;</span>, <span class="string">&quot;r&quot;</span>);</span><br><span class="line">    <span class="keyword">while</span> (fgets(line, <span class="keyword">sizeof</span>(line), fp)) &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">strstr</span>(line, <span class="string">&quot;frida-agent&quot;</span>)) &#123;</span><br><span class="line">            __android_log_print(<span class="number">6</span>, <span class="string">&quot;r0ysue&quot;</span>, <span class="string">&quot;i find frida from anti3&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>frida 在注入 App 后会在 maps 中显示 frida 的 frida-agent.so 的内存信息，可以通过搜索特征字符串来检测 frida。目前大佬们的去特征的 frida 一般会使用随机 so 名称，此时也可以通过查找 maps 文件内存信息中是否存在一些满足某些条件的特征路径，如 data&#x2F;local&#x2F;tmp</p>
+<h4 id="检查特征文件及网络端口检测"><a href="#检查特征文件及网络端口检测" class="headerlink" title="检查特征文件及网络端口检测"></a>检查特征文件及网络端口检测</h4><p>检查&#x2F;data&#x2F;local&#x2F;tmp 目录下面有没有 frida 依赖 so 所组成的文件夹，就是说 frida-server 在启动的时候会将依赖的 so 放在&#x2F;data&#x2F;local&#x2F;tmp 这个文件夹下面，所以我们可以扫描有没有这个文件夹下的特征文件，类似于下面这样的代码</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">anti</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="type">int</span> a=   access(<span class="string">&quot;/data/local/tmp/re.frida.server&quot;</span>,<span class="number">0</span>);</span><br><span class="line">    <span class="keyword">if</span>(a ==<span class="number">0</span>)</span><br><span class="line">    __android_log_print(<span class="number">6</span>,<span class="string">&quot;r0ysue&quot;</span>,<span class="string">&quot;i find frida from anti4&quot;</span>);</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>frida 注入 App 后在 App 的&#x2F;proc&#x2F;self&#x2F;task&#x2F;pid&#x2F;status 文件中会存在一些 frida 的特征信息,如 gmain、pool-frida、gdbus，可以通过这些特征进行检测</p>
+<p>fridaserver 是使用 D-Bus 协议通信，我们为每个开放的端口发送 D-Bus 的认证消息，哪个端口回复了哪个就是 fridaserver，但是此方法需要的时间会比较长</p>
+<p>frida 默认端口 27047，通过检测默认端口是否开放来检测 frida 是否开启，只需要启动时指定端口即可绕过</p>
+<p>frida-server 启动后&#x2F;proc&#x2F;net&#x2F;tcp 和&#x2F;proc&#x2F;net&#x2F;tcp6 中会有特殊标识:69a2，可以通过搜索 tcp 文件如&#x2F;proc&#x2F;net&#x2F;tcp 中的字符串来检测 frida 是否启动</p>
+<h4 id="检查-AccessFlags"><a href="#检查-AccessFlags" class="headerlink" title="检查 AccessFlags"></a>检查 AccessFlags</h4><p>这里还有一些原理性的检测方法，比如和 xposed 一样检测 ArtMethod 的 AccessFlags 值来判断一个确定为 Java 的函数是否变成了 Native 函数，这个和 java hook 的原理有关,这个是 frida 绕不开的，就是想 hookjava 函数就一定要将 java 函数改成 native 函数，但是这种方式如果不 hook java 函数直接搞 Native 层就无法判断了</p>
+<p>但是，同一个 app 的同一个方法在不同机型不同系统上的 AccessFlags 不同，这里要做很多适配</p>
+<h2 id="5-xposed"><a href="#5-xposed" class="headerlink" title="5. xposed"></a>5. xposed</h2><p>xposed 通过替换 &#x2F;system&#x2F;bin&#x2F;app_process 程序控制 zygote 进程，使得 app_process 在启动过程中会加载 XposedBridge.jar 这个 jar 包，从而完成对 Zygote 进程及其创建的 虚拟机的劫持</p>
+<p>Android 系统分为四层，分别为 kernel、Native、FrameWork、应用层（APP），loader 也可以单独算一层，是硬件的启动加载预置项。</p>
+<p>首先当我们长按开机键（电源按钮）开机，此时会引导芯片开始从固化到 ROM 里的预设代码处执行，然后加载引导程序到 RAM。然后启动加载的引导程序，引导程序主要做一些基本的检查，包括 RAM 的检查，初始化硬件的参数。</p>
+<p>到达内核层的流程后，这里初始化一些进程管理、内存管理、加载各种 Driver 等相关操作，如 Camera Driver、Binder Driver 等。下一步就是内核线程，如软中断线程、内核守护线程。下面一层就是 Native 层，这里额外提一点知识，层于层之间是不可以直接通信的，所以需要一种中间状态来通信。Native 层和 Kernel 层之间通信用的是 syscall，Native 层和 Java 层之间的通信是 JNI。</p>
+<p>在 Native 层会初始化 init 进程，也就是用户组进程的祖先进程。init 中加载配置文件 init.rc，init.rc 中孵化出 ueventd、logd、healthd、installd、lmkd 等用户守护进程。开机动画启动等操作。核心的一步是孵化出 Zygote 进程，此进程是所有 APP 的父进程，这也是 Xposed 注入的核心，同时也是 Android 的第一个 Java 进程（虚拟机进程）。</p>
+<p>进入框架层后，加载 zygote init 类，注册 zygote socket 套接字，通过此套接字来做进程通信，并加载虚拟机、类、系统资源等。zygote 第一个孵化的进程是 system_server 进程，负责启动和管理整个 Java Framework，包含 ActivityManager、PowerManager 等服务。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/%E5%BA%94%E7%94%A8%E5%B1%82%E7%9A%84%E6%89%80%E6%9C%89APP%E9%83%BD%E6%98%AF%E4%BB%8Ezygote%E5%AD%B5%E5%8C%96%E8%80%8C%E6%9D%A5.png"></p>
+<p>参考：<br><a target="_blank" rel="noopener" href="https://blog.csdn.net/cpcpcp123/article/details/122103556">https://blog.csdn.net/cpcpcp123/article/details/122103556</a><br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/baiqiantao/p/10699552.html">https://www.cnblogs.com/baiqiantao/p/10699552.html</a><br><a target="_blank" rel="noopener" href="https://bbs.kanxue.com/thread-257844.htm">https://bbs.kanxue.com/thread-257844.htm</a></p>
+<h3 id="5-1-Xposed-如何注入到-zygote-进程中的"><a href="#5-1-Xposed-如何注入到-zygote-进程中的" class="headerlink" title="5.1 Xposed 如何注入到 zygote 进程中的"></a>5.1 Xposed 如何注入到 zygote 进程中的</h3><p>总结：Android 基于 Linux，第一个启动的进程自然是 init 进程，该进程会启动所有 Android 进程的父进程——Zygote(孵化)进程，该进程的启动配置在&#x2F;init.rc 脚本中，而 Zygote 进程对应的执行文件是&#x2F;system&#x2F;bin&#x2F;app_process，该文件完成类库的加载以及一些函数的调用工作。在 Zygote 进程创建后，再 fork 出 SystemServer 进程和其他进程。</p>
+<p>而 Xposed Framework 呢，就是用自己实现的 app_process 替换掉了系统原本提供的 app_process，加载一个额外的 jar 包，然后入口从原来的 com.android.internal.osZygoteInit.main()被替换成了 de.robv.android.xposed.XposedBridge.main()，然后创建的 Zygote 进程就变成 Hook 的 Zygote 进程了，而后面 Fork 出来的进程也是被 Hook 过的。这个 Jar 包在&#x2F;data&#x2F;data&#x2F;de.rbov.android.xposed.installer&#x2F;bin&#x2F;XposedBridge.jar</p>
+<p>从图中，我们可以总结出一条启动链：init &#x3D;&gt; init.rc &#x3D;&gt; app_process &#x3D;&gt; zygote &#x3D;&gt; ZygoteInit</p>
+<p>根据 Android 启动流程图可知，zygote 是由 app_process 初始化产生的。app_process 是一个二进制可执行文件，它的表现形式是一个 bin 文件，它位于&#x2F;system&#x2F;bin&#x2F;app_process。一个应用的启动，核心的步骤是 Framework 层的 zygote 启动，zygote 是所有进程的父进程，也就是说，所有 APP 应用进程都是由 zygote 孵化而来。为什么要从 Native 层开始说明呢？这是因为 Native 层开始就是 Android 源码的运行过程，Xposed 的注入也就是从 Native 层开始的。</p>
+<p>init.rc 如下：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814125117.png" alt="20230814125117"></p>
+<p>service zygote：它告诉 init 进程，现在我们要配置一个名为 zygote 的服务。&#x2F;system&#x2F;bin&#x2F;app_process： 声明 zygote 进程对应的文件路径。init 创建服务的处理逻辑很简单，就是启动（fork）一个子进程来运行指定的程序。对 zygote 服务而言这个程序就是&#x2F;system&#x2F;bin&#x2F;app_process。-Xzygote&#x2F;system&#x2F;bin–zygote–start-system-server：传递给 app_process 的启动参数。</p>
+<p>app_process 是由 app_main.cpp 编译而来，它的源码路径位于&#x2F;frameworks&#x2F;base&#x2F;cmds&#x2F;app_process&#x2F;app_main.cpp</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814125558.png" alt="20230814125558"></p>
+<p>start 函数的目标就是要找到一个名称为 com.android.internal.os.ZygoteInit 的类，以及它的静态成员函数 main，然后就以这个函数为入口，开始运行 ART 虚拟机。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814130617.png" alt="20230814130617"></p>
+<p>核心在于 forkSystemServer，通过此函数 fork 系统服务进程，代码如下所示：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814130901.png" alt="20230814130901"></p>
+<p>xposed 是如何 Hook zygote，进而实现应用程序的 Hook 呢？这也是根据上述流程来的，核心是替换 app_process,app_process.cpp 对应的文件是 app_main.cpp</p>
+<p>xposed 重写了一份 app_main.cpp，并将 XposedBridge.jar 加载到 ClassPath 中，初始化完成后进入魔改的 runtimeStart，在新的虚拟机里面会将 XposedBridge.jar 进行注入，这么一来，所有被 Xposed fork 的进程都具备了 XposedBridge.jar 的代码 。调用 xposedBridge 类的 main 方法，它会在此加载 Xposed 的资源文件，以此完成后续的 Hook 操作。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814131734.png" alt="20230814131734"></p>
+<p>至于 hook 原理，xposed 通过修改 ART&#x2F;Davilk 虚拟机，将要 Hook 的函数注册为 Native 函数，虚拟机在调用同名函数时，会优先选择 Native 方法执行，从而达到 Hook 指定函数的目的。</p>
+<h3 id="5-2-检测-xposed"><a href="#5-2-检测-xposed" class="headerlink" title="5.2 检测 xposed"></a>5.2 检测 xposed</h3><h4 id="通过自造异常检测堆栈信息，读取异常堆栈中是否包含-Xposed-字符串"><a href="#通过自造异常检测堆栈信息，读取异常堆栈中是否包含-Xposed-字符串" class="headerlink" title="通过自造异常检测堆栈信息，读取异常堆栈中是否包含 Xposed 字符串"></a>通过自造异常检测堆栈信息，读取异常堆栈中是否包含 Xposed 字符串</h4><p>在正常的 Android 系统启动过程中，init 进程会去解析 init.rc 文件启动一系列的服务，其中就有 app_process 进程，在 app_process 执行过程中，会设置自身进程名为 Zygote，启动 com.android.internal.os.ZygoteInit.Main 方法。而 Xposed 修改了 app_process 进程，会先启动 de.robv.android.xposed.XposedBridge.Main 方法，再由它去启动 com.android.internal.os.ZygoteInit.Main 方法，因此堆栈信息中会多出一些内容。简单说就是 Xposed 先于了 Zygote 进程，因此在系统堆栈信息中会多出 Xposed 相关的内容。</p>
+<p>绕过：通过 Hook 堆栈类 StackTraceElement，当发现 Xposed 和 Zygote 有错误输出时，修改输出信息，例如将输出置空来绕过错误信息检测。</p>
+<h4 id="通过-ClassLoader-的-loadClass-加载列表检测"><a href="#通过-ClassLoader-的-loadClass-加载列表检测" class="headerlink" title="通过 ClassLoader 的 loadClass 加载列表检测"></a>通过 ClassLoader 的 loadClass 加载列表检测</h4><p>绕过：通过 Hook loadClass 加载类来修改加载的类名，例如修改 de.robv.android.xposed 成另一个普通的包名</p>
+<h4 id="检测方法是否变成了-native"><a href="#检测方法是否变成了-native" class="headerlink" title="检测方法是否变成了 native"></a>检测方法是否变成了 native</h4><p>Xposed 把 Method 的 nativefunc 修改为它自己的处理函数，再这个函数中会回调 Java 层的 handleHookMethod，但是只有 native 函数，虚拟机才会走 nativefunc，所以 Xposed 会把 java 函数的修饰符修改为 native，所以可以通过反射调用 Modifier.isNative(method.getModifiers())方法可以校验方法是不是 native 方法</p>
+<p>绕过：因为检测方必须要通过 Modifier.isNative 这个方式来做检测，所以方法就是通过 Hook isNative 的方法，将检测结果置为 0 就行了</p>
+<h4 id="检测-Xposed-相关文件"><a href="#检测-Xposed-相关文件" class="headerlink" title="检测 Xposed 相关文件"></a>检测 Xposed 相关文件</h4><p>通过读取 proc&#x2F;self&#x2F;maps 文件，在 linux 内核中，这个文件存储了进程映射了的内存区域和访问权限，因此遍历自身加载的库，就可以拿到当前上下文的 so 和 jar 列表，通过查找 Xposed 相关文件来做检测</p>
+<p>绕过：因为读取的时候会调用 BufferedReader 进行读取命令的内容，我们只需要 Hook BufferedReader 过滤掉 XposedBridge.jar 等相关内容就可以完成绕过。</p>
+<h4 id="通过反射-XposedHelper-类和-XposedBridge-类检测"><a href="#通过反射-XposedHelper-类和-XposedBridge-类检测" class="headerlink" title="通过反射 XposedHelper 类和 XposedBridge 类检测"></a>通过反射 XposedHelper 类和 XposedBridge 类检测</h4><p>Xposed 中有几个比较常用的方法，findAndHookMethod 等。通过反射找到要 Hook 的函数后会保存到 XposedHelper 类中的 fieldCache、methodCache、constructorCache 字段中。因此，可以通过反射遍历 XposedHelper 类中的 fieldCache、methodCache、constructorCache 变量，读取 HashMap 缓存字段是否有被 Hook App 的关键函数信息就行</p>
+<p>绕过：检测方通过反射调用 XposedHelper 的成员 fieldCache 中是否含有相关的关键字，解决方案就是修改类名，让检测方找不到相关类就行</p>
+<h2 id="6-Lsposed"><a href="#6-Lsposed" class="headerlink" title="6. Lsposed"></a>6. Lsposed</h2><p>xposed 适用的最高版本为 android 8.0，针对高版本的 ART HOOK 框架可以使用比较有名的 lsposed。它使用了 lsplant ART HOOK 框架（早期使用 YAHFA）并提供了和 xposed 一样的接口 API 与其进行了兼容，同时 lsposed 本身是一个基于 magisk 的 riru&#x2F;zygisk 插件，所以在分析 lsposed 运行流程之前先分析一下 riru 和 zygisk 的运行流程。(riru 不再更新， zygisk 更普遍)</p>
+<h3 id="6-1-riru"><a href="#6-1-riru" class="headerlink" title="6.1 riru"></a>6.1 riru</h3><p>riru 的目的就是为了能够将插件 so 在 zygote 刚开始启动的时候注入到此进程中，首先 riru 自己需要先注入到 zygote 进程中。不同版本的 riru 使用了不同的方法将自己注入到 zygote 进程中。</p>
+<ul>
+<li>早期：通过替换系统 so 库：libmemtrack.so 来实现劫持注入。</li>
+<li>中期：使用 public.libraries.txt，在 zygote 启动时会加载此文件中的所有 so 库。</li>
+<li>现在：修改系统属性 ro.dalvik.vm.native.bridge 进行注入，zygote 会加载此系统属性值对应的 so 库。</li>
+</ul>
+<p>目前最新的 riru 版本（V26）通过修改系统属性 ro.dalvik.vm.native.bridge 将 libriruloader.so 注入到 zygote 进程中，查看此 so 的.initarray，其会先调用 dlopen 将 libriru.so 加载，最后调用 libriru.so 的 init 函数。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814145706.png" alt="20230814145706"></p>
+<p>libriru.so 的 init 函数分别调用了 PrepareMapsHideLibrary，InstallHooks 和 Load。</p>
+<h4 id="PrepareMapsHideLibrary"><a href="#PrepareMapsHideLibrary" class="headerlink" title="PrepareMapsHideLibrary"></a>PrepareMapsHideLibrary</h4><p>PrepareMapsHideLibrary 加载 libriruhide.so 并获取其导出函数 riru_hide</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814145949.png" alt="20230814145949"></p>
+<h4 id="InstallHooks"><a href="#InstallHooks" class="headerlink" title="InstallHooks"></a>InstallHooks</h4><p>XHOOK_REGISTER 是一个宏，其通过 GOT 表 hook libandroid_runtime.so 的 jniRegisterNativeMethods.</p>
+<p>因为 libandroid_runtime.so 的 jni 函数都是通过 jniRegisterNativeMethods 注册的，所以 hook 后可以主动调用原 jniRegisterNativeMethods 为 libandroid_runtime.so 来注册回调函数并将 nativeForkAndSpecialize ,nativeSpecializeAppProcess, nativeForkSystemServer 这三个函数指针修改。这三个 jni 函数会在 Zygote 进程 java 层 fork 应用进程和系统进程时被调用，通过修改这三个函数的指针就可以在 zygote fork 新进程的时候得到执行时机。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814150437.png" alt="20230814150437"></p>
+<h4 id="Load"><a href="#Load" class="headerlink" title="Load"></a>Load</h4><ul>
+<li><p>调用 LoadModule 函数，通过 dlopen 加载所有的 riru 模块 so 并调用其 init 函数。</p>
+</li>
+<li><p>调用 HideFromMaps 函数通过之前获取的 libriruhide.so 的导出函数 riru_hide 隐藏所有加载的 riru 模块 so 和 libriru.so 本身。</p>
+<blockquote>
+<p>libriruhide.so 的导出函数 riru_hide，此函数会调用 do_hide 隐藏指定内存块，通过备份后再重新 map 回原地址的方法欺骗 map 表。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814150839.png" alt="20230814150839"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814151017.png" alt="20230814151017"></p>
+</blockquote>
+</li>
+<li><p>调用所有加载的 riru 模块 so 的 onModuleLoaded 函数。</p>
+</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814150601.png" alt="20230814150601"></p>
+<h3 id="6-2-zygisk"><a href="#6-2-zygisk" class="headerlink" title="6.2 zygisk"></a>6.2 zygisk</h3><p>zygisk 目的和 riru 一样都是为了在 zygote 进程中运行自己的模块，其通过修改 app_process 程序的入口，通过设置环境变量 LD_PRELOAD 后运行原来的 app_process 程序从而注入 zigisk 自己的 so。</p>
+<p>zygisk 自己的 so 注入到 zygote 进程中后和 riru 一样也会加载所有的模块 so，同时也会利用相同的方式隐藏这些 so 模块。整体流程大致和 riru 相似。</p>
+<h3 id="6-3-Lsposed"><a href="#6-3-Lsposed" class="headerlink" title="6.3 Lsposed"></a>6.3 Lsposed</h3><p>由 riru 运行流程分析可知，riru 在加载 lsposed 的模块 so 之后会先后进行如下几步操作（模块 so 就是 liblspd.so）：</p>
+<ul>
+<li>加载完模块 so 后调用 so 中的 init 函数</li>
+<li>隐藏模块 so</li>
+<li>调用模块 so 的 onModuleLoaded 函数</li>
+<li>当 zygote fork 生成新 apk 时会调用模块 so 中设置的回调函数，在 zygote fork 的 apk 运行前进行一些初始化。<br><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814152339.png" alt="20230814152339"></li>
+</ul>
+<h4 id="LoadDex"><a href="#LoadDex" class="headerlink" title="LoadDex"></a>LoadDex</h4><p>先调用 PreloadedDex 将 lspd.dex 文件从磁盘 map 到内存中。LoadDex 实例化一个 InMemoryClassLoader 并设置 parent 为系统类加载器 systemClassLoader，同时加载了 lspd.dex。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814152542.png" alt="20230814152542"></p>
+<h4 id="InitArtHooker-and-InitHooks"><a href="#InitArtHooker-and-InitHooks" class="headerlink" title="InitArtHooker and InitHooks"></a>InitArtHooker and InitHooks</h4><p>InitHooks 内部会获取前面实例化的 InMemoryClassLoader 类加载器中加载的所有 dex 文件（实际就是 lspd.dex）的 DexFile 对象，然后调用 DexFile_setTrusted 使此 dex 文件中的类能够绕过 android 9.0 开始的对私有系统 frameword API 的限制访问，但是查看 DexFile_setTrusted 源码发现，此函数只有在 apk 处于调试状态下才能生效。</p>
+<h4 id="SetupEntryClass"><a href="#SetupEntryClass" class="headerlink" title="SetupEntryClass"></a>SetupEntryClass</h4><p>相当于找到 lspd.dex 的入口类 org.lsposed.lspd.core.Main，这就相当于进入加载 xposed 模块了</p>
+<h4 id="forkCommon"><a href="#forkCommon" class="headerlink" title="forkCommon"></a>forkCommon</h4><p>forkCommon 会调用 initXposed 和 bootstrapXposed</p>
+<p>initXposed 进行一些初始化，通过前面加载的 lspd.dex 中提供的 xposed API 进行一些 hook 操作。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814152932.png" alt="20230814152932"></p>
+<p>bootstrapXposed 调用 lspd.dex 的 loadModules。loadModules 调用 getModulesList 加载并所有的 xposed 模块，调用重载的 loadModule（内部调用 InitModule）初始化 xposed 模块中需要 hook 的函数。</p>
+<h3 id="6-4-检测-Lsposed"><a href="#6-4-检测-Lsposed" class="headerlink" title="6.4 检测 Lsposed"></a>6.4 检测 Lsposed</h3><h4 id="检查栈回溯"><a href="#检查栈回溯" class="headerlink" title="检查栈回溯"></a>检查栈回溯</h4><p>可以通过主动抛出一个异常并检查栈回溯信息看是否存在一些特殊方法调用，例如：de.robv.android.xposed</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814153227.png" alt="20230814153227"></p>
+<h4 id="内存漫游获取-classloader"><a href="#内存漫游获取-classloader" class="headerlink" title="内存漫游获取 classloader"></a>内存漫游获取 classloader</h4><p>getInstancesOfClasses 可以获取某个类的所有实例，可以通过调用此函数获取所有的 ClassLoader 实例并进一步查看此 ClassLoader 加载的所有类信息，看是否存在特殊的类名称。但是此函数是 hide api，调用的话需要先绕过 hide api 限制。</p>
+<h4 id="检查-x2F-proc-x2F-pid-x2F-maps"><a href="#检查-x2F-proc-x2F-pid-x2F-maps" class="headerlink" title="检查&#x2F;proc&#x2F;pid&#x2F;maps"></a>检查&#x2F;proc&#x2F;pid&#x2F;maps</h4><p>无论 lsposed 是基于 riru 还是 zigisk，其 so 模块都会被隐藏。虽然隐藏后虽然内存块是匿名的，但是内存块还是包含可执行属性，正常情况下是很少出现匿名的可执行内存的。可以通过检测 map 表是否存在匿名的并且具有可执行属性的内存判断是否存在 lsposed 模块。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814153328.png" alt="20230814153328"></p>
+<h4 id="检查-riru"><a href="#检查-riru" class="headerlink" title="检查 riru"></a>检查 riru</h4><p>riru 会将 libriruloader.so 放在&#x2F;system&#x2F;lib64 目录下并注入到 zygote 进程中，通过 fopen(“&#x2F;system&#x2F;lib64&#x2F;libriruloader.so”, “r”);判断是否存在此文件。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230814153359.png" alt="20230814153359"></p>
+<h4 id="检查-zygisk"><a href="#检查-zygisk" class="headerlink" title="检查 zygisk"></a>检查 zygisk</h4><p>zygisk 通过修改 zygote 进程的环境变量 LD_PRELOAD 注入 zygisk 的 so 文件，在应用程序中可以检测环境变量。不过 shamiko 项目可以对这些变化进行抹去</p>
+<p>参考：<br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/revercc/p/17034028.html#zygisk%E8%BF%90%E8%A1%8C%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90">https://www.cnblogs.com/revercc/p/17034028.html#zygisk%E8%BF%90%E8%A1%8C%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90</a></p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/ArtMethod%20Hook/" title="ArtMethod Hook" target="_blank" rel="external">https://beichen.link/2023/08/10/Study/逆向知识/ArtMethod Hook/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/so%E5%8A%A0%E8%BD%BD%E6%B5%81%E7%A8%8B/" title="so 加载流程"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/Native%20hook/" title="Native Hook"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

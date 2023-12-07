@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Android 抓包的整理 | 北辰的小破站</title>
+  <meta name="description" content="抓包方式 hook app 业务层，根据业务代码逻辑找到触发请求的函数，比如按钮触发，或者触发数据上报时的提示框等方式。分析后找到发送数据的地方 hook 打印。  优点：不受 app 的防抓包手段的影响，只要能 hook 到就能抓到包。 缺点：必须分析 app 找关键点，并且每个不同的请求都要找对应的触发函数，效率太慢。   系统框架层的 hook。直接 hook 系统源码发送和接受数据的地方。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android 抓包的整理">
+<meta property="og:url" content="https://beichen.link/2023/03/01/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E6%8A%93%E5%8C%85%E5%AD%A6%E4%B9%A0/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="抓包方式 hook app 业务层，根据业务代码逻辑找到触发请求的函数，比如按钮触发，或者触发数据上报时的提示框等方式。分析后找到发送数据的地方 hook 打印。  优点：不受 app 的防抓包手段的影响，只要能 hook 到就能抓到包。 缺点：必须分析 app 找关键点，并且每个不同的请求都要找对应的触发函数，效率太慢。   系统框架层的 hook。直接 hook 系统源码发送和接受数据的地方。">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303061926597.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303062025341.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303062033825.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230925154404.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230925154441.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230925154540.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230925154606.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230925155021.png">
+<meta property="article:published_time" content="2023-03-01T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.751Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="逆向知识">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303061926597.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/03/01/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E6%8A%93%E5%8C%85%E5%AD%A6%E4%B9%A0/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/逆向知识/抓包学习" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Android 抓包的整理
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/03/01/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E6%8A%93%E5%8C%85%E5%AD%A6%E4%B9%A0/" class="article-date">
+	  <time datetime="2023-03-01T00:00:00.000Z" itemprop="datePublished">2023-03-01</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/03/01/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E6%8A%93%E5%8C%85%E5%AD%A6%E4%B9%A0/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 2.2k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 8(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="抓包方式"><a href="#抓包方式" class="headerlink" title="抓包方式"></a>抓包方式</h2><ol>
+<li><p>hook app 业务层，根据业务代码逻辑找到触发请求的函数，比如按钮触发，或者触发数据上报时的提示框等方式。分析后找到发送数据的地方 hook 打印。</p>
+<ul>
+<li>优点：不受 app 的防抓包手段的影响，只要能 hook 到就能抓到包。</li>
+<li>缺点：必须分析 app 找关键点，并且每个不同的请求都要找对应的触发函数，效率太慢。</li>
+</ul>
+</li>
+<li><p>系统框架层的 hook。直接 hook 系统源码发送和接受数据的地方。</p>
+<ul>
+<li>优点：可以直接省略掉业务层的分析。因为业务层不论逻辑怎么样最终都是调用系统的或者是第三方的库来进行数据传输。并且通用性更好。基本不用修改就可以抓很多 app 的包。并且可以在这里直接打印堆栈回溯请求触发的函数，提高分析的效率。同样不受防抓包手段影响。</li>
+<li>缺点：hook 出来的抓包数据不便于我们分析和筛选。只能在日志中查找对应的数据，分析数据包会比较繁琐。简单的需求或者是溯源时使用比较好</li>
+</ul>
+</li>
+<li><p>中间人抓包，使用 charles、burp 等抓包工具进行拦截，中间人抓包在 https 请求时，抓包软件的证书在中间冒充服务端接收客服端的请求。然后又冒充客户端，发送请求给服务端。在中间拿到了客户端和服务端的数据。</p>
+<ul>
+<li>优点：专业的抓包分析软件，更加友好的分析页面。更加强大的功能，例如可以拦截请求进行改写替换，安装证书可以解析抓到的 https 数据包。支持 vpn 抓包</li>
+<li>缺点：防抓包手段针对的主要目标，例如服务端验证客户端证书，不正确就拒绝访问，我们需要把客户端的证书给 dump 出来，然后让中间人抓包使用指定证书。或者是客户端验证服务端证书。我们需要找到并 hook 去掉验证的代码。无法抓 tcp 和 udp 的包</li>
+</ul>
+</li>
+<li><p>网卡抓包、路由抓包。如 wireshark，科来之类的。</p>
+<ul>
+<li>优点：这种方式不受任何限制，并且通杀，绝对能抓到。</li>
+<li>缺点：对于加密的数据没有办法。需要自己进行解密，对于 http 和 https 包的展示不太友好</li>
+</ul>
+</li>
+</ol>
+<p>其中比较通用一点的是系统层的 hook。所以我这里主要针对这个记录下系统层 hook 的方式抓取 http、https、tcp、udp 的数据</p>
+<h2 id="网络知识"><a href="#网络知识" class="headerlink" title="网络知识"></a>网络知识</h2><p>首先贴一个网上找的经典的网络模型图。可以看出 http 包是处于应用层的一种封装，所以我们抓 tcp 包的时候就可以抓到 http 包。</p>
+<img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303061926597.png" alt="image-20230306192641462" style="zoom:50%;" />
+
+<h3 id="HTTPS-流程"><a href="#HTTPS-流程" class="headerlink" title="HTTPS 流程"></a>HTTPS 流程</h3><p>超文本传输安全协议（HyperText Transfer Protocol Secure，缩写：HTTPS）是一种通过计算机网络进行安全通信的传输协议。</p>
+<p>HTTPS 经由 HTTP 进行通信，利用 SSL&#x2F;TLS 来加密数据包。其主要目的，是提供对网站服务器的身份认证，保护交换资料的隐私与完整性。</p>
+<h4 id="加密与签名"><a href="#加密与签名" class="headerlink" title="加密与签名"></a>加密与签名</h4><ol>
+<li><p>Hash<br>「Hash 算法」也被称为散列算法。「Hash 算法」没有一个固定的公式，只要符合散列思想的算法都可以被称为是「Hash 算法」。</p>
+<p>通常无法通过数据的 hash 值还原出原始数据，不同数据的 hash 值不同，所以可以用「Hash 算法」来校验完整性，检测数据是否完整或者是否有更改。</p>
+</li>
+<li><p>对称加密<br>加密与解密使用同样的密钥。</p>
+<p>对称加密效率较高，被广泛应用于各种加密协议，然而在通讯前需要将密钥发送给对方，容易导致密钥泄漏。</p>
+<p>非对称加密使用了一对密钥：公钥和私钥。私钥只能由一方保管，不能外泄，而公钥则可以发给任何请求者。通过公钥加密的数据只能由私钥解开。</p>
+<p>相比对称加密而言，非对称加密是十分安全的，但是加密和解密效率却没有对称加密高。</p>
+</li>
+<li><p>数据签名</p>
+<p>数据签名可以理解为：利用非对称加密中的私钥对「数据的 Hash 值」进行加密后的数据。</p>
+<p>签名的验证者使用公钥对数据签名进行解密，并将解密结果与自己计算出的数据的 Hash 值进行比对，结果相同则证明数据完整、签名有效，否则，则认为数据无效。</p>
+<ul>
+<li>加密过程：公钥加密，私钥解密；</li>
+<li>数字签名：私钥加密，公钥解密；</li>
+</ul>
+</li>
+</ol>
+<h4 id="数字证书"><a href="#数字证书" class="headerlink" title="数字证书"></a>数字证书</h4><p>数字证书用来证明公钥拥有者的身份。</p>
+<p>数字证书中包含：拥有者的公钥、拥有者名称、证书颁发者信息、证书信息签名及有效期等</p>
+<h4 id="SSL-x2F-TSL"><a href="#SSL-x2F-TSL" class="headerlink" title="SSL&#x2F;TSL"></a>SSL&#x2F;TSL</h4><p><img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303062025341.png" alt="image-20230306202537229"></p>
+<ol>
+<li><p>ClientHello<br>Client 首先发送本地的 TLS 版本、支持的加密算法套件，并且生成一个随机数 R1</p>
+</li>
+<li><p>Server Hello</p>
+<ul>
+<li>Server 端确认 TLS 版本号。从 Client 端支持的加密套件中选取一个，并生成一个随机数 R2 一起发送给 Client。</li>
+<li>Server 向 Client 发动自己的 CA 证书(包含公钥)、证书签名。</li>
+</ul>
+</li>
+<li><p>证书校验</p>
+</li>
+</ol>
+<ul>
+<li><p>Client 判断证书签名与 CA 证书是否合法有效</p>
+</li>
+<li><p>Client 生成随机数 Pre-Master ，并使用第二步中的公钥对 Pre-Master 进行加密，将加密后的 Pre-Master 送给服务器</p>
+<p>这一步结束后，Client 与 Server 就都有 R1、R2、Pre-Master 了，两端便可以使用这 3 个随机数独立生成对称加密会话密钥了,避免了对称加密密钥的传输,同时可以根据会话密钥生成 6 个密钥（P1~P6）用作后续身份验证</p>
+</li>
+</ul>
+<ol start="4">
+<li>Client 握手结束通知</li>
+</ol>
+<ul>
+<li><p>Client 使用 P1 将之前的握手信息的 hash 值加密并发送给 Server</p>
+</li>
+<li><p>Client 发送握手结束消息</p>
+</li>
+</ul>
+<ol start="5">
+<li>Server 握手结束通知<ul>
+<li>Server 计算之前的握手信息的 hash 值，并与 P1 解密客户端发送的握手信息的 hash 对比校验</li>
+<li>验证通过后，使用 P2 将之前的握手信息的 hash 值加密并发送给 Client</li>
+</ul>
+</li>
+</ol>
+<ol start="6">
+<li><p>Client 开始 HTTPS 通讯</p>
+<ul>
+<li>Client 计算之前的握手信息的 hash 值，并与 P2 解密 Server 发送的握手信息的 hash 对比校验</li>
+<li>验证通过后，开始发起 HTTPS 请求。</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303062033825.png" alt="image-20230306203325718"></p>
+</li>
+</ol>
+<h4 id="中间人对抗攻击"><a href="#中间人对抗攻击" class="headerlink" title="中间人对抗攻击"></a>中间人对抗攻击</h4><p>而使用中间人抓包。常常会碰到防抓包手段。这些手段一般都是针对证书的检测。</p>
+<ol>
+<li><p>服务端验证客户端证书</p>
+<p>服务端会检测客户端交互使用的证书是不是正确的。这种情况我们可以直接将客户端里面使用的证书导出来，然后设置让 charles 使用指定的证书来抓包。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230925154404.png" alt="20230925154404"></p>
+<p>对于这种双向认证的 APP 定位一般就是 KeyStore.getInstance X509TrustManager PKCS12. 那么就拿我们脱完壳的 dex 搜索一下.</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230925154441.png" alt="20230925154441"></p>
+<p>根据我们三个关键词搜索的结果来看 这个类 com.hundsun.net.a.e 有很大的嫌疑! 因为所有关键词的搜索结果都指向了这个类!!!</p>
+<p>然后进到类中查看,果然发现了关键函数</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230925154540.png" alt="20230925154540"></p>
+<p>这里出现了一个 client.p12 的证书文件,根据代码指引,这个文件就存在于 APK assets 目录下那我们拿下来看下</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230925154606.png" alt="20230925154606"></p>
+<p>这东西典型不符合 p12 证书的格式,明显是个 base64 的压缩流,那我们再看下代码. 果然在得到证书文件后它把得到的证书流进行了 DES 解密操作</p>
+<p>其实这时候我们只需要 HOOK KeyStore 的 load 函数 就能拿到证书的流跟密码.</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">hook_KeyStore_load</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="title class_">Java</span>.<span class="title function_">perform</span>(<span class="keyword">function</span> (<span class="params"></span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> <span class="title class_">StringClass</span> = <span class="title class_">Java</span>.<span class="title function_">use</span>(<span class="string">&quot;java.lang.String&quot;</span>);</span><br><span class="line">    <span class="keyword">var</span> <span class="title class_">KeyStore</span> = <span class="title class_">Java</span>.<span class="title function_">use</span>(<span class="string">&quot;java.security.KeyStore&quot;</span>);</span><br><span class="line">    <span class="title class_">KeyStore</span>.<span class="property">load</span>.<span class="title function_">overload</span>(</span><br><span class="line">      <span class="string">&quot;java.security.KeyStore$LoadStoreParameter&quot;</span></span><br><span class="line">    ).<span class="property">implementation</span> = <span class="keyword">function</span> (<span class="params">arg0</span>) &#123;</span><br><span class="line">      <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;KeyStore.load1:&quot;</span>, arg0);</span><br><span class="line">      <span class="variable language_">this</span>.<span class="title function_">load</span>(arg0);</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="title class_">KeyStore</span>.<span class="property">load</span>.<span class="title function_">overload</span>(<span class="string">&quot;java.io.InputStream&quot;</span>, <span class="string">&quot;[C&quot;</span>).<span class="property">implementation</span> =</span><br><span class="line">      <span class="keyword">function</span> (<span class="params">arg0, arg1</span>) &#123;</span><br><span class="line">        <span class="variable language_">console</span>.<span class="title function_">log</span>(</span><br><span class="line">          <span class="string">&quot;KeyStore.load2:&quot;</span>,</span><br><span class="line">          arg0,</span><br><span class="line">          arg1 ? <span class="title class_">StringClass</span>.$new(arg1) : <span class="literal">null</span></span><br><span class="line">        );</span><br><span class="line">        <span class="keyword">if</span> (arg0 != <span class="literal">null</span>) &#123;</span><br><span class="line">          <span class="keyword">var</span> byteArray = <span class="title class_">Java</span>.<span class="title function_">array</span>(<span class="string">&quot;byte&quot;</span>, <span class="keyword">new</span> <span class="title class_">Array</span>(<span class="number">10240</span>).<span class="title function_">fill</span>(<span class="number">0</span>));</span><br><span class="line">          arg0.<span class="title function_">read</span>(byteArray);</span><br><span class="line">          <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title function_">buf2hex</span>(byteArray, <span class="number">10240</span>));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="variable language_">this</span>.<span class="title function_">load</span>(arg0, arg1);</span><br><span class="line">      &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;hook_KeyStore_load...&quot;</span>);</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="title function_">setImmediate</span>(hook_KeyStore_load);</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230925155021.png" alt="20230925155021"></p>
+</li>
+<li><p>客户端验证服务端证书</p>
+<p>大概就是客户端向服务端请求。然后服务端把自己的证书返回了。客户端验证一下证书是否正确有效。没啥问题才正常通讯。而这种判断逻辑直接在客户端的。那就直接 hook 修改让他不要处理就行了。</p>
+</li>
+</ol>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/03/01/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E6%8A%93%E5%8C%85%E5%AD%A6%E4%B9%A0/" title="Android 抓包的整理" target="_blank" rel="external">https://beichen.link/2023/03/01/Study/逆向知识/抓包学习/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/03/01/Study/%E7%AE%97%E6%B3%95/%E5%93%88%E5%B8%8C%E8%A1%A8%E5%92%8C%E6%9C%89%E5%BA%8F%E8%A1%A8/" title="哈希表和有序表"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/02/27/Study/%E7%AE%97%E6%B3%95/%E5%B7%A6%E7%A5%9E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" title="左神数据结构-简单排序算法"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

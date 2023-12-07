@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>抓包奇技淫巧 | 北辰的小破站</title>
+  <meta name="description" content="移动长连接一开始爬 美团外卖 App 我是直接 Charles 上手就干的，但我抓了一天都没抓到有用的数据 查资料得知美团使用了一种叫 “移动长连接“ 的技术导致我抓不到包； 根据美团技术团队发表的一篇文章：移动网络优化实践(https:&#x2F;&#x2F;tech.meituan.com&#x2F;2017&#x2F;03&#x2F;17&#x2F;shark-sdk.html)，用我所理解的话来说就是： 打开 APP 的时候移动端和服务器建立起 t">
+<meta property="og:type" content="article">
+<meta property="og:title" content="抓包奇技淫巧">
+<meta property="og:url" content="https://beichen.link/2023/07/01/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E6%8A%93%E5%8C%85%E5%A5%87%E6%8A%80%E6%B7%AB%E5%B7%A7/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="移动长连接一开始爬 美团外卖 App 我是直接 Charles 上手就干的，但我抓了一天都没抓到有用的数据 查资料得知美团使用了一种叫 “移动长连接“ 的技术导致我抓不到包； 根据美团技术团队发表的一篇文章：移动网络优化实践(https:&#x2F;&#x2F;tech.meituan.com&#x2F;2017&#x2F;03&#x2F;17&#x2F;shark-sdk.html)，用我所理解的话来说就是： 打开 APP 的时候移动端和服务器建立起 t">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231004214328.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231004214647.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231004215549.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231004215725.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231004220151.png">
+<meta property="article:published_time" content="2023-07-01T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.751Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="逆向知识">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231004214328.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/07/01/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E6%8A%93%E5%8C%85%E5%A5%87%E6%8A%80%E6%B7%AB%E5%B7%A7/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/逆向知识/抓包奇技淫巧" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      抓包奇技淫巧
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/07/01/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E6%8A%93%E5%8C%85%E5%A5%87%E6%8A%80%E6%B7%AB%E5%B7%A7/" class="article-date">
+	  <time datetime="2023-07-01T00:00:00.000Z" itemprop="datePublished">2023-07-01</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/07/01/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E6%8A%93%E5%8C%85%E5%A5%87%E6%8A%80%E6%B7%AB%E5%B7%A7/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 2.7k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 9(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="移动长连接"><a href="#移动长连接" class="headerlink" title="移动长连接"></a>移动长连接</h2><p>一开始爬 美团外卖 App 我是直接 Charles 上手就干的，但我抓了一天都没抓到有用的数据</p>
+<p>查资料得知美团使用了一种叫 “移动长连接“ 的技术导致我抓不到包；</p>
+<p>根据美团技术团队发表的一篇文章：移动网络优化实践(<a target="_blank" rel="noopener" href="https://tech.meituan.com/2017/03/17/shark-sdk.html)%EF%BC%8C%E7%94%A8%E6%88%91%E6%89%80%E7%90%86%E8%A7%A3%E7%9A%84%E8%AF%9D%E6%9D%A5%E8%AF%B4%E5%B0%B1%E6%98%AF%EF%BC%9A">https://tech.meituan.com/2017/03/17/shark-sdk.html)，用我所理解的话来说就是：</a></p>
+<p>打开 APP 的时候移动端和服务器建立起 tcp 连接后，这个连接就不断开了，后续的请求和接收都走该通道，这个 tcp 长连接一般都是会使用自定义的协议，而非 http，所有普通的抓包软件都无法抓到这类请求</p>
+<p>美团在 HTTP 短连请求中进行了一些优化尝试方案，即域名合并方案和</p>
+<h3 id="短连方案一、域名合并方案"><a href="#短连方案一、域名合并方案" class="headerlink" title="短连方案一、域名合并方案"></a>短连方案一、域名合并方案</h3><p>随着开发规模逐渐扩大，各业务团队出于独立性和稳定性的考虑，纷纷申请了自己的三级域名。App 中的 API 域名越来越多。如下所示： search.api.dianping.com ad.api.dianping.com tuangou.api.dianping.com waimai.api.dianping.com movie.api.dianping.com …</p>
+<p>App 中域名多了之后，将面临下面几个问题：</p>
+<ol>
+<li>HTTP 请求需要跟不同服务器建立连接。增加了网络的并发连接数量。</li>
+<li>每条域名都需要经过 DNS 服务来解析服务器 IP。</li>
+</ol>
+<p>如果想将所有的三级域名都合并为一个域名，又会面临巨大的项目推进难题。因为不同业务团队当初正是出于独立性和稳定性的考虑才把域名进行拆分，现在再想把域名合并起来，势必会遭遇巨大的阻力。</p>
+<p>所以我们面临的是：既要将域名合并，提升网络连接效率，又不能改造后端业务服务器。经过讨论，我们想到了一个折中的方案。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231004214328.png" alt="20231004214328"></p>
+<p>该方案的核心思想在于：保持客户端业务层代码编写的网络请求与后端业务服务器收到的请求保持一致，请求发出前，在客户端网络层对域名收编，请求送入后端，在 SLB(Server Load Balancing)中对域名进行还原。</p>
+<p>网络请求发出前，在客户端的网络底层将 URL 中的域名做简单的替换，我们称之为“域名收编”。</p>
+<p>例如：URL “<a target="_blank" rel="noopener" href="http://ad.api.dianping.com/command?param1=123&quot;">http://ad.api.dianping.com/command?param1=123&quot;</a> 在网络底层被修改为 “<a target="_blank" rel="noopener" href="http://api.dianping.com/ad/command?param1=123&quot;">http://api.dianping.com/ad/command?param1=123&quot;</a> 。</p>
+<p>这里，将域名”ad.api.dianping.com”替换成了”api.dianping.com”，而紧跟在域名后的其后的”ad”表示了这是一条与广告业务有关的域名请求。</p>
+<p>依此类推，所有 URL 的域名都被合并为”api.dianping.com”。子级域名信息被隐藏在了域名后的 path 中。</p>
+<p>被改造的请求被送到网络后端，在 SLB 中，拥有与客户端网络层相反的一套域名反收编逻辑，称为“域名还原”。</p>
+<p>例如：”<a target="_blank" rel="noopener" href="http://api.dianping.com/ad/command?param1=123&quot;">http://api.dianping.com/ad/command?param1=123&quot;</a> 在 SLB 中被还原为 “<a target="_blank" rel="noopener" href="http://ad.api.dianping.com/command?param1=123&quot;">http://ad.api.dianping.com/command?param1=123&quot;</a> 。 SLB 的作用是将请求分发到不同的业务服务器，在经过域名还原之后，请求已经与客户端业务代码中原始请求一致了。</p>
+<p>该方案具有如下优势：</p>
+<ol>
+<li>域名得到了收编，减少了 DNS 调用次数，降低了 DNS 劫持风险。</li>
+<li>针对同一域名，可以利用 Keep-Alive 来复用 Http 的连接。</li>
+<li>客户端业务层不需要修改代码，后端业务服务也不需要进行任何修改。</li>
+</ol>
+<h3 id="短连方案二、IP-直连方案"><a href="#短连方案二、IP-直连方案" class="headerlink" title="短连方案二、IP 直连方案"></a>短连方案二、IP 直连方案</h3><p>经过域名合并方案，我们已经将所有的域名都统一成了”api.dianping.com”。针对这唯一的域名，我们可以在客户端架设自己的 DNS 服务。</p>
+<p>方案很简单：程序启动的时候拉取”api.dianping.com”对应的所有的 IP 列表；对所有 IP 进行跑马测试，找到速度最快的 IP。后续所有的 HTTPS 请求都将域名更换为跑马最快的 IP 即可。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231004214647.png" alt="20231004214647"></p>
+<p>举个例子，假如：经过跑马测试发现域名”api.dianping.com”对应最快的 IP 是”1.23.456.789”。</p>
+<p>URL “<a target="_blank" rel="noopener" href="http://api.dianping.com/ad/command?param1=123&quot;">http://api.dianping.com/ad/command?param1=123&quot;</a> 将被替换为</p>
+<p>“<a href="http://1.23.456.789/ad/command?param1=123&quot;">http://1.23.456.789/ad/command?param1=123&quot;</a></p>
+<p>IP 直连方案有下面几大优势：</p>
+<ol>
+<li>摒弃了系统 DNS，减少外界干扰，摆脱 DNS 劫持困扰。</li>
+<li>自建 DNS 更新时机可以控制。</li>
+<li>IP 列表更换方便</li>
+</ol>
+<p>接下来要想进一步提升端到端成功率，就要开始进行长连通道建设了。</p>
+<p>提到长连通道建设，首先让人想到的应该是 HTTP&#x2F;2 技术。它具有异步连接多路复用、头部压缩、请求响应管线化等众多优点。</p>
+<p>如果查看 HTTP&#x2F;2 的拓扑结构，其实非常简单：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231004215549.png" alt="20231004215549"></p>
+<p>HTTP&#x2F;2 在客户端与服务器之间建立长连通道，将同一域名的请求都放在长连通道上进行。这种拓扑结构有如下一些缺点：</p>
+<ol>
+<li>请求基于 DNS，仍将面临 DNS 劫持风险。</li>
+<li>不同域名的请求需要建立多条连接。</li>
+<li>网络通道难以优化。客户端与服务器之间是公网链路。如果在多地部署服务器，成本消耗又会很大</li>
+</ol>
+<p>与 HTTP&#x2F;2 相区别，我们这里推荐另一种代理长连的模式。这种模式的拓扑图如下：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231004215725.png" alt="20231004215725"></p>
+<p>基本思路为：在客户端与业务服务器之间架设代理长连服务器，客户端与代理服务器建立 TCP 长连通道，客户端的 HTTP 请求被转换为了 TCP 通道上的二进制数据包。代理服务器负责与业务服务器进行 HTTP 请求，请求的结果通过长连通道送回客户端。</p>
+<p>与 HTTP&#x2F;2 模式对比，代理长连模式具有下面一些优势：</p>
+<ol>
+<li><p>对 DNS 无依赖。客户端与代理服务器之间的长连通道是通过 IP 建立的，与 DNS 没有关系。客户端的 HTTP 请求被转换为二进制数据流送到代理服务器，也不需要进行 DNS 解析。代理服务器转发请求到业务服务器时，都处于同一内网，因此可以自己搭建 DNS 服务，减少对公网 DNS 服务的依赖。从这个层面上说，代理长连模式天生具有防 DNS 劫持的能力。</p>
+</li>
+<li><p>不同域名的请求可以复用同一条长连通道。</p>
+</li>
+<li><p>通道易优化。与部署业务服务器相比，部署代理长连服务器的代价就小了很多，可以在全国甚至全世界多地部署代理长连服务器。客户端在选择代理长连服务器时，可以通过跑马找到最快的服务器 IP 进行连接。另一方面，代理服务器与业务服务器之间的网络通道也可以进行优化，通过架设专线或者租用腾讯云等方式可以大大提升通道服务质量。</p>
+</li>
+<li><p>对业务完全透明。客户端的业务代码只要接入网络层的 SDK 即可，完全不用关心网络请求使用的是长连通道还是短连通道。代理服务器将客户端的请求还原为 HTTP 短连方式送到业务服务器，业务服务器不需要进行任何改造。</p>
+</li>
+</ol>
+<p>完整的网络通道拓扑图如下所示：</p>
+<p>图中网络通道 SDK 包含了三大通信通道：</p>
+<ol>
+<li><p>CIP 通道：CIP 通道就是上文中提到的自建代理长连通道。CIP 是 China Internet Plus 的缩写，为美团点评集团的注册英文名称。App 中绝大部分的请求通过 CIP 通道中的 TCP 子通道与长连服务器（CIP Connection Server）通信，长连服务器将收到的请求代理转发到业务服务器（API Server）。由于 TCP 子通道在一些极端情况下可能会无法工作，我们在 CIP 通道中额外部署了 UDP 子通道和 HTTP 子通道，其中 HTTP 子通道通过公网绕过长连服务器与业务服务器进行直接请求。CIP 通道的平均端到端成功率目前已达 99.7%，耗时平均在 350 毫秒左右。</p>
+</li>
+<li><p>WNS 通道：出于灾备的需要，腾讯的 WNS 目前仍被包含在网络通道 SDK 中。当极端情况发生，CIP 通道不可用时，WNS 通道还可以作为备用的长连替代方案。</p>
+</li>
+<li><p>HTTP 通道：此处的 HTTP 通道是在公网直接请求 API Server 的网络通道。出于长连通道重要性的考虑，上传和下载大数据包的请求如果放在长连上进行都有可能导致长连通道的拥堵，因此我们将 CDN 访问、文件上传和频繁的日志上报等放在公网利用 HTTP 短连进行请求，同时也减轻代理长连服务器的负担。</p>
+</li>
+</ol>
+<h2 id="通信降级抓包"><a href="#通信降级抓包" class="headerlink" title="通信降级抓包"></a>通信降级抓包</h2><p>文章里有这么一段：由于客户端的请求都放在 TCP 通道上进行，当代理长连服务器需要升级或者由于极端情况发生了故障时，将会造成客户端的整体网络服务不可用。为了解决这个问题，我们准备了 Failover 降级方案。当 TCP 通道无法建立或者发生故障时，可以使用 UDP 面向无连接的特性提供另一条请求通道，或者绕过代理长连服务器之间向业务服务器发起 HTTP 公网请求。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231004220151.png" alt="20231004220151"></p>
+<p>也就是说，美团为了以防万一提供了降级方案，正是因为这个方案给了我们机会，既然 tcp 通道发生故障会切换到 http 请求，那么只要让这个条件成立就好了。这个可以通过屏蔽 ip 实现，随即有了一个新问题，怎么找到这个 ip。</p>
+<p>首先移动端长连接与服务器的通信肯定是 TCP 协议；然后由于是长连接，那么移动端肯定不会轻易的去断开这个连接，也就是不会发送 fin 包，有了这两个特征就可以开始筛选 ip 了。</p>
+<p>pc 端的话用 wireshark，找比较大的返回的数据包，而且是加密过的，然后屏蔽这个 ip，Linux 直接用 iptables 就行：<code>iptable -A INPUT -s ***.**.***.181 -j DROP #屏蔽 </code>,接着就可以直接用 Charles 抓包了.</p>
+<p>手机上用小黄鸟抓包查看最大的数据包然后屏蔽相应的 ip 也可以</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/07/01/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E6%8A%93%E5%8C%85%E5%A5%87%E6%8A%80%E6%B7%AB%E5%B7%A7/" title="抓包奇技淫巧" target="_blank" rel="external">https://beichen.link/2023/07/01/Study/逆向知识/抓包奇技淫巧/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/07/03/Study/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/%E6%B1%87%E7%BC%96%E5%AD%A6%E4%B9%A0/" title="ARM32 汇编学习"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/04/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/magisk%20root%E5%8E%9F%E7%90%86/" title="magisk root原理"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

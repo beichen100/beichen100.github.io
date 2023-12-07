@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Android 漏洞介绍 | 北辰的小破站</title>
+  <meta name="description" content="activity 生命周期   Activity 第一次启动，回调如下：onCreate -&gt; onStart -&gt; onResume  打开新 Activity 或按 Home 键：onPause-&gt;onStop  如果新的 Activity 的 Theme 为 Dialog 或者 Translucent（透明）时不会调用 onStop 方法  再次回到 Activity：on">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android 漏洞介绍">
+<meta property="og:url" content="https://beichen.link/2023/08/03/Study/Android%E6%BC%8F%E6%B4%9E/%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="activity 生命周期   Activity 第一次启动，回调如下：onCreate -&gt; onStart -&gt; onResume  打开新 Activity 或按 Home 键：onPause-&gt;onStop  如果新的 Activity 的 Theme 为 Dialog 或者 Translucent（透明）时不会调用 onStop 方法  再次回到 Activity：on">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825173805.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825174018.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230823153559.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825170332.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825170348.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825171517.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825171543.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825171629.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825171730.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825171957.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825173204.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825154844.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825155049.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825221726.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825221813.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230827150336.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230827153042.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230827153100.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230827153812.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230827161654.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230827161459.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230827161737.png">
+<meta property="article:published_time" content="2023-08-03T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.747Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Android漏洞">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825173805.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/08/03/Study/Android%E6%BC%8F%E6%B4%9E/%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/Android漏洞/漏洞学习" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Android 漏洞介绍
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/08/03/Study/Android%E6%BC%8F%E6%B4%9E/%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0/" class="article-date">
+	  <time datetime="2023-08-03T00:00:00.000Z" itemprop="datePublished">2023-08-03</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/08/03/Study/Android%E6%BC%8F%E6%B4%9E/%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 7.6k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 29(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="activity-生命周期"><a href="#activity-生命周期" class="headerlink" title="activity 生命周期"></a>activity 生命周期</h2><p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825173805.png" alt="20230825173805"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825174018.png" alt="20230825174018"></p>
+<ul>
+<li><p>Activity 第一次启动，回调如下：onCreate -&gt; onStart -&gt; onResume</p>
+</li>
+<li><p>打开新 Activity 或按 Home 键：onPause-&gt;onStop</p>
+</li>
+<li><p>如果新的 Activity 的 Theme 为 Dialog 或者 Translucent（透明）时不会调用 onStop 方法</p>
+</li>
+<li><p>再次回到 Activity：onRestart-&gt;onStart-&gt;onResume</p>
+</li>
+<li><p>按 Back 键退出 Activity：onPause-&gt;onStop-&gt;onDestroy</p>
+</li>
+</ul>
+<p>Activity 的生命周期是一一对应的，比如：</p>
+<ul>
+<li><p>onCreate - onDestroy 创建与销毁，只可能为一次调用</p>
+</li>
+<li><p>onStart - onStop 可见与不可见，可能为多次调用</p>
+</li>
+<li><p>onResume - onPause 在前台与不在前台，可能为多次调用</p>
+</li>
+</ul>
+<p>通常开发者只需要实现 onCreate 方法，但是对于一些复杂的业务场景，正确理解其生命周期也是很必要的。以笔者在内测中遇到的某应用为例，其中某个 Activity 中执行了一些敏感的操作，比如开启摄像头推流，或者开启了录音，但只在 onDestroy 中进行了推流&#x2F;录音的关闭。这样会导致在 APP 进入后台时候，这些操作依然在后台运行，攻击者可以构造任务栈使得受害者在面对恶意应用的钓鱼界面时候仍然执行目标应用的后台功能，从而形成特殊的钓鱼场景。正确的做法应该是在 onPaused 回调中对敏感操作进行关闭。</p>
+<p>攻击者实际可以通过连续发送不同的 Intent 去精确控制目标 Activity 生命周期回调函数的触发时机，如果开发时没有注意也会造成应用功能的状态机异常甚至是安全问题。</p>
+<h2 id="Intent-启动-Activity"><a href="#Intent-启动-Activity" class="headerlink" title="Intent 启动 Activity"></a>Intent 启动 Activity</h2><p>我们要启动 Activity，完成各个 Activity 之间的交互，我们需要使用 Android 中一个重要的组件 Intent</p>
+<p>Intent 是各个组件之间交互的一种重要方式，它不仅可以指明当前组件想要执行的动作，而且还能在各组件之间传递数据。Intent 一般可用于启动 Activity、启动 Service、发送广播等场景。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230823153559.png" alt="20230823153559"></p>
+<p>Intent 有多个构造函数的重载</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Intent（Context packageContext,Class&lt;?&gt; cls）<span class="comment">//参数 1：启动活动的上下文 参数 2：想要启动的目标活动</span></span><br><span class="line">Intent(String action)</span><br><span class="line">Intent(String action, Uri uri)</span><br></pre></td></tr></table></figure>
+
+<p>我们构建好一个 Intent 对象后，只需要使用 startActivity(Intent)来启动就可以了</p>
+<h3 id="Intent-一般分为显式-Intent-和隐私-Intent"><a href="#Intent-一般分为显式-Intent-和隐私-Intent" class="headerlink" title="Intent 一般分为显式 Intent 和隐私 Intent"></a>Intent 一般分为显式 Intent 和隐私 Intent</h3><p>Intent 的主要形式有两种，分别是显式 Intent 和隐式 Intent；二者的差别主要在于前者显式指定了 Component，后者没有指定 Component，但是会通过足够的信息去帮助系统去理解意图，比如 ACTION、CATAGORY 等。</p>
+<h4 id="显式-Intent-打开-Activity-如下："><a href="#显式-Intent-打开-Activity-如下：" class="headerlink" title="显式 Intent 打开 Activity 如下："></a>显式 Intent 打开 Activity 如下：</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Intent</span> <span class="variable">intent</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Intent</span>(MainActivity.<span class="built_in">this</span>, SecondActivity.class); <span class="comment">//实例化Intent对象</span></span><br><span class="line"><span class="comment">//使用putExtra传递参数，参数1：键名 参数2：键对应的值 我们可以使用intent.getStringExtra(&quot;et1&quot;)获取传递的参数</span></span><br><span class="line">intent.putExtra(<span class="string">&quot;et1&quot;</span>,et1Str);</span><br><span class="line"><span class="comment">//启动Intent，完成从MainActivity类跳转到SecondActivity类</span></span><br><span class="line">startActivity(intent);</span><br></pre></td></tr></table></figure>
+
+<p>当然，也可以使用 setComponent 或者 setClassName 方法来显式构造 intent，如</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ComponentName</span> <span class="variable">componentName</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ComponentName</span>(getPackageName(),<span class="string">&quot;com.xx.xx.SecondActivity&quot;</span> );</span><br><span class="line"><span class="type">Intent</span> <span class="variable">intent</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Intent</span>();</span><br><span class="line">intent.setComponent(componentName);</span><br><span class="line">startActivity(intent);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">intent.setClassName(getPackageName(),<span class="string">&quot;com.xx.xx.SecondActivity&quot;</span>);</span><br><span class="line">startActivity(intent);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="隐式-Intent-打开-Activity"><a href="#隐式-Intent-打开-Activity" class="headerlink" title="隐式 Intent 打开 Activity:"></a>隐式 Intent 打开 Activity:</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;activity android:name=<span class="string">&quot;.SecondActivity&quot;</span>&gt;</span><br><span class="line">            &lt;intent-filter&gt;</span><br><span class="line">                &lt;action android:name=<span class="string">&quot;com.example.test.ACTION_START&quot;</span> /&gt;</span><br><span class="line">                &lt;category android:name=<span class="string">&quot;android.intent.category.DEFAULT&quot;</span> /&gt;</span><br><span class="line">            &lt;/intent-filter&gt;</span><br><span class="line"> &lt;/activity&gt;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>IntentFilter 是 manifest 文件中组件内部的一个标签，该标签描述了组件具备什么特性，如果您未配置 intent-filters，那个该组件只能被显式启动。我们在 mainfest 中设置的 intent-filters 如果可以匹配某个隐式 Intent 那么该组件就可以被启动。IntentFilter 在做匹配时主要是根据 action, type, category 这三个属性且匹配优先级是：action&gt;data&gt;category</p>
+</blockquote>
+<p>隐式 Intent 并不指明启动哪个 Activity 而是指定一系列的 action 和 category，然后由系统去分析找到合适的 Activity 并打开，action 和 category 一般在 AndroidManifest 中指定</p>
+<p>只有<code>&lt;action&gt;</code>和<code>&lt;category&gt;</code>中的内容能够匹配上 Intent 中指定的 action 和 category 时，这个活动才能响应 Intent, 这里只有 action 和 category，其实 data 字段也可以做 intent filter</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Intent</span> <span class="variable">intent</span> <span class="operator">=</span> Intent(<span class="string">&quot;com.example.test.ACTION_START&quot;</span>)；</span><br><span class="line">startActivity(intent)；</span><br></pre></td></tr></table></figure>
+
+<p>我们这里只传入了 ACTION_START，这是因为 android.intent.category.DEFAULT 是一种默认的 category，在调用 startActivity()时会自动将这个 category 添加到 Intent 中</p>
+<h3 id="Activity-漏洞"><a href="#Activity-漏洞" class="headerlink" title="Activity 漏洞"></a>Activity 漏洞</h3><h4 id="导出组件导致越权绕过"><a href="#导出组件导致越权绕过" class="headerlink" title="导出组件导致越权绕过"></a>导出组件导致越权绕过</h4><p>activity 中支持许多属性。其中一个重要的属性就是 android:exported，表示当前 Activity 是否可以被其他 APP 应用的组件启动。该属性有几个特点：</p>
+<ol>
+<li><p>属性可以缺省，缺省值默认为 false；</p>
+</li>
+<li><p>如果 Activity 没有显式设置该属性，且该 Activity 中定义了 <intent-filter>，那么缺省值就默认为 true；</p>
+</li>
+</ol>
+<p>也就是说，开发者可能没有显式指定 Activity 导出，但由于指定了 intent-filter，因此实际上也是导出的，即可以被其他应用唤起对应的 Activity。这种情况在早期很常见，比如 APP 设计了一组更换密码的界面，需要先输入旧密码然后再跳转到输入新密码的界面，如果后者是导出的，攻击者就可以直接唤起输入新密码的界面，从而绕过了旧密码的校验逻辑。</p>
+<p>Google 已经深刻意识到了这个问题，因此规定在 Android 12 之后，如果应用的 Activity 中包含 intent-filter，就必须要显式指定 android:exported 为 true 或者 false，不允许缺省。在 Android 12 中未显式指定 exported 属性且带有 intent-filter 的 Activity 的应用在安装时候会直接被 PackageManager 拒绝。</p>
+<h4 id="Intent-重定向"><a href="#Intent-重定向" class="headerlink" title="Intent 重定向"></a>Intent 重定向</h4><p>那么如果三方 APP 要想访问非导出的 Activity 是不是就没有办法了呢？</p>
+<p>当然不是! 其中一种常见的方式即：将 Intent 类的对象作为 Intent 的 Extras 通过一个导出组件传递给非导出的组件, 以此来实现访问非导出的 Activity。</p>
+<p>原理在于，Android 组件之间传输的 Intent 类是实现了 Parcelable 的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Intent</span> <span class="keyword">implements</span> <span class="title class_">Parcelable</span>, Cloneable &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因此可以将属于 Intent 类的对象作为 Intent 的 extra 数据对象传递到另一个组件中，相当于在 Intent 中嵌入 Intent。</p>
+<p>这时，如果 App 从不可信 Intent 的 Extras 字段中提取出嵌入的 Intent，然后对这个嵌入 Intent 调用  startActivity（或类似的 startService 和 sendBroadcast），这样做是很危险的； 因为攻击者原本是无法访问非导出的组件的，但是通过 intent 重定向，即以导出的组件作为桥即可以访问非 exported 的组件，达到 launch anywhere 或者 broadcast anywhere 的目的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onCreate</span> <span class="params">(Bundle savedInstanceState)</span> &#123;</span><br><span class="line">   <span class="type">Intent</span> <span class="variable">target</span> <span class="operator">=</span> (Intent) getIntent().getParcelableExtra(<span class="string">&quot;target&quot;</span>);</span><br><span class="line">   startActivity(target);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上述代码将用户传入的 target Parcelable 直接转换成了 Intent 对象，并将这个对象作为 startActivity 的参数进行调用。就这个例子而言，可能造成的危害就是攻击者可以用任意构造的 Intent 数据去启动目标 APP 中的任意应用，哪怕是未导出的私有应用。而目标未导出的应用中可能进一步解析了攻击者提供的 Intent 中的参数，去造成进一步的危害，比如在内置 Webview 中执行任意 Javascript 代码，或者下载保存文件等。</p>
+<p>Intent 重定向可能导致以下安全问题：</p>
+<ol>
+<li><p>启动非导出组件，通过精心构造的可控的 Intent 参数来执行敏感操作，如果可以重写或者替换 native 库，甚至还会导致任意代码执行；</p>
+</li>
+<li><p>可以获取非导出的 content provider 组件的 content：&#x2F;&#x2F; URI 的访问权限来窃取敏感文件.</p>
+</li>
+</ol>
+<p>实际上 Intent Redirection 除了可能用来启动私有 Activity 组件，还可以用于其他的的接口，包括：</p>
+<p>• startActivity[15]</p>
+<p>• startService[16]</p>
+<p>• sendBroadcast[17]</p>
+<p>• setResult[18]</p>
+<p>注：每种方法可能还有若干衍生方法，比如 startActivityForResult</p>
+<p>前面三个可能比较好理解，分别是启动界面、启动服务和发送广播。最后一个 setResult 可能会在排查的时候忽略，这主要用来给当前 Activity 的调用者返回额外数据，主要用于 startActivityForResult 的场景，这同样也可能将用户的不可信数据污染到调用者处。</p>
+<p>startActivityForResult 和 setResult 这对 API 各应用使用非常普遍，比如权限动态申请、拍照预览、媒体分享、文件访问、联系人选择等等，这也是跨进程通信的一种特殊方式。这里再简单介绍一下。</p>
+<p>startActivityForResult(Intent, int) 启动某 activity 并通过 onActivityResult(int, int, Intent) 方法接收数据。当一个活动退出时，它可以调用 setResult(int) 将数据返回给它的父级 activity，它还可以选择返回一个 Intent，其中包含通信的任何附加数据。</p>
+<p>假设现在有一个 Activity A，从 Activity A 通过 startActivityForResult 方法启动了 Activity B，在 Activity B 销毁前，Activity B 若将一些数据回传给 Activity A，可以调用 setResult 方法，这样在 Activity B 销毁后，Activity A 重新展示时，在 Activity A 的 onActivityResult 方法就能够获取 Activity B 回传过来的数据。</p>
+<p>从防御的角度上来说，建议不要直接把外部传入的 Intent 作为参数发送到上述四个接口中，如果一定要这么做的话，需要事先进行充分的过滤和安全校验，比如：</p>
+<ol>
+<li><p>将组件本身的 android:exported 设置为 false，但这只是防止了用户主动发送的数据，无法拦截通过 setResult 返回的数据；</p>
+</li>
+<li><p>确保获取到的 Intent 来自于可信的应用，比如在组件上下文中调用 getCallingActivity().getPackageName().equals(“trust.app”)，但是需要注意的是，检查 getCallingActivity() 是否返回非 null 值或检查包名是否匹配仅在 startActivityForResult 中生效，且并不足以防范此漏洞，恶意应用可以为该函数提供 null 值，或者伪造满足条件的包名绕过校验。故此处建议在 setResult 或 onActivityResult 时对应用的身份同时进行校验，保证收到的 intent 来源于可信方。</p>
+</li>
+<li><p>确保待转发的 Intent 没有有害行为，比如 component 不指向自身的非导出组件，不带有 FLAG_GRANT_READ_URI_PERMISSION 等（详见后文 ContentProvider 漏洞）；应用可以使用 getFlags 等方法来检查 Intent 是否会授予 URI 权限，应用还可以使用 removeFlags 撤消 URI 权限的授予。除了上述两种方法，还可以在 setResult 前重新创建 Intent，确保不安全的 Intent 不会被传递。</p>
+</li>
+</ol>
+<h5 id="ContentProvider-漏洞"><a href="#ContentProvider-漏洞" class="headerlink" title="ContentProvider 漏洞"></a>ContentProvider 漏洞</h5><h6 id="ContentProvider-学习"><a href="#ContentProvider-学习" class="headerlink" title="ContentProvider 学习"></a>ContentProvider 学习</h6><p>FileProvider 是 Android 7.0 出现的新特性，它是 ContentProvider 的子类，可以通过创建一个 Content URI 并赋予临时的文件访问权限来代替 File URI 实现文件共享,帮助我们将访问受限的 file:&#x2F;&#x2F;URI 转化为可以授权共享的 content:&#x2F;&#x2F;URI。Intent 重定向漏洞能够使得攻击者借助受害者 APP 的身份发送一个恶意 Intent，从而达到恶意攻击的目的，比如获得原本无权访问的 FileProvider 的访问权限。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825170332.png" alt="20230825170332"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825170348.png" alt="20230825170348"></p>
+<p>Android 7.0 之前，文件的 Uri 以 file:&#x2F;&#x2F;&#x2F; 形式提供给其他 app 访问，Android 7.0 之后，分享文件的 Uri 发生了变化。为了提高私有目录的安全性，防止应用信息的泄漏，从 Android 7.0 开始，私有目录的访问权限被限制。开发人员不再能够简单地通过 file:&#x2F;&#x2F;URI 访问其他应用的私有目录文件或者让其他应用访问自己的私有目录文件。</p>
+<p>官方提供了替代方案——FileProvider，FileProvider 生成的 Uri 会以 content:&#x2F;&#x2F; 的形式分享给其他 app 使用。content 形式的 Uri 可以让其他 app 临时获得读取 (Read) 和写入 (Write) 权限，只要我们在创建 Intent 时，使用 Intent.setFlags() 添加权限，那么只要接收 Uri 的 app 在接收的 Activity 任务栈中处于活动状态，添加的权限就会一直有效，直到 app 被任务栈移除。</p>
+<p>在 Android 7.0 以前，为了访问 file:&#x2F;&#x2F;&#x2F; 形式的 Uri，我们必须修改文件的权限。修改后的权限对所有 app 都是有效的，这样的行为是不安全的。 而使用了 FilePrrovider 后 content:&#x2F;&#x2F; 形式的 Uri 让 Android 的文件系统更安全，对于分享的文件，接收方 app 只拥有临时的权限，减少了我们 app 内部的文件被其他 app 恶意操作的行为。</p>
+<p>FileProvider 的完整使用步骤：</p>
+<ul>
+<li>Mainfest.xml 中注册 FileProvider；</li>
+<li>配置、指定共享目录范围 ；</li>
+<li>使用 FileProvider 生成 Content URI；</li>
+<li>给 Uri 授予临时权限并分享这个 URI 给另一个 App。</li>
+</ul>
+<ol>
+<li><p>在 manifest 文件中添加 pvodier 标签<br><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825171517.png" alt="20230825171517"><br><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825171543.png" alt="20230825171543"></p>
+</li>
+<li><p>设置共享目录<br><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825171629.png" alt="20230825171629"></p>
+</li>
+<li><p>使用 FileProvider 生成 Content URI<br><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825171730.png" alt="20230825171730"></p>
+<p>此处需要继续将原先所采用的 file:&#x2F;&#x2F; 替换成 FileProvoider 需要用到的 content:&#x2F;&#x2F;，这就需要用到 FileProvider.getUriForFile() 方法了</p>
+</li>
+<li><p>给 Uri 授予临时权限并分享这个 URI 给另一个 App</p>
+<p>当我们生成一个 content:&#x2F;&#x2F; 的 Uri 对象之后，第三方应用其实还无法对其直接使用，还需要对这个 Uri 接收的 App 赋予对应的权限才可以。</p>
+<p>授权方式有两种，上面的方法属于第一种.使用 intent 对象提供的 setClipData() 方法可以一次性传递多个 URI 对象，然后使用 setFlags() 或者 addFlags() 方法设置读写权限，可选常量值选择 FLAG_GRANT_READ_URI_PERMISSION 和 FLAG_GRANT_WRITE_URI_PERMISSION。这种形式的授权方式，权限有效期截止至其它应用所处的堆栈销毁，并且一旦授权给某一个组件后，该应用的其它组件拥有相同的访问权限。</p>
+<p>另外一种授权的方法是通过 Context 的 grantUriPermission() 方法授权.</p>
+<p>拥有授予权限的 Content URI 后，便可以通过 startActivity() 方法启动其他应用并传递授权过的 Content URI 数据。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825171957.png" alt="20230825171957"></p>
+<p>最终将访问到 URI 格式如下的文件：<code>content://com.demo.fileprovider/shared_files/xxx.txt</code></p>
+</li>
+</ol>
+<h6 id="ContentProvider-越权访问"><a href="#ContentProvider-越权访问" class="headerlink" title="ContentProvider 越权访问"></a>ContentProvider 越权访问</h6><p>除了可以访问任意组件之外，攻击者还可以访问满足以下条件的 APP 的 Content Provider 的组件：</p>
+<ul>
+<li>该组件必须是非导出的（否则可以直接攻击，无需使用我们在本文中讨论的模型）；</li>
+<li>组件还设置了 android:grantUriPermissions 为 true</li>
+</ul>
+<p>同时，攻击者在实现攻击时，必须将自己设置为嵌入 Intent 的接收者，并设置以下标志：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825173204.png" alt="20230825173204"></p>
+<p>比如在 App 中有一个非导出的 file provider，该 provider 在其私有目录的 database 路径下保存了 secret.db 文件，该文件中保存了用户的登录账号信息。</p>
+<p>我们无法直接访问 FileProvider， 但是可以通过 Intent 重定向来窃取 secret.db 文件，Payload 如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Intent next= <span class="keyword">new</span> <span class="title class_">Intent</span>();</span><br><span class="line"><span class="comment">// 设置为攻击者自己的组件</span></span><br><span class="line">next.setClassName(getPackageName(), <span class="string">&quot;com.Attacker.AttackerActivity&quot;</span>);</span><br><span class="line"><span class="comment">//设置想要访问的私有文件的URI</span></span><br><span class="line">next.setData(Uri.parse(<span class="string">&quot;content://com.victim.localfile/secret.db&quot;</span>));</span><br><span class="line"><span class="comment">// 添加所有可以访问content provider的读写flag</span></span><br><span class="line">next.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION |   Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION  | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);</span><br><span class="line"></span><br><span class="line"><span class="type">Intent</span> <span class="variable">intent</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Intent</span>();</span><br><span class="line">intent.setClassName(<span class="string">&quot;com.victim.localfile&quot;</span>, <span class="string">&quot;com.victim.localfile.LoginActivity&quot;</span>);</span><br><span class="line">intent.putExtra(<span class="string">&quot;com.victim.extra.NEXT_INTENT&quot;</span>, next);</span><br><span class="line"></span><br><span class="line"><span class="comment">//这样，攻击者就能从受害者activity跳到攻击者activity，并且携带了FileProvider权限</span></span><br><span class="line">startActivity(intent);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="Activity-点击劫持"><a href="#Activity-点击劫持" class="headerlink" title="Activity 点击劫持"></a>Activity 点击劫持</h4><p>Activity 既然作为 UI 的主要载体，那么与用户的交互也是其中关键的一项功能。在传统 Web 安全中就已经有过点击劫持的方法，即将目标网站想要让受害者点击的案件放在指定位置（如 iframe），并在宿主中使用相关组件对目标进行覆盖和引导，令受害者在不知不觉中执行了敏感操作，比如点赞投币收藏一键离职等。</p>
+<p>Android 中也出现过类似的攻击手段，比如在系统的敏感弹窗前面覆盖攻击者自定义的 TextView，引导受害者确认某些有害操作。当然这需要攻击者的应用拥有浮窗权限（SYSTEM_ALERT_WINDOW），在较新的 Android 系统中，该权限的申请需要用户多次的确认。</p>
+<p>近两年中在 AOSP 中也出现过一些点击劫持漏洞，包括但不限于：</p>
+<p>• CVE-2020-0306：蓝牙发现请求确认框覆盖</p>
+<p>• CVE-2020-0394：蓝牙配对对话框覆盖</p>
+<p>• CVE-2020-0015：证书安装对话框覆盖</p>
+<p>• CVE-2021-0314：卸载确认对话框覆盖</p>
+<p>• CVE-2021-0487：日历调试对话框覆盖</p>
+<p>• …</p>
+<p>对于系统应用而言，防御点击劫持的方法一般是通过使用 android.permission.HIDE_NON_SYSTEM_OVERLAY_WINDOWS 权限并在布局参数中指定 SYSTEM_FLAG_HIDE_NON_SYSTEM_OVERLAY_WINDOWS 来防止 UI 被覆盖</p>
+<p>而对于普通应用，没法申请 HIDE_NON_SYSTEM_OVERLAY_WINDOWS 权限，防御措施一般有两种，一是通过将布局的 filterTouchesWhenObscured 设置为 true 来禁止窗体被覆盖后的输入事件；二是重载 View.onFilterTouchEventForSecurity 方法，并在其中检测其他应用的覆盖情况。在 Android 12 中系统已经默认开启了 filterTouchesWhenObscured 属性，这也是 security by default 的一种经典实现。</p>
+<p>对于 CVE-2021-0314：卸载确认对话框覆盖，即恶意 APP 能够主动控制劫持的时机，可以主动请求敏感操作，在显示用户确认对话框的同时，直接在上悬浮一个虚假的对话框。</p>
+<p>漏洞位于框架代码<code>frameworks/base/packages/PackageInstaller/src/com/android/packageinstaller/UninstallerActivity.java</code>，</p>
+<p>UninstallerActivity 可以接受外部 Intent 传入，并给用户提供一个卸载确认的确认框。例如，使用下列代码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="type">Intent</span> <span class="variable">intent</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Intent</span>();</span><br><span class="line">intent.setComponent(<span class="keyword">new</span> <span class="title class_">ComponentName</span>(<span class="string">&quot;com.google.android.packageinstaller&quot;</span>, <span class="string">&quot;&quot;</span> +</span><br><span class="line">         <span class="string">&quot;com.android.packageinstaller.UninstallerActivity&quot;</span>));</span><br><span class="line">intent.setData(Uri.parse(<span class="string">&quot;package:android&quot;</span>)); <span class="comment">// put arbitrary unstallable package name here</span></span><br><span class="line">startActivity(intent);</span><br></pre></td></tr></table></figure>
+
+<p>将请求卸载包名 android，并展现如下对话框</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825154844.png" alt="20230825154844"></p>
+<p>若恶意 APP 已被授予 SYSTEM_ALERT_WINDOW 权限，那么可以在请求卸载用户手机上一个已经安装的 app 的同时，展现一个虚假的对话框覆盖在正常的对话框之上。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Intent</span> <span class="variable">intent</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Intent</span>();</span><br><span class="line">intent.setComponent(<span class="keyword">new</span> <span class="title class_">ComponentName</span>(<span class="string">&quot;com.google.android.packageinstaller&quot;</span>, <span class="string">&quot;&quot;</span> +</span><br><span class="line">         <span class="string">&quot;com.android.packageinstaller.UninstallerActivity&quot;</span>));</span><br><span class="line">intent.setData(Uri.parse(<span class="string">&quot;package:android&quot;</span>)); <span class="comment">// put arbitrary unstallable package name here</span></span><br><span class="line">startActivity(intent);</span><br><span class="line"></span><br><span class="line"><span class="type">Intent</span> <span class="variable">intent2</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Intent</span>(MainActivity.<span class="built_in">this</span>, FloatingButtonService.class);</span><br><span class="line">startService(intent2);</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825155049.png" alt="20230825155049"></p>
+<p>注意虚假对话框其实只覆盖了正常对话框中除按钮以外的其他部分，下面的按钮还是属于 PackageInstaller 应用的，当用户点击 OK 时，其实已经卸载了恶意 APP 请求卸载的 package，而此时恶意 APP 也已经监听到了 ACTION_OUTSIDE 事件，于是主动退出。在整个欺骗过程中，用户难以察觉自己其实已经确认了一次卸载操作。</p>
+<p>除了”主动请求、主动劫持”这种恶意 APP 可以主动控制劫持时机的情况，恶意 APP 还可以监听用户确认对话框出现的其他时机，例如有特定的广播事件、特定的通知，在时机出现的时候进行劫持。例如，在重要对话框出现时，将出现一个通知，恶意 APP 可以监听通知该通知的出现，通过实现一个 NotificationListenerService，捕捉特定的通知，并启动服务，在原有对话框之上悬浮一个欺骗的对话框</p>
+<p>对于系统应用而言，防御点击劫持的方法一般是通过使用 android.permission.HIDE_NON_SYSTEM_OVERLAY_WINDOWS 权限并在布局参数中指定 SYSTEM_FLAG_HIDE_NON_SYSTEM_OVERLAY_WINDOWS 来防止 UI 被覆盖。</p>
+<p>而对于普通应用，没法申请 HIDE_NON_SYSTEM_OVERLAY_WINDOWS 权限，防御措施一般有两种，一是通过将布局的 filterTouchesWhenObscured 设置为 true 来禁止窗体被覆盖后的输入事件；二是重载 View.onFilterTouchEventForSecurity 方法，并在其中检测其他应用的覆盖情况。在 Android 12 中系统已经默认开启了 filterTouchesWhenObscured 属性，这也是 security by default 的一种经典实现</p>
+<h2 id="Webview-漏洞"><a href="#Webview-漏洞" class="headerlink" title="Webview 漏洞"></a>Webview 漏洞</h2><p>Android WebView 在 Android 主要用来显示和渲染 Web 页面、直接使用 html 文件（网络上或本地 assets 中）作布局、可和 JavaScript 交互调用</p>
+<h3 id="webview-的基本使用"><a href="#webview-的基本使用" class="headerlink" title="webview 的基本使用"></a>webview 的基本使用</h3><p>WebView 的最简单的使用方式即是直接显示网页内容，有以下两个步骤：</p>
+<ul>
+<li>在布局文件中添加 WebView 控件；</li>
+<li>在代码中让 WebView 控件加载显示网页。</li>
+</ul>
+<h4 id="Webview-加载-URL-有三种方式："><a href="#Webview-加载-URL-有三种方式：" class="headerlink" title="Webview 加载 URL 有三种方式："></a>Webview 加载 URL 有三种方式：</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="type">Webview</span> <span class="variable">webview</span> <span class="operator">=</span> (WebView) findViewById(R.id.webView1);</span><br><span class="line"><span class="comment">//方式1. 加载一个网页：</span></span><br><span class="line">webView.loadUrl(<span class="string">&quot;http://www.google.com/&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">//方式2：加载apk包中的html页面，如果html文件存于assets：则加前缀：file:///android_asset/</span></span><br><span class="line">webView.loadUrl(<span class="string">&quot;file:///android_asset/test.html&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">//方式3：加载手机本地的html页面，如果html文件存于sdcard：则加前缀：content://com.android.htmlfileprovider/sdcard/</span></span><br><span class="line">webView.loadUrl(<span class="string">&quot;content://com.android.htmlfileprovider/sdcard/test.html&quot;</span>);</span><br><span class="line"></span><br><span class="line"> <span class="comment">// 方式4： 加载 HTML 页面的一小段内容</span></span><br><span class="line"> <span class="comment">// 参数说明：</span></span><br><span class="line"><span class="comment">// 参数1：需要截取展示的内容</span></span><br><span class="line"><span class="comment">// 内容里不能出现 ’#’, ‘%’, ‘\’ , ‘?’ 这四个字符，若出现了需用 %23, %25, %27, %3f 对应来替代，否则会出现异常</span></span><br><span class="line"><span class="comment">// 参数2：展示内容的类型</span></span><br><span class="line"><span class="comment">// 参数3：字节编码</span></span><br><span class="line">WebView.loadData(String data, String mimeType, String encoding)</span><br><span class="line"></span><br><span class="line"><span class="comment">//复写shouldOverrideUrlLoading()方法，使得打开网页时不调用系统浏览器， 而是在本WebView中显示</span></span><br><span class="line">webView.setWebViewClient(<span class="keyword">new</span> <span class="title class_">WebViewClient</span>()&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">shouldOverrideUrlLoading</span><span class="params">(WebView view, String url)</span> &#123;</span><br><span class="line">        view.loadUrl(url);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="WebViewClient"><a href="#WebViewClient" class="headerlink" title="WebViewClient"></a>WebViewClient</h4><p>WebViewClient 是帮助 WebView 处理各种通知、请求事件、记录页面加载过程的。其中就包括 URL 地址，我们可以通过它来监控到地址的调用过程</p>
+<p>shouldOverrideUrlLoading 方法可选择是否拦截加载 URL</p>
+<p>如果返回值为 true，拦截 WebView 加载 url，进行自定义逻辑，false 允许 WebView 正常加载 url</p>
+<p>可以在这个方法里做什么呢，比如点击到已经定义好的 url 协议 电话号码 tel:&#x2F;&#x2F; 时，那么可以在这里做拦截，跳转到系统拨号界面。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">shouldOverrideUrlLoading</span><span class="params">(WebView view, String url)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (url.startsWith(<span class="string">&quot;tel:&quot;</span>)) &#123;</span><br><span class="line">        <span class="type">Intent</span> <span class="variable">intent</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Intent</span>(Intent.ACTION_VIEW, Uri.parse(url));</span><br><span class="line">        startActivity(intent);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">super</span>.shouldOverrideUrlLoading(view, url);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="Android-和-JS-的交互"><a href="#Android-和-JS-的交互" class="headerlink" title="Android 和 JS 的交互"></a>Android 和 JS 的交互</h5><p>允许 WebView 与 Js 交互，先设置权限 <code>settings.setJavaScriptEnabled(true); //使 WebView 支持 JS</code></p>
+<h6 id="js-调用-Android"><a href="#js-调用-Android" class="headerlink" title="js 调用 Android"></a>js 调用 Android</h6><p>Android 使用如下方法和 Js 建立联系 <code>addJavascriptInterface(Object obj, String interfaceName);</code></p>
+<p>第一个参数为 java 类的对象，第二是 js 里自定义别名，Js 通过这个别名来调用 Java 的方法</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825221726.png" alt="20230825221726"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230825221813.png" alt="20230825221813"></p>
+<h6 id="Android-调用-js"><a href="#Android-调用-js" class="headerlink" title="Android 调用 js"></a>Android 调用 js</h6><p>在 html 有如下 javascript 方法</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">jsFunc</span>(<span class="params"></span>) &#123;</span><br><span class="line">  <span class="title function_">alert</span>(<span class="string">&quot;调用 JS 方法&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Android 主动调用 JavaScript 的函数，使用如下方法 <code>mWebView.loadUrl(&quot;javascript:jsFunc()&quot;);</code></p>
+<p>加参也一样，比如调用下面方法</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">jsFunc</span>(<span class="params">msg</span>) &#123;</span><br><span class="line">  <span class="title function_">alert</span>(msg);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>WebView 操作：<code>mWebView.loadUrl(&quot;javascript:jsFunc(\&#39;jsFunc:Tina\&#39;)&quot;);</code></p>
+<p>注意字符串要加引号</p>
+<p>也可以使用 WebView.evaluateJavascript()方法，效率更高，不会使页面刷新</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//使用evaluateJavascript来加载</span></span><br><span class="line">mWebView.evaluateJavascript(<span class="string">&quot;javascript:callJS()&quot;</span>, <span class="keyword">new</span> <span class="title class_">ValueCallback</span>&lt;String&gt;() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onReceiveValue</span><span class="params">(String value)</span> &#123;</span><br><span class="line">        <span class="comment">//此处为 js 返回的结果</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h3 id="WebView-任意代码执行漏洞-RCE"><a href="#WebView-任意代码执行漏洞-RCE" class="headerlink" title="WebView 任意代码执行漏洞 (RCE)"></a>WebView 任意代码执行漏洞 (RCE)</h3><p>漏洞原因是 addJavascriptInterface 接口引起远程代码执行漏洞</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">webView.addJavascriptInterface(<span class="keyword">new</span> <span class="title class_">JSObject</span>(), <span class="string">&quot;myObj&quot;</span>);</span><br><span class="line"><span class="comment">// 参数1：Android的本地对象</span></span><br><span class="line"><span class="comment">// 参数2：JS的对象</span></span><br><span class="line"><span class="comment">// 通过对象映射将Android中的本地对象和JS中的对象进行关联，从而实现JS调用Android的对象和方法</span></span><br></pre></td></tr></table></figure>
+
+<p>当 JS 拿到 Android 这个对象后，就可以通过反射调用这个 Android 对象中所有的方法，包括使用 forName 方法获取系统类（java.lang.Runtime 类），从而进行任意代码执行。</p>
+<blockquote>
+<p>反射知识：<br>Class 类封装一个对象和接口运行时的状态，当装载类时，Class 类型的对象自动创建。Class 没有公共构造方法。Class 对象是在加载类时由 Java 虚拟机以及通过调用类加载器中的 defineClass 方法自动构造的，因此不能显式地声明一个 Class 对象。</p>
+<p>虚拟机为每种类型管理一个独一无二的 Class 对象。也就是说，每个类都有一个 Class 对象。运行程序时，Java 虚拟机(JVM)首先检查所要加载的类对应的 Class 对象是否已经加载。如果没有加载，JVM 就会根据类名查找.class 文件，并将其 Class 对象载入。</p>
+<p>Java 反射机制的核心是在程序运行时动态加载类并获取类的详细信息，从而操作类或对象的属性和方法。本质是 JVM 得到 class 对象之后，再通过 class 对象进行反编译，从而获取对象的各种信息。<br>存在着⼏个在反射⾥极为重要的⽅法，几乎涵盖了 Java 安全中各种和反射有关的 payload：</p>
+<ul>
+<li>获取类的⽅法： Class.forName(“类名的 string”) &#x2F;&#x2F;Class 类静态方法，返回一个给定类或者接口的一个 Class 对象</li>
+<li>实际上 x.getClass();或者 x.class 也能拿到 x 自己的 Class 对象</li>
+<li>实例化类对象的⽅法： newInstance</li>
+<li>获取函数的⽅法： getMethod</li>
+<li>执⾏函数的⽅法： invoke</li>
+</ul>
+</blockquote>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">execute</span>(<span class="params">cmdArgs</span>) &#123;</span><br><span class="line">  <span class="comment">// 步骤1：遍历 window 对象,window是全局对象，保存了这个页面的所有信息</span></span><br><span class="line">  <span class="comment">// 目的是为了找到包含 getClass方法的对象</span></span><br><span class="line">  <span class="comment">// 因为Android映射的JS对象也在window中，所以肯定会遍历到</span></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">var</span> obj <span class="keyword">in</span> <span class="variable language_">window</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="string">&quot;getClass&quot;</span> <span class="keyword">in</span> <span class="variable language_">window</span>[obj]) &#123;</span><br><span class="line">      <span class="comment">// 步骤2：利用反射调用forName（）得到Runtime类对象</span></span><br><span class="line">      <span class="comment">// 步骤3：以后，就可以调用静态方法来执行一些命令，比如访问文件的命令</span></span><br><span class="line">      <span class="keyword">return</span> <span class="variable language_">window</span>[obj]</span><br><span class="line">        .<span class="title function_">getClass</span>()</span><br><span class="line">        .<span class="title function_">forName</span>(<span class="string">&quot;java.lang.Runtime&quot;</span>)</span><br><span class="line">        .<span class="title function_">getMethod</span>(<span class="string">&quot;getRuntime&quot;</span>, <span class="literal">null</span>)</span><br><span class="line">        .<span class="title function_">invoke</span>(<span class="literal">null</span>, <span class="literal">null</span>)</span><br><span class="line">        .<span class="title function_">exec</span>(cmdArgs);</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 从执行命令后返回的输入流中得到字符串，有很严重暴露隐私的危险。</span></span><br><span class="line">      <span class="comment">// 如执行完访问文件的命令之后，就可以得到文件名的信息了。</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>漏洞防护：Google 在 Android4.2 以后对调用的函数以@JavascriptInterface 进行注解从而避免漏洞攻击，也就是说我们 js 调用 Android 的方法，必须要在 JavascriptInterface 中进行声明，这样才能调用</p>
+<p>除此之外，如果一定要使用 addJavascriptInterface 接口：</p>
+<ul>
+<li>如果使用 HTTPS 协议加载 URL，应进行证书校验防止访问的页面被篡改挂马</li>
+<li>如果使用 HTTP 协议加载 URL，应进行白名单过滤、完整性校验等防止访问的页面被篡改</li>
+<li>如果加载本地 Html，应将 html 文件内置在 APK 中，以及进行对 html 页面完整性的校验</li>
+</ul>
+<h3 id="WebView-明文存储漏洞"><a href="#WebView-明文存储漏洞" class="headerlink" title="WebView 明文存储漏洞"></a>WebView 明文存储漏洞</h3><p>WebView 默认开启密码保存功能 ：<code>mWebView.setSavePassword(true)</code></p>
+<p>开启后，在用户输入密码时，会弹出提示框：询问用户是否保存密码；</p>
+<p>如果选择”是”，密码会被明文保存到 &#x2F;data&#x2F;data&#x2F;com.package.name&#x2F;databases&#x2F;webview.db 中，这样就有被盗取密码的危险</p>
+<p>防护措施：通过 WebSettings.setSavePassword(false) 关闭密码保存提醒功能，防止明文密码存在本地被盗用。</p>
+<h3 id="WebView-域控制不严格漏洞"><a href="#WebView-域控制不严格漏洞" class="headerlink" title="WebView 域控制不严格漏洞"></a>WebView 域控制不严格漏洞</h3><p>针对 WebView 的跨域问题，主要是三个重要的 API，如下所示：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230827150336.png" alt="20230827150336"></p>
+<h4 id="初级：任意文件窃取-应用克隆漏洞"><a href="#初级：任意文件窃取-应用克隆漏洞" class="headerlink" title="初级：任意文件窃取 (应用克隆漏洞)"></a>初级：任意文件窃取 (应用克隆漏洞)</h4><p>漏洞原理：<code>setAllowFileAccess(true) + setAllowFileAccessFromFileURLs(true) / setAllowUniversalAccessFromFileURLs(true)</code></p>
+<p>这样使得 WebView 可以使用 File 协议来加载本地或者远程 http 源上的 js 脚本，这样会导致攻击者操作用户点击后无感知下载恶意的 HTML&#x2F;JS，并窃取相关的私有文件信息</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230827153042.png" alt="20230827153042"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230827153100.png" alt="20230827153100"></p>
+<p>以上是原理层的讲解，实际上这个漏洞要想被最终利用，还离不开一个重要的前提：WebView 可以直接被外部调用</p>
+<p>也就是说 App 内部的 WebView 会被不信任的第三方调用：内置 WebView 的 Activity 是否被导出、必须导出的 Activity 是否会通过参数传递调起内置的 WebView 等；</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230827153812.png" alt="20230827153812"></p>
+<p>防护措施：</p>
+<ul>
+<li><p>避免 App 内部的 WebView 被不信任的第三方调用，排查内置 WebView 的 Activity 是否被导出、必须导出的 Activity 是否会通过参数传递调起内置的 WebView 等；</p>
+</li>
+<li><p>file 域访问为非功能需求时，手动配置 setAllowFileAccessFromFileURLs 或 setAllowUniversalAccessFromFileURLs 两个 API 为 false（Android 4.1 版本之前这两个 API 默认是 true，需要显式设置为 false）；</p>
+</li>
+<li><p>若需要开启 file 域访问，则设置 file 路径的白名单，严格控制 file 域的访问范围，具体如下：</p>
+<ul>
+<li><p>固定不变的 HTML 文件可以放在 assets 或 res 目录下，file:&#x2F;&#x2F;&#x2F;android_asset 和 file:&#x2F;&#x2F;&#x2F;android_res 在不开启 API 的情况下也可以访问；</p>
+</li>
+<li><p>对 file 域请求做白名单限制时，需要对“…&#x2F;…&#x2F;”特殊情况进行处理，避免白名单被绕过。(使用 shouldOverrideUrlLoading)</p>
+</li>
+</ul>
+</li>
+<li><p>进一步对 APP 目录下的敏感数据进行保护</p>
+</li>
+</ul>
+<h4 id="升级：同源检查绕过：符号链接和延时加载"><a href="#升级：同源检查绕过：符号链接和延时加载" class="headerlink" title="升级：同源检查绕过：符号链接和延时加载"></a>升级：同源检查绕过：符号链接和延时加载</h4><p>初级版的文件窃取是利用了<code>setAllowFileAccess(true) + setAllowFileAccessFromFileURLs(true) / setAllowUniversalAccessFromFileURLs(true)</code></p>
+<p>为了防护，一般会对 setAllowFileAccessFromFileURLs API 默认置 false，但仅仅设置 setAllowFileAccess(true)也能达到类似的漏洞利用效果</p>
+<p>通过绕过 file 协议的同源检查：符号链接和延时加载来产生此漏洞<br><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230827161654.png" alt="20230827161654"></p>
+<ul>
+<li>设置 WebView 允许使用 JS 代码：WebView.getSettings().setJavaScriptEnabled(true)</li>
+<li>设置 WebView 允许访问本地 html 文件：WebView.setAllowFileAccess(true)</li>
+</ul>
+<p>setAllowFileAccessFromFileURLs 方法和 setAllowUniversalAccessFromFileURLs 在这种情况下设置为 false。其实无论怎么限制 file 协议的同源检查，通过 file 协议访问当前 js 脚本文件总是可以的</p>
+<p>所以，通过 javascript 的延时执行和将当前文件替换成指向其它文件的软链接就可以读取到被符号链接所指的文件。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230827161459.png" alt="20230827161459"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230827161737.png" alt="20230827161737"></p>
+<p>其攻击过程首先是操纵 WebView 去访问一个攻击 APP 自己公开出来的网页，然后这个网页执行的内容其实就是延时去读取自身。在延时读取自身的时间窗口内，这个文件悄悄被进行了替换，替换成了软链接，指向受害 APP 的一个私有文件，最终读取窃取其内容。</p>
+<p>安全防护：</p>
+<ul>
+<li>设置 setAllowFileAccess 方法为 false,设置 setAllowFileAccessFromFileURLs 和 setAllowUniversalAccessFromFileURLs 为 false。</li>
+<li>禁止 File 域协议调用 JavaScript</li>
+<li>当 WebView 所在 Activity 存在组件暴露时，若不是必要的组件暴露，应该禁止组件暴露</li>
+</ul>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/08/03/Study/Android%E6%BC%8F%E6%B4%9E/%E6%BC%8F%E6%B4%9E%E5%AD%A6%E4%B9%A0/" title="Android 漏洞介绍" target="_blank" rel="external">https://beichen.link/2023/08/03/Study/Android漏洞/漏洞学习/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/08/05/Study/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/NDK%E5%BC%80%E5%8F%91/" title="NDK开发学习"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/07/30/Study/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/linux%E5%91%BD%E4%BB%A4/" title="linux 面试"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

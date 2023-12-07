@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Frida 原理初识 | 北辰的小破站</title>
+  <meta name="description" content="frida的代码结构使用Frida可以进行注入（Inject）、拦截（Intercept）、代码跟踪（Stalk）。  frida-core: Frida 核心库 frida-gum: inline-hook 框架 bindings: frida-python: python frida-node: Node.js frida-qml: Qml frida-swift: Swift   frida">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Frida 原理初识">
+<meta property="og:url" content="https://beichen.link/2023/03/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/frida%E5%8E%9F%E7%90%86%E5%AD%A6%E4%B9%A0/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="frida的代码结构使用Frida可以进行注入（Inject）、拦截（Intercept）、代码跟踪（Stalk）。  frida-core: Frida 核心库 frida-gum: inline-hook 框架 bindings: frida-python: python frida-node: Node.js frida-qml: Qml frida-swift: Swift   frida">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303071949441.png">
+<meta property="article:published_time" content="2023-03-10T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.751Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="逆向知识">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303071949441.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/03/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/frida%E5%8E%9F%E7%90%86%E5%AD%A6%E4%B9%A0/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/逆向知识/frida原理学习" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Frida 原理初识
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/03/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/frida%E5%8E%9F%E7%90%86%E5%AD%A6%E4%B9%A0/" class="article-date">
+	  <time datetime="2023-03-10T00:00:00.000Z" itemprop="datePublished">2023-03-10</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/03/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/frida%E5%8E%9F%E7%90%86%E5%AD%A6%E4%B9%A0/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 2.3k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 8(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="frida的代码结构"><a href="#frida的代码结构" class="headerlink" title="frida的代码结构"></a>frida的代码结构</h2><p>使用Frida可以进行注入（Inject）、拦截（Intercept）、代码跟踪（Stalk）。</p>
+<ul>
+<li>frida-core: Frida 核心库</li>
+<li>frida-gum: inline-hook 框架</li>
+<li>bindings:<ul>
+<li>frida-python: python</li>
+<li>frida-node: Node.js</li>
+<li>frida-qml: Qml</li>
+<li>frida-swift: Swift</li>
+</ul>
+</li>
+<li>frida-tools: CLI tools</li>
+<li>capstone: instruction disammbler</li>
+</ul>
+<h3 id="frida-core"><a href="#frida-core" class="headerlink" title="frida-core"></a>frida-core</h3><p>frida-core的功能有<strong>进程注入</strong>、进程间通信、会话管理、脚本生命周期管理等功能，屏蔽部分底层的实现细节并给最终用户提供开箱即用的操作接口。</p>
+<p>而这一切的实现都在 frida-core 之中，正如名字所言，这其中包含了 frida 相关的大部分关键模块和组件，比如 frida-server、frida-gadget、frida-agent、frida-helper、frida-inject 以及之间的互相通信底座。</p>
+<h4 id="1-frida-注入原理-ptrace"><a href="#1-frida-注入原理-ptrace" class="headerlink" title="1. frida 注入原理 ptrace"></a>1. frida 注入原理 ptrace</h4><p>frida 注入是基于 ptrace实现的。frida 调用ptrace向目标进程注入了一个frida-agent-xx.so文件。后续骚操作是这个so文件跟frida-server通讯实现的。ida调试也是基于 ptrace实现的。</p>
+<blockquote>
+<p>ptrace系统调用从名字上看是用于进程跟踪的，它提供了父进程可以观察和控制其子进程执行的能力，并允许父进程检查和替换子进程的内核镜像(包括寄存器)的值。</p>
+<p>其基本原理是: </p>
+<p>当使用了ptrace跟踪后，所有发送给被跟踪的子进程的信号(除了SIGKILL)，都会被转发给父进程，而子进程则会被阻塞，这时子进程的状态就会被系统标注为TASK_TRACED。而父进程收到信号后，就可以对停止下来的子进程进行检查和修改，然后让子进程继续运行。 </p>
+</blockquote>
+<p>frida注入的主要思路就是找到目标进程pid ,使用ptrace跟踪目标进程获取mmap，dlpoen，dlsym等函数的地址。然后远程调用mmap在目标进程申请一段内存空间用来保存信息，向mmap分配的空间写入 frida-agent-32&#x2F;64.so ，调用dlopen加载so库，启动执行各种操作由agent去实现(远程调用dlsym函数获取目标函数地址-&gt;使用ptrace_call远程调用被注入模块的函数 )</p>
+<p>frida-agent 注入到目标进程并启动后会启动一个新进程与 host 进行通信，从而 host 可以给目标进行发送命令，比如执行代码，激活&#x2F;关闭 hook，同时也能接收到目标进程的执行返回以及异步事件信息等。</p>
+<p>frida注入之后会在远端进程分配一段内存将agent拷贝过去，并在目标进程中执行代码，执行完成后会 detach 目标进程，这也是为什么在 frida 先连接上目标进程后还可以用gdb&#x2F;ida等调试器连接，而先gdb连接进程后 frida 就无法再次连上的原因(frida在注入时只会ptrace一下下，注入完毕后就会结束ptrace。所以ptrace占坑这种反调试使用spawn方式启动即可)。</p>
+<blockquote>
+<ol>
+<li>attach模式<br> attach到已经存在的进程，核心原理是ptrace修改进程内存，如果进程处于调试状态（traceid不等于0），则attach失败</li>
+<li>spawn模式<br> 启动一个新的进程并挂起，在启动的同时注入frida代码，适用于在进程启动前的一些hook，如hook RegisterNative等，注入完成后调用resume恢复进程。</li>
+</ol>
+</blockquote>
+<h4 id="2-frida-hook-原理"><a href="#2-frida-hook-原理" class="headerlink" title="2. frida hook 原理"></a>2. frida hook 原理</h4><p>frida 的 hook 区分了 art 模式和 dalvik 模式。</p>
+<p>frida兼容了低版本的Android, 低于Android 5.0时，采用Dalvik虚拟机。frida的Dalvik hook和xposed的hook原理相同，都是把要hook的java函数变成native函数，并修改函数的入口为自定义的内容，这样在调用时就会执行自定义的代码。</p>
+<p>下面主要讲的是art模式。</p>
+<p>frida的ART hook实现也是把java method转为native method, 但ART的运行机制不同于Dalvik, 其实现也较为复杂，这里从ART运行机制开始解释。</p>
+<p>ART 是一种代替 Dalivk 的新的运行时,它具有更高的执行效率。ART虚拟机执行 Java 方法主要有两种模式：quick code 模式和 Interpreter 模式。</p>
+<ul>
+<li>quick code 模式：执行 arm 汇编指令</li>
+<li>Interpreter 模式：由解释器解释执行 Dalvik 字节码</li>
+</ul>
+<p>即使是在quick code模式中，也有类方法可能需要以Interpreter模式执行。反之亦然。解释执行的类方法通过函数artInterpreterToCompiledCodeBridge的返回值调用本地机器指令执行的类方法；本地机器指令执行的类方法通过函数GetQuickToInterpreterBridge的返回值调用解释执行的类方法；</p>
+<p>不管是解释模式还是其他模式，只要目标方法有 native 代码，那么该方法的代码地址都是会保存在 entry_point_from_quick_compiled_code_ 字段，只不过这个字段的含义在不同的场景中略有不同。</p>
+<p>所以我们若想要实现 ART Hook，理论上只要找到对应方法在内存中的 ArtMethod 地址，然后替换其 entrypoint 的值即可。</p>
+<p>jniCode 替换为用户指定的 js 函数封装而成的 NativeFunction，并将 accessFlags 设置为 <code>kAccNative</code>，即 JNI 方法。quickCode 和 interpreterCode 分别是 Quick 模式和解释器模式的入口，替换为了上文中查找保存的 trampoline，令 Quick 模式跳转到 JNI 入口，解释器模式跳转到 Quick 代码，这样就实现了该方法的拦截，每次执行都会当做 JNI 函数执行到 jniCode 即我们替换的代码中。</p>
+<p>所以 frida 要将 java method 转为 native method，需要将ARTMethod 结构进行修改。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">patchMethod(methodId, &#123;</span><br><span class="line">  <span class="comment">//jnicode入口entry_point_from_jni_改为自定义的代码</span></span><br><span class="line">  <span class="string">&#x27;jniCode&#x27;</span>: implementation,</span><br><span class="line">  <span class="comment">//修改为access_flags_为native</span></span><br><span class="line">  <span class="string">&#x27;accessFlags&#x27;</span>: (Memory.readU32(methodId.add(artMethodOffset.accessFlags)) | kAccNative | kAccFastNative) &gt;&gt;&gt; <span class="number">0</span>,</span><br><span class="line">  <span class="comment">//art_quick_generic_jni_trampoline函数的地址</span></span><br><span class="line">  <span class="string">&#x27;quickCode&#x27;</span>: api.artQuickGenericJniTrampoline,</span><br><span class="line">  <span class="comment">//artInterpreterToCompiledCodeBridge函数地址</span></span><br><span class="line">  <span class="string">&#x27;interpreterCode&#x27;</span>: api.artInterpreterToCompiledCodeBridge</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="frida-gum"><a href="#frida-gum" class="headerlink" title="frida-gum"></a>frida-gum</h3><p>frida-gum是基于inline-hook实现的，它还有很多丰富的功能，比如用于代码跟踪 Stalker、用于内存访问监控的MemoryAccessMonitor，以及符号查找、栈回溯实现、内存扫描、动态代码生成和重定位等。</p>
+<h4 id="1-Interceptor"><a href="#1-Interceptor" class="headerlink" title="1. Interceptor"></a>1. Interceptor</h4><p>Interceptor 是 inline-hook 的封装。</p>
+<p>hook的实现有很多种，inlinehook是Native层hook的一种方式。通过修改原函数开头的汇编指令，直接跳转到指定函数。</p>
+<blockquote>
+<p>平时用来开发的高级语言必须转换成低级语言才能被CPU执行，根据是否有中间结果的区别，完成转换的可能是编译器或虚拟机。和百花齐放的高级语言不同，低级语言只有两种，汇编和机器码（即二进制码），汇编是机器码的文本化表示，两者是一对一的对应关系。</p>
+<p>逻辑上讲，汇编是为了解决机器码可读性的产物，汇编在执行前需要先翻译成机器码，这个过程叫assembing，所以汇编语言叫ASM。</p>
+</blockquote>
+<p>指令级别的hook跟高级语言层面的实现方式在感官上有很大区别，高级语言中不管借助什么手段，只需将hook代码织入到目标代码之中即可，但这种方式在指令级别是行不通的。</p>
+<p>我们需要知道，操作系统将程序指令成段装载到内存里，我们手动把若干指令插入到某个位置就是改动了程序装载后的内存结构，这意味着程序需要重新做地址重定位才能正常运行，这本该由链接器完成的工作换成人工来计算几乎是不可能的，所以这肯定不是实现hook的正确方式。为了保持内存结构不变，正确的方法是使用指令替换而不是指令插入的方式来实现hook，见下图：</p>
+<img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202303071949441.png" alt="image-20230307194956283" style="zoom:67%;" />
+
+<p>假设目标方法内有ins0, ins1, ins2三条指令，首先将起始指令替换为等长的跳转指令jump_ins，jump_ins负责跳转到hook方法执行。</p>
+<p>而hook操作后，往往还需要保留调用原方法的能力以保证功能可用性，所以hook方法内还有一个跳转指令来调回原方法继续执行（jump ins1）。</p>
+<p>调回前需要先补充执行目标方法已被替换的原始指令（图中ins0），保证原方法完整性。</p>
+<p>综上，inline hook需要完成的工作就是图中绿色的部分，即跳转指令的替换、补充执行原指令、跳回原方法继续执行这三步。</p>
+<h4 id="2-Stalker"><a href="#2-Stalker" class="headerlink" title="2. Stalker"></a>2. Stalker</h4><p>潜行者又称为尾行痴汉，可以实现指定线程中所有函数、所有基本块、甚至所有指令的跟踪。一般想使用指令跟踪都是使用内存断点或者unidbg模拟执行so。</p>
+<p>Stalker的功能实现，在线程即将执行下一条指令前，先将目标指令拷贝一份到新建的内存中，然后在新的内存中对代码进行插桩</p>
+<h4 id="3-MemoryAccessMonitor"><a href="#3-MemoryAccessMonitor" class="headerlink" title="3. MemoryAccessMonitor"></a>3. MemoryAccessMonitor</h4><p>MemoryAccessMonitor可以实现对指定内存区间的访问监控，在目标内存区间发生读写行为时可以触发用户指定的回调函数。</p>
+<p>通过阅读源码发现这个功能的实现方法非常简洁，本质上是将目标内存页设置为不可读写，这样在发生读写行为时会触发事先注册好的中断处理函数。</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/03/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/frida%E5%8E%9F%E7%90%86%E5%AD%A6%E4%B9%A0/" title="Frida 原理初识" target="_blank" rel="external">https://beichen.link/2023/03/10/Study/逆向知识/frida原理学习/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/03/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/Xposed%E5%8E%9F%E7%90%86/" title="Xposed 原理"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/03/03/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/%E8%AE%BE%E5%A4%87%E6%8C%87%E7%BA%B9%E8%8E%B7%E5%8F%96%E4%B8%8E%E7%BB%95%E8%BF%87/" title="大厂设备指纹获取和对抗"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

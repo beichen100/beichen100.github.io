@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Android系统源码目录 | 北辰的小破站</title>
+  <meta name="description" content="1. 整体结构各个版本的源码目录基本是类似，如果是编译后的源码目录会多增加一个out文件夹，用来存储编译产生的文件。Android7.0的根目录结构说明如下表所示。    Android源码根目录 描述    abi 应用程序二进制接口   art 全新的ART运行环境   bionic 系统C库   bootable 启动引导相关代码   build 存放系统编译规则及generic等基础开发包">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android系统源码目录">
+<meta property="og:url" content="https://beichen.link/2022/04/23/LAB/AOSP/Android%E7%B3%BB%E7%BB%9F%E6%BA%90%E7%A0%81%E7%9B%AE%E5%BD%95/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="1. 整体结构各个版本的源码目录基本是类似，如果是编译后的源码目录会多增加一个out文件夹，用来存储编译产生的文件。Android7.0的根目录结构说明如下表所示。    Android源码根目录 描述    abi 应用程序二进制接口   art 全新的ART运行环境   bionic 系统C库   bootable 启动引导相关代码   build 存放系统编译规则及generic等基础开发包">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2022-04-23T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.747Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="android">
+<meta name="twitter:card" content="summary">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2022/04/23/LAB/AOSP/Android%E7%B3%BB%E7%BB%9F%E6%BA%90%E7%A0%81%E7%9B%AE%E5%BD%95/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-LAB/AOSP/Android系统源码目录" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Android系统源码目录
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2022/04/23/LAB/AOSP/Android%E7%B3%BB%E7%BB%9F%E6%BA%90%E7%A0%81%E7%9B%AE%E5%BD%95/" class="article-date">
+	  <time datetime="2022-04-23T00:00:00.000Z" itemprop="datePublished">2022-04-23</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/AOSP/">AOSP</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/android/" rel="tag">android</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2022/04/23/LAB/AOSP/Android%E7%B3%BB%E7%BB%9F%E6%BA%90%E7%A0%81%E7%9B%AE%E5%BD%95/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 1k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 3(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h3 id="1-整体结构"><a href="#1-整体结构" class="headerlink" title="1. 整体结构"></a>1. 整体结构</h3><p>各个版本的源码目录基本是类似，如果是编译后的源码目录会多增加一个out文件夹，用来存储编译产生的文件。Android7.0的根目录结构说明如下表所示。</p>
+<table>
+<thead>
+<tr>
+<th align="center">Android源码根目录</th>
+<th align="center">描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">abi</td>
+<td align="center">应用程序二进制接口</td>
+</tr>
+<tr>
+<td align="center">art</td>
+<td align="center">全新的ART运行环境</td>
+</tr>
+<tr>
+<td align="center">bionic</td>
+<td align="center">系统C库</td>
+</tr>
+<tr>
+<td align="center">bootable</td>
+<td align="center">启动引导相关代码</td>
+</tr>
+<tr>
+<td align="center">build</td>
+<td align="center">存放系统编译规则及generic等基础开发包配置</td>
+</tr>
+<tr>
+<td align="center">cts</td>
+<td align="center">Android兼容性测试套件标准</td>
+</tr>
+<tr>
+<td align="center">dalvik</td>
+<td align="center">dalvik虚拟机</td>
+</tr>
+<tr>
+<td align="center">developers</td>
+<td align="center">开发者目录</td>
+</tr>
+<tr>
+<td align="center">development</td>
+<td align="center">应用程序开发相关</td>
+</tr>
+<tr>
+<td align="center">device</td>
+<td align="center">设备相关配置</td>
+</tr>
+<tr>
+<td align="center">docs</td>
+<td align="center">参考文档目录</td>
+</tr>
+<tr>
+<td align="center">external</td>
+<td align="center">开源模组相关文件</td>
+</tr>
+<tr>
+<td align="center">frameworks</td>
+<td align="center">应用程序框架，Android系统核心部分，由Java和C++编写</td>
+</tr>
+<tr>
+<td align="center">hardware</td>
+<td align="center">主要是硬件抽象层的代码</td>
+</tr>
+<tr>
+<td align="center">libcore</td>
+<td align="center">核心库相关文件</td>
+</tr>
+<tr>
+<td align="center">libnativehelper</td>
+<td align="center">动态库，实现JNI库的基础</td>
+</tr>
+<tr>
+<td align="center">ndk</td>
+<td align="center">NDK相关代码，帮助开发人员在应用程序中嵌入C&#x2F;C++代码</td>
+</tr>
+<tr>
+<td align="center">out</td>
+<td align="center">编译完成后代码输出在此目录</td>
+</tr>
+<tr>
+<td align="center">packages</td>
+<td align="center">应用程序包</td>
+</tr>
+<tr>
+<td align="center">pdk</td>
+<td align="center">Plug Development Kit 的缩写，本地开发套件</td>
+</tr>
+<tr>
+<td align="center">platform_testing</td>
+<td align="center">平台测试</td>
+</tr>
+<tr>
+<td align="center">prebuilts</td>
+<td align="center">x86和arm架构下预编译的一些资源</td>
+</tr>
+<tr>
+<td align="center">sdk</td>
+<td align="center">sdk和模拟器</td>
+</tr>
+<tr>
+<td align="center">system</td>
+<td align="center">底层文件系统库、应用和组件</td>
+</tr>
+<tr>
+<td align="center">toolchain</td>
+<td align="center">工具链文件</td>
+</tr>
+<tr>
+<td align="center">tools</td>
+<td align="center">工具文件</td>
+</tr>
+<tr>
+<td align="center">Makefile</td>
+<td align="center">全局Makefile文件，用来定义编译规则</td>
+</tr>
+</tbody></table>
+<h3 id="2-应用层部分-packages"><a href="#2-应用层部分-packages" class="headerlink" title="2. 应用层部分 (packages)"></a>2. 应用层部分 (packages)</h3><p>应用层位于整个Android系统的最上层，开发者开发的应用程序以及系统内置的应用程序都是在应用层。源码根目录中的packages目录对应着系统应用层。它的目录结构如下所示。</p>
+<table>
+<thead>
+<tr>
+<th align="center">packages目录</th>
+<th align="center">描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">apps</td>
+<td align="center">核心应用程序</td>
+</tr>
+<tr>
+<td align="center">experimental</td>
+<td align="center">第三方应用程序</td>
+</tr>
+<tr>
+<td align="center">inputmethods</td>
+<td align="center">输入法目录</td>
+</tr>
+<tr>
+<td align="center">providers</td>
+<td align="center">内容提供者目录</td>
+</tr>
+<tr>
+<td align="center">screensavers</td>
+<td align="center">屏幕保护</td>
+</tr>
+<tr>
+<td align="center">services</td>
+<td align="center">通信服务</td>
+</tr>
+<tr>
+<td align="center">wallPapers</td>
+<td align="center">壁纸</td>
+</tr>
+</tbody></table>
+<p>从目录结构可以发现，packages目录存放着系统核心应用程序、第三方的应用程序和输入法等等，这些应用都是运行在系统应用层的，因此packages目录对应着系统的应用层。</p>
+<h3 id="3-应用框架层部分-（frameworks）"><a href="#3-应用框架层部分-（frameworks）" class="headerlink" title="3. 应用框架层部分 （frameworks）"></a>3. 应用框架层部分 （frameworks）</h3><p>应用框架层是系统的核心部分，一方面向上提供接口给应用层调用，另一方面向下与C&#x2F;C++程序库以及硬件抽象层等进行衔接。 应用框架层的主要实现代码在&#x2F;frameworks&#x2F;base和&#x2F;frameworks&#x2F;av目录下，其中base目录结构如下所示。</p>
+<table>
+<thead>
+<tr>
+<th align="center">&#x2F;base</th>
+<th align="center">描述</th>
+<th align="center">&#x2F;base</th>
+<th align="center">描述&#x2F;</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">api</td>
+<td align="center">定义API</td>
+<td align="center">cmds</td>
+<td align="center">重要命令：am、app_proce等</td>
+</tr>
+<tr>
+<td align="center">core</td>
+<td align="center">核心库</td>
+<td align="center">data</td>
+<td align="center">字体和声音等数据文件</td>
+</tr>
+<tr>
+<td align="center">docs</td>
+<td align="center">文档</td>
+<td align="center">graphics</td>
+<td align="center">图形图像相关</td>
+</tr>
+<tr>
+<td align="center">include</td>
+<td align="center">头文件</td>
+<td align="center">keystore</td>
+<td align="center">和数据签名证书相关</td>
+</tr>
+<tr>
+<td align="center">libs</td>
+<td align="center">库</td>
+<td align="center">location</td>
+<td align="center">地理位置相关库</td>
+</tr>
+<tr>
+<td align="center">media</td>
+<td align="center">多媒体相关库</td>
+<td align="center">native</td>
+<td align="center">本地库</td>
+</tr>
+<tr>
+<td align="center">nfc-extras</td>
+<td align="center">NFC相关</td>
+<td align="center">obex</td>
+<td align="center">蓝牙传输</td>
+</tr>
+<tr>
+<td align="center">opengl</td>
+<td align="center">2D&#x2F;3D 图形API</td>
+<td align="center">packages</td>
+<td align="center">设置、TTS、VPN程序</td>
+</tr>
+<tr>
+<td align="center">sax</td>
+<td align="center">XML解析器</td>
+<td align="center">services</td>
+<td align="center">系统服务</td>
+</tr>
+<tr>
+<td align="center">telephony</td>
+<td align="center">电话通讯管理</td>
+<td align="center">test-runner</td>
+<td align="center">测试工具相关</td>
+</tr>
+<tr>
+<td align="center">tests</td>
+<td align="center">测试相关</td>
+<td align="center">tools</td>
+<td align="center">工具</td>
+</tr>
+<tr>
+<td align="center">wifi</td>
+<td align="center">wifi无线网络</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<h3 id="4-C-x2F-C-程序库部分"><a href="#4-C-x2F-C-程序库部分" class="headerlink" title="4. C&#x2F;C++程序库部分"></a>4. C&#x2F;C++程序库部分</h3><p>系统运行库层（Native)中的 C&#x2F;C++程序库的类型繁多，功能强大，C&#x2F;C++程序库并不完全在一个目录中，这里给出几个常用且比较重要的C&#x2F;C++程序库所在的目录位置。</p>
+<table>
+<thead>
+<tr>
+<th align="center">目录位置</th>
+<th align="center">描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">&#x2F;bonic</td>
+<td align="center">Google开发的系统C库，以BSD许可形式开源。</td>
+</tr>
+<tr>
+<td align="center">&#x2F;frameworks&#x2F;av&#x2F;media</td>
+<td align="center">系统媒体库</td>
+</tr>
+<tr>
+<td align="center">&#x2F;frameworks&#x2F;native&#x2F;opengl</td>
+<td align="center">第三方图形渲染库</td>
+</tr>
+<tr>
+<td align="center">&#x2F;frameworks&#x2F;native&#x2F;services&#x2F;surfaceflinger</td>
+<td align="center">图形显示库，主要负责图形的渲染、叠加和绘制等功能</td>
+</tr>
+<tr>
+<td align="center">external&#x2F;sqlite</td>
+<td align="center">轻量型关系数据库SQLite的C++实现</td>
+</tr>
+</tbody></table>
+<p>余下的部分，Android运行时库的代码放在art&#x2F;目录中。硬件抽象层的代码在hardware&#x2F;目录中，这一部分是手机厂商改动最大的一部分，根据手机终端所采用的硬件平台会有不同的实现。</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2022/04/23/LAB/AOSP/Android%E7%B3%BB%E7%BB%9F%E6%BA%90%E7%A0%81%E7%9B%AE%E5%BD%95/" title="Android系统源码目录" target="_blank" rel="external">https://beichen.link/2022/04/23/LAB/AOSP/Android系统源码目录/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2022/04/23/LAB/AOSP/Android%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E5%BC%80%E7%AF%87/" title="Android系统架构开篇"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2022/04/06/LAB/AOSP/Docker%20%E6%90%AD%E5%BB%BAandroid6%E7%BC%96%E8%AF%91%E7%8E%AF%E5%A2%83/" title="Docker 搭建android编译环境"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

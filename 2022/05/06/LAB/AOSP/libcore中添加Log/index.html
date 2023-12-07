@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Android Java核心库libcore中打印Log（Android10） | 北辰的小破站</title>
+  <meta name="description" content="最近在弄系统定制功能的时候(比如打印File构造函数的参数)，需要修改libcore中的核心代码并打印日志输出。虽然Android提供了android.utils.Log日志工具类，但是不能在Android Java层的核心库libcore中调用。 Android Java 核心库中是无法直接使用 android.util.Log 的，添加后编译不通过，因为 framework 中的 Java A">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android Java核心库libcore中打印Log（Android10）">
+<meta property="og:url" content="https://beichen.link/2022/05/06/LAB/AOSP/libcore%E4%B8%AD%E6%B7%BB%E5%8A%A0Log/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="最近在弄系统定制功能的时候(比如打印File构造函数的参数)，需要修改libcore中的核心代码并打印日志输出。虽然Android提供了android.utils.Log日志工具类，但是不能在Android Java层的核心库libcore中调用。 Android Java 核心库中是无法直接使用 android.util.Log 的，添加后编译不通过，因为 framework 中的 Java A">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2022-05-06T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.747Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="android">
+<meta name="twitter:card" content="summary">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2022/05/06/LAB/AOSP/libcore%E4%B8%AD%E6%B7%BB%E5%8A%A0Log/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-LAB/AOSP/libcore中添加Log" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Android Java核心库libcore中打印Log（Android10）
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2022/05/06/LAB/AOSP/libcore%E4%B8%AD%E6%B7%BB%E5%8A%A0Log/" class="article-date">
+	  <time datetime="2022-05-06T00:00:00.000Z" itemprop="datePublished">2022-05-06</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/AOSP/">AOSP</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/android/" rel="tag">android</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2022/05/06/LAB/AOSP/libcore%E4%B8%AD%E6%B7%BB%E5%8A%A0Log/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 1.4k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 6(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>最近在弄系统定制功能的时候(比如打印File构造函数的参数)，需要修改libcore中的核心代码并打印日志输出。虽然Android提供了android.utils.Log日志工具类，但是不能在Android Java层的核心库libcore中调用。</p>
+<p>Android Java 核心库中是无法直接使用 android.util.Log 的，添加后编译不通过，因为 framework 中的 Java API 依赖于 Java 核心库。</p>
+<blockquote>
+<p>在 Android 7.0 之前，Java 核心库源码在libcore&#x2F;luni&#x2F;下，luni 代表 lang、util、net、io，是 Java 中最常见的包；Android 7.0 中，核心库在libcore&#x2F;ojluni&#x2F;下，oj 代表 OpenJDK。</p>
+</blockquote>
+<h2 id="一、使用-Java-util-logging-Logger"><a href="#一、使用-Java-util-logging-Logger" class="headerlink" title="一、使用 Java.util.logging.Logger"></a>一、使用 Java.util.logging.Logger</h2><p>java.util.logging是JDK自带的日志记录包。而Android Java 核心库中也有 java.util.logging.Logger，在 Android 中它也被重定向到 Android 本地的 Log 系统。</p>
+<p>使用方法很简单，在需要打印 Log 的源码中添加：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">import java.util.logging.Logger;  </span><br><span class="line"></span><br><span class="line">private static final Logger sLogger = Logger.getLogger(&quot;MyTag&quot;);</span><br><span class="line"></span><br><span class="line">private static void logi(String msg) &#123;</span><br><span class="line">    sLogger.info(msg);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用时只需调用 logi() 方法即可，log标签为“mytag”，会直接在adb logcat里输出。这里使用的是 Level 为 INFO 的 Log。你也可以自定义 Level。</p>
+<h2 id="二、移植-android-utils-Log-到-libcore库"><a href="#二、移植-android-utils-Log-到-libcore库" class="headerlink" title="二、移植 android.utils.Log 到 libcore库"></a>二、移植 android.utils.Log 到 libcore库</h2><p>将android.utils.Log移植到libcore中有两种方式:</p>
+<ul>
+<li>在现有的类中添加方法，并在native追加对应的方法，这种方式相对简单；</li>
+</ul>
+<p>​        比如java.lang.System中添加相应的方法，在对应System.c中添加对应的jni方法。</p>
+<ul>
+<li>在libcore中添加新的接口类，并实现native的方法，这种方式相对复杂一点。</li>
+</ul>
+<ol>
+<li><p>第一种方法，利用现有类 File.java</p>
+<p>之前的源码阅读证明，Java层的 android.utils.Log 输出 log 实际上通过JNI的链接使用的是 println_native()方法，println_native()再去调用native层的__android_log_buf_write方法。</p>
+<p>那么我们也可以在想要打印的 Java 类处也实现一个 println_native() ，搭建一个类似的JNI层，这样就能实现类似Log类的效果。</p>
+<p>以AOSP&#x2F;libcore&#x2F;ojluni&#x2F;src&#x2F;main&#x2F;java&#x2F;java&#x2F;io&#x2F;File.java 类为例：</p>
+<ul>
+<li><p>首先，在 File.java 里新建Log()方法，之后想打印的时候可以直接调用类内的方法；</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">LOG_ID_MAIN</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">DEBUG</span> <span class="operator">=</span> <span class="number">3</span>;</span><br><span class="line"><span class="comment">/** </span></span><br><span class="line"><span class="comment">* <span class="doctag">@hide</span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">int</span> <span class="title function_">Log</span><span class="params">(String tag, String msg)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> println_native(LOG_ID_MAIN, DEBUG, tag, msg);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意到那个Public方法中的 @hide，这样就让Android文档生成不自动索引，这样就能使得Log方法也可以被其他类使用，例如在libcore&#x2F;ojluni&#x2F;src&#x2F;main&#x2F;java&#x2F;java&#x2F;util&#x2F;logging&#x2F;Logger.java中使用File.Log()即可，记得要import java.io.File。</p>
+</li>
+<li><p>然后，将AOSP&#x2F;frameworks&#x2F;base&#x2F;core&#x2F;java&#x2F;android&#x2F;util&#x2F;Log.java里面的native方法声明  println_native() copy到 File.java文件里面；</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">native</span> <span class="type">int</span> <span class="title function_">println_native</span><span class="params">(<span class="type">int</span> bufID, <span class="type">int</span> priority, String tag, String msg)</span>;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>接下来，把&#x2F;frameworks&#x2F;base&#x2F;core&#x2F;jni&#x2F;android_util_Log.cpp中对之对应的本地方法copy到libcore&#x2F;ojluni&#x2F;src&#x2F;main&#x2F;native&#x2F;FileSystemPreferences.c，加在static JNINativeMethod gMethods[ ]之前就行；</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//头文件一定要加上</span></span><br><span class="line">+++ <span class="meta">#<span class="keyword">include</span> <span class="string">&lt;utils/Log.h&gt;</span> </span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">static</span> jint <span class="title">android_util_Log_println_native</span><span class="params">(JNIEnv* env, jobject clazz,</span></span></span><br><span class="line"><span class="params"><span class="function">        jint bufID, jint priority, jstring tagObj, jstring msgObj)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	......</span><br><span class="line">	......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>对于参考的&#x2F;frameworks&#x2F;base&#x2F;core&#x2F;jni&#x2F;android_util_Log.cpp里android_util_Log_println_native方法的实现，如果照搬过来，会报错：</p>
+<blockquote>
+<p>Member reference base type ‘JNIEnv’ (aka ‘const struct JNINativeInterface_ *’) is not a structure or union</p>
+<p>原因是：env变量在C和C++语法表达不一致引起。</p>
+<p>C++：env-&gt;FindClass(“java&#x2F;lang&#x2F;String”)<br>C：(*env)-&gt;FindClass(env, “java&#x2F;lang&#x2F;String”)</p>
+</blockquote>
+<p>不一定非得是修改FileSystemPreferences.c文件，正常来说应该是修改 File.java 对应的native层文件。</p>
+<p>之前看的网上教程针对的是android4.4，与android10源码有较大差异，File.java在&#x2F;libcore&#x2F;luni&#x2F;src&#x2F;main&#x2F;java&#x2F;java&#x2F;io&#x2F;File.java，同时对应的native文件在&#x2F;libcore&#x2F;luni&#x2F;src&#x2F;main&#x2F;native&#x2F;java_io_File.cpp。</p>
+<p>但对于Android10源码，File.java在&#x2F;libcore&#x2F;ojluni&#x2F;src&#x2F;main&#x2F;java&#x2F;java&#x2F;io&#x2F;File.java，且File.java并无native函数，也就是说，Android10进入libcore&#x2F;ojluni&#x2F;src&#x2F;main&#x2F;native&#x2F;目录下并未找到java_io_File.cpp。</p>
+<p>思考下来，其实并不是一定要找到并修改java_io_File.cpp，只需要修改跟File.java路径差不多的文件对应的native层文件，在此文件内部进行注册JNI的地方插入我们新定义的android_util_Log_println_native方法就可以。</p>
+<p>File.java对应的路径为java&#x2F;io&#x2F;File.java，类似的选定了java&#x2F;util&#x2F;prefs&#x2F;FileSystemPreferences.java，对应的native层为&#x2F;libcore&#x2F;ojluni&#x2F;src&#x2F;main&#x2F;native&#x2F;FileSystemPreferences.c。JNI注册修改如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> JNINativeMethod gMethods[] = &#123;</span><br><span class="line">    <span class="built_in">NATIVE_METHOD</span>(FileSystemPreferences, lockFile0, <span class="string">&quot;(Ljava/lang/String;IZ)[I&quot;</span>),</span><br><span class="line">    <span class="built_in">NATIVE_METHOD</span>(FileSystemPreferences, unlockFile0, <span class="string">&quot;(I)I&quot;</span>),</span><br><span class="line">    <span class="built_in">NATIVE_METHOD</span>(FileSystemPreferences, chmod, <span class="string">&quot;(Ljava/lang/String;I)I&quot;</span>),</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">+++ <span class="type">static</span> JNINativeMethod mygMethods[] = &#123;&#123; <span class="string">&quot;println_native&quot;</span>,  <span class="string">&quot;   (IILjava/lang/String;Ljava/lang/String;)I&quot;</span>, (<span class="type">void</span>*) android_util_Log_println_native  &#125;,&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">register_java_util_prefs_FileSystemPreferences</span><span class="params">(JNIEnv* env)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">jniRegisterNativeMethods</span>(env, <span class="string">&quot;java/util/prefs/FileSystemPreferences&quot;</span>, gMethods, <span class="built_in">NELEM</span>(gMethods));</span><br><span class="line">+++ <span class="built_in">jniRegisterNativeMethods</span>(env, <span class="string">&quot;java/io/File&quot;</span>, mygMethods, <span class="built_in">NELEM</span>(mygMethods));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意：原始的gMethods[] 使用了 NATIVE_METHOD()格式，即宏#define NATIVE_METHOD(className, functionName, signature)  { #functionName, signature, (void*)(Java_java_util_prefs_ ## className ## _ ## functionName) }，自动补全了functionName的全路径，但却是关于FileSystemPreferences.c的，对于android_util_Log_println_native方法不可使用。</p>
+<p>所以，新定义了一个mygMethods[]，参考了&#x2F;frameworks&#x2F;base&#x2F;core&#x2F;jni&#x2F;android_util_Log.cpp里的实现，最后由于类名变化了，也额外进行了一次 jniRegisterNativeMethods方法。这样也就不用在JNI_onload函数里再注册一次register方法。</p>
+</li>
+<li><p>最后，在File.java里任意处调用 Log(tag,msg); 然后make update-api，编译运行即可。经测试，可打印Log。</p>
+</li>
+</ul>
+<ol start="2">
+<li><p>第二种方法，在libcore中添加新的接口类，并实现native的方法</p>
+<p>不想写了，累了，参考 <a target="_blank" rel="noopener" href="https://blog.csdn.net/u011426115/article/details/113032671?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-0.pc_relevant_default&spm=1001.2101.3001.4242.1&utm_relevant_index=1">Java核心库libcore中添加Log接口任意调用（Android10）_哆啦安全的博客-CSDN博客</a></p>
+</li>
+</ol>
+</li>
+</ol>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2022/05/06/LAB/AOSP/libcore%E4%B8%AD%E6%B7%BB%E5%8A%A0Log/" title="Android Java核心库libcore中打印Log（Android10）" target="_blank" rel="external">https://beichen.link/2022/05/06/LAB/AOSP/libcore中添加Log/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2022/05/07/LAB/AOSP/Android-Log%E5%88%86%E6%9E%90/" title="Android源码Log类的实现"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2022/05/05/LAB/AOSP/Android.bp%E8%AF%AD%E6%B3%95/" title="Android.bp文件语法"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

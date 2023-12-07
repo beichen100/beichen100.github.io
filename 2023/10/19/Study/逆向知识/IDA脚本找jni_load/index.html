@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>IDA脚本找jni_load | 北辰的小破站</title>
+  <meta name="description" content="idaPython 脚本 : 支持 libart.so 32&#x2F;64 位下断点。 手动分析过程     123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767">
+<meta property="og:type" content="article">
+<meta property="og:title" content="IDA脚本找jni_load">
+<meta property="og:url" content="https://beichen.link/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="idaPython 脚本 : 支持 libart.so 32&#x2F;64 位下断点。 手动分析过程     123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231022102917.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231022102934.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231022103007.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231022103100.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231022103110.png">
+<meta property="article:published_time" content="2023-10-19T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.751Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="逆向知识">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231022102917.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/逆向知识/IDA脚本找jni_load" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      IDA脚本找jni_load
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="article-date">
+	  <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 825(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 4(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>idaPython 脚本 : 支持 libart.so 32&#x2F;64 位下断点。</p>
+<h2 id="手动分析过程"><a href="#手动分析过程" class="headerlink" title="手动分析过程"></a>手动分析过程</h2><p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231022102917.png" alt="20231022102917"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231022102934.png" alt="20231022102934"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231022103007.png" alt="20231022103007"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231022103100.png" alt="20231022103100"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231022103110.png" alt="20231022103110"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> idc</span><br><span class="line"><span class="keyword">import</span> idautils</span><br><span class="line"><span class="keyword">import</span> ida_bytes</span><br><span class="line"><span class="keyword">import</span> ida_funcs</span><br><span class="line"><span class="comment"># time: 2023/1/31</span></span><br><span class="line"><span class="comment"># author: iyue</span></span><br><span class="line"><span class="comment"># 基于aosp10 - 12  源码符号都一样 其他可以自己找一下</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">helloIdaPython</span>():</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;---------------- start --------------------&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">findModules</span>(<span class="params">name</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">        获取指定模块</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="comment"># module = idc.get_first_module()</span></span><br><span class="line">    <span class="comment"># print(&quot;get first module : &#123;&#125;&quot;.format(module))</span></span><br><span class="line">    <span class="comment"># while (module!=None):</span></span><br><span class="line">    <span class="comment">#     moduleName = idc.get_module_name(module)</span></span><br><span class="line">    <span class="comment">#     print(&quot;find module name:&#123;&#125;&quot;.format(moduleName))</span></span><br><span class="line">    <span class="comment">#     if name in moduleName:</span></span><br><span class="line">    <span class="comment">#         return module</span></span><br><span class="line">    <span class="comment">#     module = idc.get_next_module(module)</span></span><br><span class="line">    <span class="comment"># return None</span></span><br><span class="line"></span><br><span class="line">    modules = idc.get_event_module_base()</span><br><span class="line">    <span class="keyword">for</span> module <span class="keyword">in</span> modules:</span><br><span class="line">        <span class="built_in">print</span>(module)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">setJniOnloadBt</span>():</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 1. 获取数据段起始和结束位置</span></span><br><span class="line">    rodata_ea_start = <span class="number">0</span></span><br><span class="line">    rodata_ea_end = <span class="number">0</span></span><br><span class="line">    local_sections = idautils.Segments()</span><br><span class="line">    <span class="keyword">for</span> section <span class="keyword">in</span> local_sections:</span><br><span class="line">        seg_name = idc.get_segm_name(section)</span><br><span class="line">        <span class="comment"># print(seg_name)</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> seg_name == <span class="string">&#x27;.rodata&#x27;</span>:</span><br><span class="line">            rodata_ea_start = section</span><br><span class="line">            rodata_ea_end = idc.get_segm_end(rodata_ea_start)</span><br><span class="line">            <span class="comment"># print(&quot;\t[iyue] find .rodata segment:0x%X&quot;%(rodata_ea_start))</span></span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;\t[iyue] find .rodata segment:0x%X - 0x%X&quot;</span>%(rodata_ea_start,rodata_ea_end))</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> rodata_ea_start == <span class="number">0</span>:</span><br><span class="line">        <span class="built_in">print</span> (<span class="string">&quot;\t[iyue] can not locate .rodata segment&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 2. 在rodata段中搜索字符串</span></span><br><span class="line">    jniOnloadStrAddr = <span class="number">0</span></span><br><span class="line">    eaOffset = rodata_ea_start</span><br><span class="line">    <span class="comment"># for debug</span></span><br><span class="line">    <span class="comment"># file = open(r&quot;C:\Users\l\Tools\SCRIPT\test.log&quot;,&#x27;w&#x27;)</span></span><br><span class="line">    <span class="built_in">print</span> (<span class="string">&quot;\t[iyue] start find: [Calling JNI_OnLoad in \&quot; &quot;</span>)</span><br><span class="line">    <span class="keyword">while</span> eaOffset&lt;rodata_ea_end:</span><br><span class="line">        currentString = idc.get_strlit_contents(eaOffset)</span><br><span class="line">        <span class="keyword">if</span> currentString == <span class="literal">None</span>:</span><br><span class="line">            eaOffset+=<span class="number">1</span></span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">        sstr = <span class="built_in">bytes</span>(currentString).decode(<span class="string">&#x27;utf-8&#x27;</span>)</span><br><span class="line">        <span class="keyword">if</span> <span class="string">&quot;[Calling JNI_OnLoad in \&quot;&quot;</span> == sstr:</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;\t[iyue] found strlit: %s addr:0x%X&quot;</span>%(sstr,eaOffset))</span><br><span class="line">            jniOnloadStrAddr = eaOffset</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        <span class="comment"># file.write(sstr+&#x27;\n&#x27;)</span></span><br><span class="line">        eaOffset+=<span class="built_in">len</span>(sstr)</span><br><span class="line">    <span class="comment"># file.flush()</span></span><br><span class="line">    <span class="comment"># file.close()</span></span><br><span class="line">    <span class="keyword">if</span> jniOnloadStrAddr == <span class="number">0</span>:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;\t[iyue] not found strlit: %s&quot;</span>%(<span class="string">&quot;[Calling JNI_OnLoad in \&quot;&quot;</span>))</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 3. 获取jni关键字符串的引用地址</span></span><br><span class="line">    xrefAddr=<span class="number">0</span></span><br><span class="line">    allXref = idautils.XrefsTo(jniOnloadStrAddr)</span><br><span class="line">    <span class="comment"># 通过分析源码可知 前两个挨着的 第三个属于</span></span><br><span class="line">    <span class="keyword">for</span> xref <span class="keyword">in</span> allXref:</span><br><span class="line">        <span class="built_in">print</span>(xref.<span class="built_in">type</span>, idautils.XrefTypeName(xref.<span class="built_in">type</span>),<span class="string">&#x27;from&#x27;</span>, <span class="built_in">hex</span>(xref.frm), <span class="string">&#x27;to&#x27;</span>, <span class="built_in">hex</span>(xref.to))</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&#x27;\t[iyue] first ref in:0x%X&#x27;</span>%xref.frm)</span><br><span class="line">        xrefAddr = xref.frm</span><br><span class="line">        <span class="keyword">break</span></span><br><span class="line">    <span class="keyword">if</span> xrefAddr == <span class="number">0</span>:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;\t[iyue] not found %s Reference!&quot;</span>%(<span class="string">&quot;[Calling JNI_OnLoad in \&quot;&quot;</span>))</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 4. 找到跳转后的地址,其实就是找b跳转，E4B7，loc_2a1a4a以_分割，goNextAddr找2a1a4a地址</span></span><br><span class="line">    <span class="comment"># int version = (*jni_on_load)(this, nullptr); 可以看到函数地址是一个变量</span></span><br><span class="line">    funcItems = idautils.FuncItems(xrefAddr) <span class="comment">#获取xref引用地址所在函数的所有地址</span></span><br><span class="line">    goNextAddr=<span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> itermAddr <span class="keyword">in</span> funcItems:</span><br><span class="line">        <span class="keyword">if</span> itermAddr &gt;= xrefAddr:</span><br><span class="line">            <span class="comment"># 跳转指令opcode 2 个字节</span></span><br><span class="line">            <span class="comment"># print(itermAddr)</span></span><br><span class="line">            opcode = ida_bytes.get_word(itermAddr)</span><br><span class="line">            <span class="comment"># print(opcode)</span></span><br><span class="line">            <span class="keyword">if</span> <span class="number">0xE4B7</span> == opcode:</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">&quot;\t[iyue] &quot;</span>,<span class="built_in">hex</span>(opcode),idc.GetDisasm(itermAddr))</span><br><span class="line">                gotoAddr = idc.GetDisasm(itermAddr).split(<span class="string">&#x27;_&#x27;</span>)[<span class="number">1</span>]</span><br><span class="line">                goNextAddr= <span class="built_in">hex</span>(<span class="built_in">int</span>(<span class="string">&#x27;0x&#x27;</span>+gotoAddr,<span class="number">16</span>))</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">&quot;\t[iyue] find go next addr:&quot;</span>,goNextAddr)</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            <span class="comment"># 兼容64位libart.so</span></span><br><span class="line">            <span class="comment"># print(opcode64)</span></span><br><span class="line">            opcode64 = ida_bytes.get_32bit(itermAddr)</span><br><span class="line">            <span class="keyword">if</span> <span class="number">0x17fffe17</span> == opcode64:</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">&quot;\t[iyue] &quot;</span>,<span class="built_in">hex</span>(opcode64),idc.GetDisasm(itermAddr))</span><br><span class="line">                gotoAddr = idc.GetDisasm(itermAddr).split(<span class="string">&#x27;_&#x27;</span>)[<span class="number">1</span>]</span><br><span class="line">                goNextAddr= <span class="built_in">hex</span>(<span class="built_in">int</span>(<span class="string">&#x27;0x&#x27;</span>+gotoAddr,<span class="number">16</span>))</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">&quot;\t[iyue] find go next addr:&quot;</span>,goNextAddr)</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> goNextAddr==<span class="number">0</span>:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;\t[iyue] no found go next addr !&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 5. 获取函数起始和结束位置，就是获取loc_2a1a4a的起止，因为后面会遍历每个地址</span></span><br><span class="line">    goNextAddr = <span class="built_in">int</span>(goNextAddr,<span class="number">16</span>)</span><br><span class="line">    tmpFuncName = idc.get_func_name(goNextAddr)</span><br><span class="line">    <span class="keyword">if</span> <span class="string">&#x27;LoadNativeLibrary&#x27;</span> <span class="keyword">in</span> tmpFuncName:</span><br><span class="line">        LoadNativeLibraryFuncStart = idc.get_func_attr(goNextAddr,idc.FUNCATTR_START)</span><br><span class="line">        LoadNativeLibraryFuncEnd = idc.get_func_attr(goNextAddr,idc.FUNCATTR_END)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 6.找到jni_onload 调用位置，就是找同时带BLX和r4的</span></span><br><span class="line">    callJniOnloadAddr=<span class="number">0</span></span><br><span class="line">    <span class="keyword">while</span> goNextAddr &lt; LoadNativeLibraryFuncEnd:</span><br><span class="line">        ssstr = idc.GetDisasm(goNextAddr)</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&#x27;\t[iyue] 0x%X %s&#x27;</span>%(goNextAddr,ssstr))</span><br><span class="line">        <span class="comment">#print(&quot;&#x27;%s&#x27;&quot;%ssstr)</span></span><br><span class="line">        <span class="keyword">if</span> <span class="string">&#x27;BLX&#x27;</span> <span class="keyword">in</span> ssstr <span class="keyword">and</span> <span class="string">&#x27;R&#x27;</span> <span class="keyword">in</span> ssstr <span class="keyword">or</span> <span class="string">&#x27;BLR&#x27;</span> <span class="keyword">in</span> ssstr <span class="keyword">and</span> <span class="string">&#x27;X&#x27;</span> <span class="keyword">in</span> ssstr:</span><br><span class="line">            callJniOnloadAddr = goNextAddr</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;\t[iyue] find call jni_onload  addr:&quot;</span>,goNextAddr)</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        goNextAddr+=<span class="number">1</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> callJniOnloadAddr == <span class="number">0</span>:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;\t[iyue] no found call jni_onload fial !&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line">    <span class="comment"># 7. 在调用位置下断点</span></span><br><span class="line">    idc.add_bpt(callJniOnloadAddr)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;\t[iyue] add bpt in:%s&#x27;</span>%ssstr)</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">True</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">main</span>():</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;---------------- start --------------------&quot;</span>)</span><br><span class="line">    <span class="comment"># findModules(&#x27;libart.so&#x27;)</span></span><br><span class="line">    setJniOnloadBt()</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;---------------- end --------------------&quot;</span>)</span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    main()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" title="IDA脚本找jni_load" target="_blank" rel="external">https://beichen.link/2023/10/19/Study/逆向知识/IDA脚本找jni_load/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" title="(no title)"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" title="SVC"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

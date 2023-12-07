@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Android Property分析 | 北辰的小破站</title>
+  <meta name="description" content="一、Android Property介绍 Property Service  Android 中有很多 Property，他们无处不在，我们的熟悉的 android.os.Build 中的很多字段都是直接读取的对应的 Property 值。Property 都是以键值对的形式存在，键和值都是字符串类型，他们是全局的（各个进程看到的都一样），Android 中非常多的进程和应用直接或者间接依赖 Pr">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android Property分析">
+<meta property="og:url" content="https://beichen.link/2022/05/14/LAB/AOSP/Android-property%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="一、Android Property介绍 Property Service  Android 中有很多 Property，他们无处不在，我们的熟悉的 android.os.Build 中的很多字段都是直接读取的对应的 Property 值。Property 都是以键值对的形式存在，键和值都是字符串类型，他们是全局的（各个进程看到的都一样），Android 中非常多的进程和应用直接或者间接依赖 Pr">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205162023262.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205162027804.png">
+<meta property="article:published_time" content="2022-05-14T15:05:16.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.743Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="android">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205162023262.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2022/05/14/LAB/AOSP/Android-property%E5%88%86%E6%9E%90/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-LAB/AOSP/Android-property分析" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Android Property分析
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2022/05/14/LAB/AOSP/Android-property%E5%88%86%E6%9E%90/" class="article-date">
+	  <time datetime="2022-05-14T15:05:16.000Z" itemprop="datePublished">2022-05-14</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/AOSP/">AOSP</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/android/" rel="tag">android</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2022/05/14/LAB/AOSP/Android-property%E5%88%86%E6%9E%90/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 2.3k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 9(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="一、Android-Property介绍"><a href="#一、Android-Property介绍" class="headerlink" title="一、Android Property介绍"></a>一、Android Property介绍</h2><ol>
+<li><p>Property Service</p>
+<p> Android 中有很多 Property，他们无处不在，我们的熟悉的 android.os.Build 中的很多字段都是直接读取的对应的 Property 值。Property 都是以键值对的形式存在，键和值都是字符串类型，他们是全局的（各个进程看到的都一样），Android 中非常多的进程和应用直接或者间接依赖 Property 系统，并由此决定其运行期的行为。Property 实质上是由若干个属性读取进程和一个属性设置进程（Property Service）操作。</p>
+<p> <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205162023262.png" alt="Property Service"></p>
+<p> Property Service 位于 init 进程（拥有 root 权限），在系统开机后创建各个属性对应的内存映射文件，即分配一个<strong>共享内存区</strong>来存储的属性。各个 App 进程想获得属性信息可以使用对应的内存映射文件，<strong>直接从共享内存读取</strong>，为上层的 property api 提供数据来源。</p>
+</li>
+<li><p>Property Tree</p>
+<p> 属性共享内存中的内容，其实被组织成一棵字典树。内存块的第一个节点是个特殊的总述节点，类型为 prop_area。紧随其后的就是字典树的“树枝”和“树叶”了，树枝以 prop_bt 表达，树叶以 prop_info 表达。我们读取或设置属性值时，最终都只是在操作“叶子”节点而已。</p>
+<p> <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host/img/202205162027804.png" alt="Property的数据结构"></p>
+<p> 每一个映射文件都是一个 128K 大小的二进制文件，以 prop_area 结构开头，它代表着共享内存块的起始，属性名将以‘.’符号为分割符，被分割开来。比如 ro.secure 属性名就会被分割成“ro”和“secure”两部分，而且每个部分用一个 prop_bt 节点表达。<strong>属性名中的这种‘.’关系被表示为父子关系</strong>，当一个属性名对应的“字典树枝”都已经形成好后，会另外创建一个 prop_info 节点，专门表示这个属性，该节点就是“字典树叶”。</p>
+</li>
+<li><p>Property属性组成</p>
+<p> Android 的系统属性包括两部分：文件保存的持久属性和每次开机导入的cache属性。前者主要保存在prop文件中，需要注意的是android属性的名称是有一定的格式要求的。<strong>ro.开头的属性将不能被更改属性值，persist.开头的属性会被永久记录</strong>，其他属性值在重新开机后均将被丢弃。</p>
+<ul>
+<li>属性名以ro.开头，该属性被视为只读属性，一旦设置属性值不能改变；</li>
+<li>属性名以persist.开头，该属性值将写入&#x2F;data&#x2F;property；</li>
+<li>属性名以net.开头，当设置这个属性时，“net.change”属性将会自动设置，以加入到最后修改的属性名。</li>
+</ul>
+</li>
+<li><p>Property属性的加载</p>
+<p> Android的启动后，在 property_service.cpp 的 property_init 中完成 prop 的初始化。系统中存在着几个文件，如 build.prop 和 default.prop 等，这些文件是在系统构建时候生成的，里面包含很多系统的配置。属性服务启动后会从系统文件中读取默认的属性，并写入共享内存中，并且<strong>后读入的属性将覆盖前面读取的相同的属性</strong>。也就是说，系统开机时会去加载这些文件中的信息并保存到 prop 模块(内存)中去，以便其它程序进行读取和使用。</p>
+<p> 系统启动的时候会从几个配置文件中加载属性的默认值，大概有以下几个文件， 在不同 Android 版本系统上可能不一样：</p>
+<ul>
+<li>&#x2F;default.prop 或者是 &#x2F;prop.default，</li>
+<li>&#x2F;vendor&#x2F;default.prop</li>
+<li>&#x2F;system&#x2F;build.prop</li>
+<li>&#x2F;vendor&#x2F;build.prop</li>
+<li>&#x2F;data&#x2F;local.prop</li>
+<li>&#x2F;data&#x2F;property&#x2F;*</li>
+</ul>
+<p> 系统会按先后顺序依次加载以上文件，后加载的属性将覆盖原先的值。default.prop 的值是通过 build&#x2F;tools 目录下的 buildinfo.sh 生成的。要修改的话，就要修改编译系统了，这种方法不好维护，不推荐。一般来说我们可以把属性加到 &#x2F;system&#x2F;build.prop 或者 &#x2F;vendor&#x2F;build.prop。</p>
+</li>
+</ol>
+<h2 id="二、Property-prop文件的生成"><a href="#二、Property-prop文件的生成" class="headerlink" title="二、Property prop文件的生成"></a>二、Property prop文件的生成</h2><p>Android 编译时会收集各种property值，编译完成之后，文件生成在out&#x2F;target&#x2F;product&#x2F;system 目录下。在Android运行时刻可以通过property_get()[c&#x2F;c++]或 SystemProperties_get()[Java]读取这些属性值。以build.prop文件为例，build.prop的生成是由make系统解析build&#x2F;core&#x2F;Makefile完成。</p>
+<ol>
+<li><p>Makefile中首先定义各种变量，这在下一步执行时会用到。比如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">PRODUCT_DEFAULT_LANGUAGE=&quot;$(calldefault-locale-language,$(PRODUCT_LOCALES))&quot; \</span><br><span class="line">PRODUCT_DEFAULT_REGION=&quot;$(calldefault-locale-region,$(PRODUCT_LOCALES))&quot; \</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Makefile中调用build&#x2F;tools&#x2F;buildinfo.sh执行脚本，echo一些属性并输出到build.prop，如ro.product.locale.language&#x2F; ro.product.locale.region就是些属性，等号后面是值。</p>
+ <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">echo&quot;ro.product.locale.language=$PRODUCT_DEFAULT_LANGUAGE&quot;</span><br><span class="line">echo&quot;ro.product.locale.region=$PRODUCT_DEFAULT_REGION&quot;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Makefile中直接把$(TARGET_DEVICE_DIR)&#x2F;system.prop的内容追加到build.prop中。</p>
+</li>
+<li><p>收集ADDITIONAL_BUILD_PROPERTIES中的属性，追加到build.prop中。</p>
+<p> ADDITIONAL_BUILD_PROPERTIES又会收集PRODUCT_PROPERTY_OVERRIDES中定义的属性。</p>
+ <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ADDITIONAL_BUILD_PROPERTIES:= \</span><br><span class="line">        $(ADDITIONAL_BUILD_PROPERTIES)\</span><br><span class="line">        $(PRODUCT_PROPERTY_OVERRIDES)</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>总结：build.prop的生成是由make系统解析build&#x2F;core&#x2F;Makefile完成，关于build.prop生成过程的分析，可知属性的来源：</p>
+<ul>
+<li>buildinfo.sh ：系统默认属性一般在build&#x2F;tool&#x2F;buildinfo.sh，编译时写到文件 build.prop；</li>
+<li>system.prop追加；</li>
+<li>ADDITIONAL_BUILD_PROPERTIES 或 PRODUCT_PROPERTY_OVERRIDES追加；<br>一般我们自定义属性就在对应的项目下 device&#x2F;$(TARGET_DEVICE_DIR)&#x2F;system.prop 定义自己的属性即可，建议修改属性在 system.prop 或 PRODUCT_PROPERTY_OVERRIDES，这对应于具体特定平台或产品的修改。</li>
+</ul>
+<h2 id="三、Android系统属性获取跟踪"><a href="#三、Android系统属性获取跟踪" class="headerlink" title="三、Android系统属性获取跟踪"></a>三、Android系统属性获取跟踪</h2><p>在 Android 应用程序开发中，可以通过 android.os.Build 类来访问一些属性信息，如设备品牌，设备名称，CPU 信息等。我们以使用 Build.BRAND 获取brand信息来分析 Android 系统中是如何获取属性信息的。</p>
+<ol>
+<li><p>android.os.Build类</p>
+<p> android.os.Build.java 源码位于 &#x2F;frameworks&#x2F;base&#x2F;core&#x2F;java&#x2F;android&#x2F;os&#x2F;Build.java，BRAND 的定义如下：  </p>
+ <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** The name of the underlying board, like &quot;goldfish&quot;. */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">BOARD</span> <span class="operator">=</span> getString(<span class="string">&quot;ro.product.board&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p> 从上述代码易知，BRAND 值是通过调用类方法 getString(“ro.product.brand”)来获取的，而 getString 代码如下：</p>
+ <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@UnsupportedAppUsage</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> String <span class="title function_">getString</span><span class="params">(String property)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> SystemProperties.get(property, UNKNOWN);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>android.os.SystemProperties类</p>
+<p> 再往下，getString 通过 SystemProperties 类(即&#x2F;frameworks&#x2F;base&#x2F;core&#x2F;java&#x2F;android&#x2F;os&#x2F;SystemProperties.java)的 get(String key, String def) 获取对应属性信息，该函数代码如下：</p>
+ <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Get the String value for the given &#123;<span class="doctag">@code</span> key&#125;.</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> key the key to lookup</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> def the default value in case the property is not set or empty</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> if the &#123;<span class="doctag">@code</span> key&#125; isn&#x27;t found, return &#123;<span class="doctag">@code</span> def&#125; if it isn&#x27;t null, or an empty</span></span><br><span class="line"><span class="comment"> * string otherwise</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@hide</span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title function_">get</span><span class="params">(<span class="meta">@NonNull</span> String key, <span class="meta">@Nullable</span> String def)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (TRACK_KEY_ACCESS) onKeyAccess(key);</span><br><span class="line">    <span class="keyword">return</span> native_get(key, def);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p> 也就是会调用 Native Code，对应 key 的 value 值为空则默认为 string def。在 SystemProperties.java 内有相应 Native 方法声明。</p>
+</li>
+<li><p>android_os_SystemProperties.cpp</p>
+<p> Native Code 对应的具体实现为 SystemProperties_getSS 方法，路径为 frameworks&#x2F;base&#x2F;core&#x2F;jni&#x2F;android_os_SystemProperties.cpp，如下：</p>
+ <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">jstring <span class="title">SystemProperties_getSS</span><span class="params">(JNIEnv *env, jclass clazz, jstring keyJ,jstring defJ)</span></span>&#123;</span><br><span class="line">    <span class="comment">// Using ConvertKeyAndForward is sub-optimal for copying the key string,</span></span><br><span class="line">    <span class="comment">// but improves reuse and reasoning over code.</span></span><br><span class="line">    <span class="keyword">auto</span> handler = [&amp;](<span class="type">const</span> std::string&amp; key, jstring defJ) &#123;</span><br><span class="line">    std::string prop_val = android::base::<span class="built_in">GetProperty</span>(key, <span class="string">&quot;&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (!prop_val.<span class="built_in">empty</span>()) &#123;</span><br><span class="line">        <span class="keyword">return</span> env-&gt;<span class="built_in">NewStringUTF</span>(prop_val.<span class="built_in">c_str</span>());</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="keyword">if</span> (defJ != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> defJ;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// This function is specified to never return null (or have an</span></span><br><span class="line">    <span class="comment">// exception pending).</span></span><br><span class="line">    <span class="keyword">return</span> env-&gt;<span class="built_in">NewStringUTF</span>(<span class="string">&quot;&quot;</span>);</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">return</span> <span class="built_in">ConvertKeyAndForward</span>(env, keyJ, defJ, handler);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意里面的 android::base::GetProperty(key, “”) 方法，获取属性值并存入到 prop_val 里。</p>
+</li>
+<li><p>properties.cpp</p>
+<p> GetProperty 方法位于 &#x2F;system&#x2F;core&#x2F;base&#x2F;properties.cpp，起作用的是 __system_property_find 函数。</p>
+<p> GetProperty函数的内部逻辑，会根据 __BIONIC__这个宏是否定义，分两个不同的逻辑。可以看到如果该宏已定义的话，会继续调用 __system_property_find,；如果该宏未定义，则从全局变量 g_properties中读取 property_value值。</p>
+ <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">std::string <span class="title">GetProperty</span><span class="params">(<span class="type">const</span> std::string&amp; key, <span class="type">const</span> std::string&amp; default_value)</span> </span>&#123;</span><br><span class="line">std::string property_value;</span><br><span class="line"><span class="meta">#<span class="keyword">if</span> defined(__BIONIC__)</span></span><br><span class="line"><span class="type">const</span> prop_info* pi = __system_property_find(key.<span class="built_in">c_str</span>());</span><br><span class="line"><span class="keyword">if</span> (pi == <span class="literal">nullptr</span>) <span class="keyword">return</span> default_value;</span><br><span class="line">__system_property_read_callback(pi,</span><br><span class="line">                              [](<span class="type">void</span>* cookie, <span class="type">const</span> <span class="type">char</span>*, <span class="type">const</span> <span class="type">char</span>* value, <span class="type">unsigned</span>) &#123;</span><br><span class="line">                                <span class="keyword">auto</span> property_value = <span class="built_in">reinterpret_cast</span>&lt;std::string*&gt;(cookie);</span><br><span class="line">                                *property_value = value;</span><br><span class="line">                              &#125;,</span><br><span class="line">                              &amp;property_value);</span><br><span class="line"><span class="meta">#<span class="keyword">else</span></span></span><br><span class="line"><span class="keyword">auto</span> it = g_properties.<span class="built_in">find</span>(key);</span><br><span class="line"><span class="keyword">if</span> (it == g_properties.<span class="built_in">end</span>()) <span class="keyword">return</span> default_value;</span><br><span class="line">property_value = it-&gt;second;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"><span class="comment">// If the property exists but is empty, also return the default value.</span></span><br><span class="line"><span class="comment">// Since we can&#x27;t remove system properties, &quot;empty&quot; is traditionally</span></span><br><span class="line"><span class="comment">// the same as &quot;missing&quot; (this was true for cutils&#x27; property_get).</span></span><br><span class="line"><span class="keyword">return</span> property_value.<span class="built_in">empty</span>() ? default_value : property_value;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>system_property_api.cpp</p>
+<p> 方法 GetProperty 会继续调用__system_property_find。__system_property_find 实现在bionic&#x2F;libc&#x2F;bionic&#x2F;system_property_api.cpp中:</p>
+ <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">__BIONIC_WEAK_FOR_NATIVE_BRIDGE</span><br><span class="line"><span class="type">const</span> prop_info* __system_property_find(<span class="type">const</span> <span class="type">char</span>* name) &#123;</span><br><span class="line"><span class="keyword">return</span> system_properties.<span class="built_in">Find</span>(name);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p> system_properties是一个全局对象，对应的类为SystemProperties:</p>
+ <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> SystemProperties system_properties;</span><br><span class="line"><span class="built_in">static_assert</span>(__is_trivially_constructible(SystemProperties),</span><br><span class="line">            <span class="string">&quot;System Properties must be trivially constructable&quot;</span>);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>system_properties.cpp<br> SystemProperties 类实现在bionic&#x2F;libc&#x2F;system_properties&#x2F;system_properties.cpp中， 实现代码比较多， 我们直接看Find方法的实现：</p>
+ <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">const</span> prop_info* <span class="title">SystemProperties::Find</span><span class="params">(<span class="type">const</span> <span class="type">char</span>* name)</span> </span>&#123;</span><br><span class="line"><span class="keyword">if</span> (!initialized_) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">&#125;</span><br><span class="line">prop_area* pa = contexts_-&gt;<span class="built_in">GetPropAreaForName</span>(name);</span><br><span class="line"><span class="keyword">if</span> (!pa) &#123;</span><br><span class="line">    <span class="built_in">async_safe_format_log</span>(ANDROID_LOG_ERROR, <span class="string">&quot;libc&quot;</span>, <span class="string">&quot;Access denied finding property \&quot;%s\&quot;&quot;</span>, name);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> pa-&gt;<span class="built_in">find</span>(name);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p> Find 方法调用成员变量contexts_的 GetPropAreaForName 方法来获取一个prop_area，也就是从存放属性值的共享内存块中读取。如果无法获取，则打印 Access denied finding property日志。</p>
+</li>
+</ol>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2022/05/14/LAB/AOSP/Android-property%E5%88%86%E6%9E%90/" title="Android Property分析" target="_blank" rel="external">https://beichen.link/2022/05/14/LAB/AOSP/Android-property分析/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2022/07/07/LAB/Emulator/emulator%E6%A3%80%E6%B5%8B%E5%8E%9F%E7%90%86/" title="emulator检测原理"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2022/05/07/LAB/AOSP/Android-JNI%E5%B1%82%E4%B8%8Eso%E5%BA%93/" title="Android-JNI"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

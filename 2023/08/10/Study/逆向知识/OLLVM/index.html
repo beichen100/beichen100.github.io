@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Ollvm 介绍 | 北辰的小破站</title>
+  <meta name="description" content="LLVM(Obfuscator-LLVM)是瑞士西北应用科技大学安全实验室于 2010 年 6 月份发起的一个项目,该项目旨在提供一套开源的针对 LLVM 的代码混淆工具,以增加对逆向工程的难度，只不过仅更新到 llvm 的 4.0，2017 年开始就没在更新。 源代码（c&#x2F;c++）经过 clang–&gt; 中间代码(经过一系列的优化，优化用的是 Pass)–&gt; 机器码 ollv">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ollvm 介绍">
+<meta property="og:url" content="https://beichen.link/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/OLLVM/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="LLVM(Obfuscator-LLVM)是瑞士西北应用科技大学安全实验室于 2010 年 6 月份发起的一个项目,该项目旨在提供一套开源的针对 LLVM 的代码混淆工具,以增加对逆向工程的难度，只不过仅更新到 llvm 的 4.0，2017 年开始就没在更新。 源代码（c&#x2F;c++）经过 clang–&gt; 中间代码(经过一系列的优化，优化用的是 Pass)–&gt; 机器码 ollv">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906105745.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906105921.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906112431.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906112442.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906112527.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230920103828.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230920103927.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230920104511.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230920104954.png">
+<meta property="article:published_time" content="2023-08-10T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.751Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="逆向知识">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906105745.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/OLLVM/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/逆向知识/OLLVM" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Ollvm 介绍
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/OLLVM/" class="article-date">
+	  <time datetime="2023-08-10T00:00:00.000Z" itemprop="datePublished">2023-08-10</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/OLLVM/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 2.8k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 11(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>LLVM(Obfuscator-LLVM)是瑞士西北应用科技大学安全实验室于 2010 年 6 月份发起的一个项目,该项目旨在提供一套开源的针对 LLVM 的代码混淆工具,以增加对逆向工程的难度，只不过仅更新到 llvm 的 4.0，2017 年开始就没在更新。</p>
+<p>源代码（c&#x2F;c++）经过 clang–&gt; 中间代码(经过一系列的优化，优化用的是 Pass)–&gt; 机器码</p>
+<h2 id="ollvm-的分类"><a href="#ollvm-的分类" class="headerlink" title="ollvm 的分类"></a>ollvm 的分类</h2><p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906105745.png" alt="20230906105745"></p>
+<h3 id="1-指令替换（Sub）"><a href="#1-指令替换（Sub）" class="headerlink" title="1. 指令替换（Sub）"></a>1. 指令替换（Sub）</h3><p>指令替换，将一条运算指令，替换为多条等价的运算指令。例如：y&#x3D;x+1 变为 y&#x3D;x+1+1-1</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906105921.png" alt="20230906105921"></p>
+<h3 id="2-虚假控制流（bcf）"><a href="#2-虚假控制流（bcf）" class="headerlink" title="2. 虚假控制流（bcf）"></a>2. 虚假控制流（bcf）</h3><p>虚假控制流混淆主要通过加入包含不透明谓词(相邻数字相乘恒为偶数)的条件跳转和不可达的基本块，来干扰 IDA 的控制流分析和 F5 反汇编</p>
+<p>不透明谓词是指一个表达式，他的值在执行到某处时，对程序员而言必然是已知的，但是由于某种原因，编译器或者说静态分析器无法推断出这个值，只能在运行时确定。</p>
+<p>常见特征：不透明谓词–&gt;例如 y &gt; 10 || x * (x + 1) % 2 &#x3D;&#x3D; 0</p>
+<p>在 OLLVM 中，使用了 y &gt; 10 || x * (x + 1) % 2 &#x3D;&#x3D; 0 这个不透明谓词，学过数学的都知道，x * (x + 1) % 2 &#x3D;&#x3D; 0 是个永真式。也就是说，混淆器已经知道了 y &gt; 10 || x * (x + 1) % 2 &#x3D;&#x3D; 0 这个式子的值，所以可以将其放在条件语句中，控制代码的走向；而编译器和反编译器都认为这个表达式需要进行运行后才能求值，会保留这段代码，进而干扰到反编译器。</p>
+<p>虚假控制流去除的思路一般为除去不可达块和不透明谓词。但是难点在于不透明谓词</p>
+<p>针对简单的控制流混淆，去不透明谓词的思想主要是：</p>
+<ul>
+<li>不直接处理不透明谓词，通过让不透明谓词的变量地址可读，则 IDA 便可以优化</li>
+<li>直接将不透明谓词赋值为 0 或者将不透明谓词中变量 x，y 赋值为 0</li>
+<li>编译器优化去干掉不透明谓词</li>
+</ul>
+<p>不可达块：</p>
+<p>不可达块是指控制流永远无法到达的基本块，一般我们可以使用符号执行或模拟执行来除去不可达基本块</p>
+<h3 id="3-控制流平坦化（Fla）"><a href="#3-控制流平坦化（Fla）" class="headerlink" title="3. 控制流平坦化（Fla）"></a>3. 控制流平坦化（Fla）</h3><p>控制流平坦化，主要通过一个主分发器来控制程序基本块的执行流程。该方法将所有基本代码放到控制流最底部，然后删除原理基本块之间跳转关系，添加次分发器来控制分发逻辑，然后过新的复杂分发逻辑还原原来程序块之间的逻辑关系。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906112431.png" alt="20230906112431"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906112442.png" alt="20230906112442"></p>
+<p>一般通用的反控制流平坦化思路：</p>
+<ul>
+<li><p>先保存所有的基本块</p>
+<p>控制流平坦化本质逻辑是把原始的基本块都碎片化，再通过 switch-case 语句，对函数的执行流进行重建。那么反混淆的时候，可以尝试根据主分发器将这些执行链给一条条的拆解出来</p>
+</li>
+<li><p>区分真实块和分发器（虚假块） 一般通过规则匹配来做，但是并无法使用所有情况 （难点）</p>
+<p>主分发器的确定：直接遍历目标函数下的所有基本块，并计算每一个 Block 的引用次数，数量最多的那个就是主分发器</p>
+<ol>
+<li>通过特征匹配来找真实块</li>
+<li>真实块的入口跳转地址必须为绝对的比较指令，如 beq、bne，首次匹配到这种绝对的跳转指令，就能定位对应流程链中的真实入口地址，然后识别</li>
+<li>凡是有内存操作的以及有 bl&#x2F;blx 函数调用的都是真实块，其中有一些指向主分发器的虚拟块也会包含内存操作</li>
+</ol>
+</li>
+<li><p>连接真实块的顺序 一般静态可以通过 IDA trace 然后编写 IDApython 脚本，动态可以通过符号执行、模拟执行</p>
+</li>
+<li><p>编写 patch 对目标函数进行修复、恢复原始逻辑</p>
+<p>打 patch，即通过 jump 指令或者一些条件跳转指令试图将它们重新连接起来</p>
+</li>
+</ul>
+<h3 id="3-字符串加密"><a href="#3-字符串加密" class="headerlink" title="3. 字符串加密"></a>3. 字符串加密</h3><p>符串加密的原理很简单，编写一个 pass 将其中的字符串信息使用一些加密算法进行加密，然后特定的时间进行还原。一般含有字符串混淆、函数名混淆、不在 init_array 解密等</p>
+<p>常见的特征：datadiv_decoded</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230906112527.png" alt="20230906112527"></p>
+<p>字符串加密的的常规解决方式：</p>
+<ul>
+<li><p>特征搜索</p>
+<p>一般在 so 中可以直接搜索 datadiv_decode，一般很多编写解密函数进行操作是这个函数，针对这种情况，一般可以通过 frida hook 就可以拿到解密后的值，然后进行 patch</p>
+</li>
+<li><p>init_array 中解密</p>
+<p>字符串解密操作在 init_arrray 中进行，一般可以通过模拟执行 init_array，然后将解密后的字符串全部保存下来</p>
+</li>
+<li><p>Jni_onload 解密</p>
+<p>在 jni_onload 函数中进行解密操作，这时候就要进行 inlinehook 拿到解密后寄存器的值，也可以进行 hook，也可以使用 unicorn 进行操作</p>
+</li>
+</ul>
+<h4 id="对抗例子"><a href="#对抗例子" class="headerlink" title="对抗例子"></a>对抗例子</h4><p>AndroidNativeEmu 和 unidbg 都是对 unicorn 进行了一定程度封装的开源项目，让我们可以很方便的调用 jni 函数，以及对没有实现的函数进行 hook 实现处理，并且让我们可以实现 so 里面模拟调用 java 函数。</p>
+<p>下面首先使用 AndroidNativeEmu 来对抗 ollvm 的字符串混淆，对 so 进行修复，让我们可以更加便捷的进行静态分析。</p>
+<p>AndroidNativeEmu 的介绍如：<a target="_blank" rel="noopener" href="https://www.52pojie.cn/thread-1031123-1-1.html">https://www.52pojie.cn/thread-1031123-1-1.html</a></p>
+<p>注意，在本机上使用时 python 环境为 3.7，3.9 会报错，安不上 keystore</p>
+<p>在实现之前，先总结下原理。</p>
+<p>ollvm 的字符串混淆，我们使用 IDA 的时候，看到的结果如下：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230920103828.png" alt="20230920103828"></p>
+<p>这里相当于是一个解密函数，通过这个函数将会还原成正常的字符串。然后我们看看在哪里调用到了这个解密函数。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230920103927.png" alt="20230920103927"></p>
+<p>可以看到是在.init_array 中使用解密函数对字符串进行还原。也就是说，当我们执行完.init_array 后，就会将正常的字符串写入内存中，这时我们就得到了真正的字符串了。所以根据这个情况：</p>
+<p>第一步，我们需要监控内存的读写，然后运行.init_array。这样发生的内存写入时，基本可以确定是字符串还原函数在写入恢复的字符串。</p>
+<p>写之前我们先看看 unicorn 的内存写入的相关注释：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">  Callback function for hooking memory (READ, WRITE &amp; FETCH)</span></span><br><span class="line"><span class="comment">  @type: this memory is being READ, or WRITE</span></span><br><span class="line"><span class="comment">  @address: address where the code is being executed</span></span><br><span class="line"><span class="comment">  @size: size of data being read or written</span></span><br><span class="line"><span class="comment">  @value: value of data being written to memory, or irrelevant if type = READ.</span></span><br><span class="line"><span class="comment">  @user_data: user data passed to tracing APIs</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+
+<p>这里就知道了，size 是写入或读取数据的长度，value 是写入或读取的数据。那么开始写我们第一步的代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> logging</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">from</span> unicorn <span class="keyword">import</span> UC_HOOK_MEM_WRITE</span><br><span class="line"><span class="keyword">import</span> struct</span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> androidemu.emulator <span class="keyword">import</span> Emulator</span><br><span class="line"></span><br><span class="line"><span class="comment"># Configure logging</span></span><br><span class="line">logging.basicConfig(</span><br><span class="line">    stream=sys.stdout,</span><br><span class="line">    level=logging.DEBUG,</span><br><span class="line">    <span class="built_in">format</span>=<span class="string">&quot;%(asctime)s %(levelname)7s %(name)34s | %(message)s&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">logger = logging.getLogger(__name__)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">hook_mem_write</span>(<span class="params">uc,<span class="built_in">type</span>,address,size,value,userdata</span>):</span><br><span class="line">    curdata=struct.pack(<span class="string">&quot;I&quot;</span>,value)[:size]</span><br><span class="line">    <span class="built_in">print</span>(curdata)</span><br><span class="line"></span><br><span class="line">emulator = Emulator(vfp_inst_set=<span class="literal">True</span>)</span><br><span class="line">emulator.load_library(<span class="string">&quot;example_binaries/libc.so&quot;</span>, do_init=<span class="literal">False</span>)</span><br><span class="line"><span class="comment">#设置内存的写入监控</span></span><br><span class="line">emulator.mu.hook_add(UC_HOOK_MEM_WRITE, hook_mem_write)</span><br><span class="line"><span class="comment">#后面的do_init为true就会调用.init_array</span></span><br><span class="line">lib_module = emulator.load_library(<span class="string">&quot;example_binaries/obf.so&quot;</span>, do_init=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+
+<p>输出的结果如下：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230920104511.png" alt="20230920104511"></p>
+<p>这里能看到，真实的字符串已经能在回调监控中打印出来了。接下来的第二步，我们需要把所有真实字符串以及写入真实字符串的位置给保存下来。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">dstr_datas=&#123;&#125;</span><br><span class="line"><span class="keyword">def</span> <span class="title function_">hook_mem_write</span>(<span class="params">uc,<span class="built_in">type</span>,address,size,value,userdata</span>):</span><br><span class="line">    curdata=struct.pack(<span class="string">&quot;I&quot;</span>,value)[:size]</span><br><span class="line">    dstr_datas[address]=curdata</span><br><span class="line">    <span class="built_in">print</span>(curdata)</span><br></pre></td></tr></table></figure>
+
+<p>那么写回到哪里呢？我们监控内存写入时，当时是给什么地址写入数据，我们就写入到哪里，这样我们写入的 so 就能直接在 IDA 中打开就看到真实字符串了。</p>
+<p>在写入时需要注意的是，我们保存的 address 是有一个基址的。也就是说，我们写入时需要减掉基址，才是真正应该写入的位置。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#获取到基址</span></span><br><span class="line">base_addr=lib_module.base</span><br><span class="line">sofile=<span class="built_in">open</span>(<span class="string">&quot;example_binaries/obf.so&quot;</span>,<span class="string">&quot;rb&quot;</span>)</span><br><span class="line"><span class="comment">#我们要将真实的字符串回填到sodata中。然后再保存</span></span><br><span class="line">sodata=sofile.read()</span><br><span class="line"><span class="keyword">for</span> address,v <span class="keyword">in</span> dstr_datas.items():</span><br><span class="line">    <span class="comment">#仅仅将so范围内的保存原字符串进行写回</span></span><br><span class="line">    <span class="keyword">if</span> address &gt; base_addr <span class="keyword">and</span> address &lt; base_addr+lib_module.size:</span><br><span class="line">        offset=address-base_addr</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;address:0x%x data:%s offset:0x%x&quot;</span> % (address, v,offset))</span><br></pre></td></tr></table></figure>
+
+<p>然后我贴上几行打印的内容：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">address:<span class="number">0xcbc6a004</span> data:b<span class="string">&#x27;j&#x27;</span> offset:<span class="number">0x4004</span></span><br><span class="line">address:<span class="number">0xcbc6a005</span> data:b<span class="string">&#x27;n&#x27;</span> offset:<span class="number">0x4005</span></span><br><span class="line">address:<span class="number">0xcbc6a006</span> data:b<span class="string">&#x27;i&#x27;</span> offset:<span class="number">0x4006</span></span><br><span class="line">address:<span class="number">0xcbc6a007</span> data:b<span class="string">&#x27;\x00&#x27;</span> offset:<span class="number">0x4007</span></span><br><span class="line">address:<span class="number">0xcbc6a008</span> data:b<span class="string">&#x27;g&#x27;</span> offset:0x4008s</span><br></pre></td></tr></table></figure>
+
+<p>第一个 offset 的偏移是 0x4004，那么我们打开 IDA 检查一下是否对的上:</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20230920104954.png" alt="20230920104954"></p>
+<p>能看到 IDA 里面显示的确实是对的上的。但是这里要留意最左下角的 00003004，实际这个才是文件中的真实位置。所以我们这里直接写回 so 要再将 offset-0x1000。</p>
+<p>这里最左下角是 “current offset” 指文件中的实际偏移量，而 右边的”current location” 是 IDA 为了提供更多上下文信息而显示的位置标识，对于特殊结构或功能的位置，IDA 可能会将 “current location” 设定为更有意义的值，以提供更好的可读性和理解性。所以此处两者会有不同</p>
+<p>下面我们开始将 so 的数据修改，并且保存成一个新的文件。最后贴上完整代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> logging</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">from</span> unicorn <span class="keyword">import</span> UC_HOOK_MEM_WRITE</span><br><span class="line"><span class="keyword">import</span> struct</span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> androidemu.emulator <span class="keyword">import</span> Emulator</span><br><span class="line"></span><br><span class="line"><span class="comment"># Configure logging</span></span><br><span class="line">logging.basicConfig(</span><br><span class="line">    stream=sys.stdout,</span><br><span class="line">    level=logging.DEBUG,</span><br><span class="line">    <span class="built_in">format</span>=<span class="string">&quot;%(asctime)s %(levelname)7s %(name)34s | %(message)s&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">logger = logging.getLogger(__name__)</span><br><span class="line">dstr_datas=&#123;&#125;</span><br><span class="line"><span class="keyword">def</span> <span class="title function_">hook_mem_write</span>(<span class="params">uc,<span class="built_in">type</span>,address,size,value,userdata</span>):</span><br><span class="line">    curdata=struct.pack(<span class="string">&quot;I&quot;</span>,value)[:size]</span><br><span class="line">    dstr_datas[address]=curdata</span><br><span class="line">    <span class="comment"># print(curdata)</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">emulator = Emulator(vfp_inst_set=<span class="literal">True</span>)</span><br><span class="line">emulator.load_library(<span class="string">&quot;example_binaries/libc.so&quot;</span>, do_init=<span class="literal">False</span>)</span><br><span class="line"><span class="comment">#设置内存的写入监控</span></span><br><span class="line">emulator.mu.hook_add(UC_HOOK_MEM_WRITE, hook_mem_write)</span><br><span class="line"><span class="comment">#后面的do_init为true就会调用.init_array</span></span><br><span class="line">modulePath=<span class="string">&quot;example_binaries/obf.so&quot;</span></span><br><span class="line">lib_module = emulator.load_library(modulePath, do_init=<span class="literal">True</span>)</span><br><span class="line"><span class="comment">#获取到基址</span></span><br><span class="line">base_addr=lib_module.base</span><br><span class="line">sofile=<span class="built_in">open</span>(<span class="string">&quot;example_binaries/obf.so&quot;</span>,<span class="string">&quot;rb&quot;</span>)</span><br><span class="line"><span class="comment">#我们要将真实的字符串回填到sodata中。然后再保存</span></span><br><span class="line">sodata=sofile.read()</span><br><span class="line">sofile.close()</span><br><span class="line"><span class="keyword">for</span> address,v <span class="keyword">in</span> dstr_datas.items():</span><br><span class="line">    <span class="comment">#仅仅将so范围内的保存原字符串进行写回</span></span><br><span class="line">    <span class="keyword">if</span> address &gt; base_addr <span class="keyword">and</span> address &lt; base_addr+lib_module.size:</span><br><span class="line">        offset=address-base_addr-<span class="number">0x1000</span></span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;address:0x%x data:%s offset:0x%x&quot;</span> % (address, v,offset))</span><br><span class="line">        sodata=sodata[:offset]+v+sodata[offset+<span class="built_in">len</span>(v):]</span><br><span class="line"><span class="comment">#保存成一个新的so</span></span><br><span class="line">savepath=modulePath+<span class="string">&quot;.new&quot;</span></span><br><span class="line">nfile=<span class="built_in">open</span>(savepath,<span class="string">&quot;wb&quot;</span>)</span><br><span class="line">nfile.write(sodata)</span><br><span class="line">nfile.close()</span><br></pre></td></tr></table></figure>
+
+<h2 id="ollvm-对抗"><a href="#ollvm-对抗" class="headerlink" title="ollvm 对抗"></a>ollvm 对抗</h2><p>1.简单 ollvm 可以通过交叉引用分析<br>2.angr 去除不透明谓词<br>3.Unicorn&#x2F;Unidbg&#x2F;AndroidNativeEmu 模拟执行<br>4.IDA Trace<br>5.binary ninja 6.后端编译优化<br>7.frida 辅助分析</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/OLLVM/" title="Ollvm 介绍" target="_blank" rel="external">https://beichen.link/2023/08/10/Study/逆向知识/OLLVM/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/08/10/Study/%E5%AE%9E%E4%B9%A0/FakeLocation%E5%8E%9F%E7%90%86/" title="FakeLocation原理及重打包 ( 二 )"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/08/10/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/bilibili%20%E5%8F%8D%E8%B0%83%E8%AF%95/" title="bilibili 反调试"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

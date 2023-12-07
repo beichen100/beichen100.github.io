@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Arm服务器上运行Android Emulator | 北辰的小破站</title>
+  <meta name="description" content="安装emulator 尝试下载Android sdk，通过命令行工具创建AVD，但运行AVD时提示emulator不支持本机架构。 尝试在arm服务器上运行Android Studio的AVD，更新初始sdk后发现AS上下载的sdk只适配了x86的emulator，arm服务器上一旦创建虚拟机就会卡死。 尝试直接在服务器上编译源码，再运行AOSP原生emulator，但下载源码后提示无法编译，lu">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Arm服务器上运行Android Emulator">
+<meta property="og:url" content="https://beichen.link/2022/07/15/LAB/Emulator/arm%20emulator/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="安装emulator 尝试下载Android sdk，通过命令行工具创建AVD，但运行AVD时提示emulator不支持本机架构。 尝试在arm服务器上运行Android Studio的AVD，更新初始sdk后发现AS上下载的sdk只适配了x86的emulator，arm服务器上一旦创建虚拟机就会卡死。 尝试直接在服务器上编译源码，再运行AOSP原生emulator，但下载源码后提示无法编译，lu">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2022-07-15T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.747Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="android">
+<meta name="twitter:card" content="summary">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2022/07/15/LAB/Emulator/arm%20emulator/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-LAB/Emulator/arm emulator" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Arm服务器上运行Android Emulator
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2022/07/15/LAB/Emulator/arm%20emulator/" class="article-date">
+	  <time datetime="2022-07-15T00:00:00.000Z" itemprop="datePublished">2022-07-15</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Emulator/">Emulator</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/android/" rel="tag">android</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2022/07/15/LAB/Emulator/arm%20emulator/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 1.2k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 5(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="安装emulator"><a href="#安装emulator" class="headerlink" title="安装emulator"></a>安装emulator</h2><ol>
+<li><p>尝试下载Android sdk，通过命令行工具创建AVD，但运行AVD时提示emulator不支持本机架构。</p>
+<p>尝试在arm服务器上运行Android Studio的AVD，更新初始sdk后发现AS上下载的sdk只适配了x86的emulator，arm服务器上一旦创建虚拟机就会卡死。</p>
+<p>尝试直接在服务器上编译源码，再运行AOSP原生emulator，但下载源码后提示无法编译，lunch时出现 </p>
+<blockquote>
+<p>error : android10&#x2F;prebuilts&#x2F;go&#x2F;linux-x86&#x2F;&#x2F;bin&#x2F;go: cannot execute binary file: Exec format error</p>
+</blockquote>
+<p>尝试解决但失败，后尝试用docker搭建Android10编译环境，未成功。最后发现AOSP源码编译只能在x86机器上进行，放弃。</p>
+</li>
+<li><p>最后在github上找到arm版emulator，地址：<a target="_blank" rel="noopener" href="https://github.com/google/android-emulator-container-scripts/issues/192%EF%BC%8C%E7%A7%BB%E6%A4%8D%E5%88%B0sdk%E5%90%8E%E5%86%8D%E8%BF%90%E8%A1%8CAS%E7%9A%84avd%E6%88%90%E5%8A%9F%EF%BC%8C%E4%BD%86%E4%BC%9A%E6%8F%90%E7%A4%BAkvm">https://github.com/google/android-emulator-container-scripts/issues/192，移植到sdk后再运行AS的avd成功，但会提示kvm</a> 服务不可用，AS运行emulator也会卡死。尝试命令行运行创建好的虚拟机，报错，但error提示了解决kvm的办法，运行 </p>
+<blockquote>
+<p>sudo gpasswd -a $USER kvm &#x2F;&#x2F;赋予运行kvm的权限</p>
+</blockquote>
+<p> 结果提示kvm服务成功运行。接下来出现新的error:</p>
+<blockquote>
+<p>error：qt.qpa.plugin: Could not load the Qt platform plugin “xcb“ even though it was found.</p>
+</blockquote>
+<p> 发现是Qt加载插件出现问题，通过设置QT_DEBUG_PLUGINS&#x3D;1，可以查看Qt的插件加载信息。所以设置环境变量：</p>
+<blockquote>
+<p>export QT_DEBUG_PLUGINS&#x3D;1</p>
+</blockquote>
+<p> 再次运行程序时，会打印出很多信息，细节是提示了:</p>
+<blockquote>
+<p>plugins&#x2F;platforms&#x2F;libqxcb.so: (libxkbcommon-x11.so.0: cannot open shared object file: No such file or directory</p>
+</blockquote>
+</li>
+</ol>
+<p>​     google后找到解决方案：运行 sudo apt install pyqt5-dev-tools pyqt5-dev 后成功解决error。<br>​     附未知效果的依赖包安装命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install -y --no-install-recommends libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev g++-aarch64-linux-gnu gcc-aarch64-linux-gnu git build-essential python qemu-kvm ninja-build ccache libgl1-mesa-glx lz4 libc6 adb unzip xcb xfce4 xfce4-goodies tree libpcre2-16-0 cpu-checker qemu-kvm libaio1 libaio-dev </span><br></pre></td></tr></table></figure>
+<p>​     最后，成功运行arm emulator ：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd download/android-sdk-linux/emulator</span><br><span class="line">./emulator -avd Pixel_3a_XL_API_29  -qemu -cpu max -machine gic-version=max</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>待解决的问题：</li>
+</ol>
+<ul>
+<li><p>安装应用部分能安装，部分安装失败，adb报error:INSTALL_FAILED_NO_MATCHING_ABIS: Failed to extract native libraries, res&#x3D;-113.</p>
+<p>能安装：小红书  沪江网校 个人所得税  美团外卖   b站 微信 得物 咪咕阅读 闲鱼</p>
+<p>不能安装： 抖音 银行类app  夸克浏览器 qq音乐 qqHD  百度贴吧 微博 momo  知乎  mooc</p>
+</li>
+<li><p>emulator显示界面模糊，原因未知。</p>
+</li>
+</ul>
+<h2 id="自定义运行emulator"><a href="#自定义运行emulator" class="headerlink" title="自定义运行emulator"></a>自定义运行emulator</h2><p>针对前述部分应用不能安装的情况，判断是AS上AVD创建的是Aarch64-v8的虚拟机，经测试，不可兼容armeabi-v7的apk。</p>
+<blockquote>
+<p>问：为什么最开始尝试的时候选择AS上AVD？<br>答：主要是由于SDK的问题，命令行创建avd需要对应版本的andrid sdk，同时也需要指定avd运行的arm img，自己去单独下载较为麻烦，交给AS刚好，但AS上只能指定 arm64-v8的系统image，同时以上完成的启动emulator需要两个附加参数，AS无法启动时附加，故之前选取的方案是在AS上创建avd，再在命令行内加入附加参数启动emulator。</p>
+</blockquote>
+<p>为解决此问题，尝试找到一种不用通过AS上AVD创建虚拟机的方法，也就是编译源码后输出SDK，既可以自修改虚拟机img，又可命令行创建AVD。</p>
+<ol>
+<li><p>编译AOSP输出SDK</p>
+<p>lunch时选择aosp_arm-eng（为armv7，aosp_arm64-eng就是v8），然后make sdk。编译成功后，在android-10.0.0_r33&#x2F;out&#x2F;host&#x2F;linux-x86&#x2F;sdk&#x2F;sdk&#x2F;android-sdk_eng.xiehao_linux-x86下即为SDK产品，目录结构接近AS使用的sdk，但少了tools与emulator子目录。</p>
+<blockquote>
+<p>&#x2F;tools&#x2F;bin目录下存放着 avdmanager 与 sdkmanager 两个关键命令，进入bin目录下运行 .&#x2F;avdmanager 与 .&#x2F;sdkmanager 即可启动。</p>
+<p>而&#x2F;emulator目录下存放着emulator命令，进入此目录下运行 .&#x2F;emulator 即可启动。</p>
+</blockquote>
+<p>复制此 SDK 至 arm 服务器下，并将AS链接的sdk文件夹里的tools、emulator（arm版）文件夹拷贝过去，至此一个完整的可运行arm emulator的android sdk就设置好了。</p>
+</li>
+<li><p>SDK创建AVD</p>
+<p>在编译好的SDK目录下，执行以下代码即可创建AVD，并运行arm emulator：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">cd mysdk/tools/bin</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="comment"># sdk的system-image目录下只有android-10这个子目录，但创建avd时参数为system-images;android-29;default;armeabi-v7a，同时config.ini中sys.dir也显示为android-10</span></span></span><br><span class="line">./avdmanager create avd  -n xiehao -k &#x27;system-images;android-29;default;armeabi-v7a&#x27;  </span><br><span class="line">./avdmanager list avd   ## 查看已创建的AVD信息</span><br><span class="line">cd ../../emulator</span><br><span class="line">./emulator -avd xiehao -qemu -cpu max -machine gic-version=max &amp;</span><br><span class="line">adb devices -l  ##当有多个emulator同时运行时查看其编号</span><br><span class="line">adb -t 5 logcat * | grep &quot;mytag&quot;   ## 查看指定编号的emulator日志</span><br></pre></td></tr></table></figure>
+
+<p>我们也可在AS创建AVD的基础上更改config.ini的参数，指定 image.sysdir.1 路径，这样就能让emulator使用我们自编译的img，即<code>image.sysdir.1=/home/xiehao/download/mysdk/system-images/android-10/armeabi-v7a</code></p>
+</li>
+</ol>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2022/07/15/LAB/Emulator/arm%20emulator/" title="Arm服务器上运行Android Emulator" target="_blank" rel="external">https://beichen.link/2022/07/15/LAB/Emulator/arm emulator/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2022/08/26/Paper/%E4%BA%BA%E8%84%B8%E8%AF%86%E5%88%AB-%E8%AE%BA%E6%96%87%E8%B0%83%E7%A0%94/" title="人脸识别-论文前期预调研"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2022/07/10/LAB/Emulator/anti-Emulator/" title="AOSP对抗模拟器检测"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Fake dlopen | 北辰的小破站</title>
+  <meta name="description" content="Android 对 dlopen 和 dlsym 的限制hook 的第一步是拿到被 hook 方法的地址。获取方法地址的常规方法是使用 dlopen() 和 dlsym()，但 Android 平台上对这两个方法的使用有限制，如何突破这个限制呢？ Android 7.0 及以上版本对 dlopen() 和 dlsym() 函数的使用有限制。System.load() 和 System.lo">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Fake dlopen">
+<meta property="og:url" content="https://beichen.link/2023/08/15/Study/%E5%AE%9E%E4%B9%A0/%E6%B3%A8%E5%85%A5%E5%BC%80%E5%8F%91%E4%B9%8Bfake_dlopen/index.html">
+<meta property="og:site_name" content="beichen">
+<meta property="og:description" content="Android 对 dlopen 和 dlsym 的限制hook 的第一步是拿到被 hook 方法的地址。获取方法地址的常规方法是使用 dlopen() 和 dlsym()，但 Android 平台上对这两个方法的使用有限制，如何突破这个限制呢？ Android 7.0 及以上版本对 dlopen() 和 dlsym() 函数的使用有限制。System.load() 和 System.lo">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231016195026.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231016195117.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231022214746.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231016201559.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231010164255.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231010164447.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231010165035.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231010165057.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231010165414.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231010170255.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231010171940.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231010172012.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231010174500.png">
+<meta property="article:published_time" content="2023-08-15T00:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-07T09:39:19.747Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="实习">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231016195026.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://beichen.link/2023/08/15/Study/%E5%AE%9E%E4%B9%A0/%E6%B3%A8%E5%85%A5%E5%BC%80%E5%8F%91%E4%B9%8Bfake_dlopen/index.html">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+  
+<meta name="generator" content="Hexo 6.1.0"><link rel="alternate" href="/atom.xml" title="beichen" type="application/atom+xml">
+</head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="" target="_blank">
+          <img class="img-circle img-rotate" src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">beichen</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Android system developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Beijing, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget-body">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/AOSP/">AOSP</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/APP-Detection-engine/">APP Detection engine</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Emulator/">Emulator</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Paper/">Paper</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Study/">Study</a><span class="category-list-count">55</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget-body">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E6%BC%8F%E6%B4%9E/" rel="tag">Android漏洞</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android%E7%9F%A5%E8%AF%86/" rel="tag">Android知识</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/" rel="tag">Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Face-Security/" rel="tag">Face Security</a><span class="tag-list-count">4</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/OSS-Security/" rel="tag">OSS Security</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">android</a><span class="tag-list-count">11</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/android%EF%BC%8CDocker/" rel="tag">android，Docker</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" rel="tag">语言学习</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" rel="tag">逆向知识</a><span class="tag-list-count">27</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Android%E6%BC%8F%E6%B4%9E/" style="font-size: 13.17px;">Android漏洞</a> <a href="/tags/Android%E7%9F%A5%E8%AF%86/" style="font-size: 13.67px;">Android知识</a> <a href="/tags/Docker/" style="font-size: 13px;">Docker</a> <a href="/tags/Face-Security/" style="font-size: 13.33px;">Face Security</a> <a href="/tags/OSS-Security/" style="font-size: 13px;">OSS Security</a> <a href="/tags/android/" style="font-size: 13.83px;">android</a> <a href="/tags/android%EF%BC%8CDocker/" style="font-size: 13px;">android，Docker</a> <a href="/tags/%E5%AE%9E%E4%B9%A0/" style="font-size: 13.5px;">实习</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 13.67px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 13.17px;">计算机基础</a> <a href="/tags/%E8%AF%AD%E8%A8%80%E5%AD%A6%E4%B9%A0/" style="font-size: 13.5px;">语言学习</a> <a href="/tags/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/" style="font-size: 14px;">逆向知识</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a><span class="archive-list-count">8</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a><span class="archive-list-count">16</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a><span class="archive-list-count">17</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/05/">May 2022</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">April 2022</a><span class="archive-list-count">3</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2023/12/07/Study/%E7%AE%97%E6%B3%95/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-12-07T09:39:19.747Z" itemprop="datePublished">2023-12-07</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/IDA%E8%84%9A%E6%9C%AC%E6%89%BEjni_load/" class="title">IDA脚本找jni_load</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/19/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/SVC/" class="title">SVC</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-19T00:00:00.000Z" itemprop="datePublished">2023-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                <a class="category-link" href="/categories/Study/">Study</a>
+              </p>
+              <p class="item-title">
+                <a href="/2023/10/18/Study/%E9%80%86%E5%90%91%E7%9F%A5%E8%AF%86/hook%E5%AF%B9%E6%8A%97%E6%96%B9%E6%A1%88/" class="title">hook对抗方法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2023-10-18T00:00:00.000Z" itemprop="datePublished">2023-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Study/实习/注入开发之fake_dlopen" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Fake dlopen
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2023/08/15/Study/%E5%AE%9E%E4%B9%A0/%E6%B3%A8%E5%85%A5%E5%BC%80%E5%8F%91%E4%B9%8Bfake_dlopen/" class="article-date">
+	  <time datetime="2023-08-15T00:00:00.000Z" itemprop="datePublished">2023-08-15</time>
+	</a>
+</span>
+        
+  <span class="article-category">
+    <i class="icon icon-folder"></i>
+    <a class="article-category-link" href="/categories/Study/">Study</a>
+  </span>
+
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/%E5%AE%9E%E4%B9%A0/" rel="tag">实习</a>
+  </span>
+
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2023/08/15/Study/%E5%AE%9E%E4%B9%A0/%E6%B3%A8%E5%85%A5%E5%BC%80%E5%8F%91%E4%B9%8Bfake_dlopen/#comments" class="article-comment-link">Comments</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">Word Count: 2.3k(words)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">Read Count: 10(minutes)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231016195026.png" alt="20231016195026"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231016195117.png" alt="20231016195117"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231022214746.png" alt="20231022214746"></p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231016201559.png" alt="20231016201559"></p>
+<h2 id="Android-对-dlopen-和-dlsym-的限制"><a href="#Android-对-dlopen-和-dlsym-的限制" class="headerlink" title="Android 对 dlopen 和 dlsym 的限制"></a>Android 对 dlopen 和 dlsym 的限制</h2><p>hook 的第一步是拿到被 hook 方法的地址。获取方法地址的常规方法是使用 dlopen() 和 dlsym()，但 Android 平台上对这两个方法的使用有限制，如何突破这个限制呢？</p>
+<p>Android 7.0 及以上版本对 dlopen() 和 dlsym() 函数的使用有限制。System.load() 和 System.loadLibrary() 是基于这两个函数实现的，所以也存在同样限制。</p>
+<p>测试中发现无论是调用 System.load() 还是 System.loadLibrary() 加载 libart.so (系统的 so 库，非公开 API) 均会导致以下异常：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">E/AndroidRuntime: FATAL EXCEPTION: main</span><br><span class="line">    Process: com.sunmoonblog.cmdemo, PID: <span class="number">8432</span></span><br><span class="line">    java.lang.UnsatisfiedLinkError: dlopen failed: library <span class="string">&quot;/system/lib/libart.so&quot;</span> needed or</span><br><span class="line">      dlopened by <span class="string">&quot;/system/lib64/libnativeloader.so&quot;</span> is not accessible <span class="keyword">for</span> the namespace <span class="string">&quot;classloader-namespace&quot;</span></span><br><span class="line">        at java.lang.Runtime.load0(Runtime.java:<span class="number">928</span>)</span><br><span class="line">        at java.lang.System.load(System.java:<span class="number">1624</span>)</span><br></pre></td></tr></table></figure>
+
+<p>异常信息很明确：第三方应该不应当尝试使用非公开的方法。当然，官方对此早有说明。官方的作出上述限制的理由是只允许应用访问公开的 API(无论是 Java 层还是 Native 层)，不允许访问非公开的方法，以提升应用的稳定性。</p>
+<p>系统私有库指的是，存放在 android 系统&#x2F;system&#x2F;lib&#x2F;和&#x2F;vendor&#x2F;lib 下面，但是 Android NDK 中没有公开 API 的 lib 库。</p>
+<p>从 Android N 开始（SDK &gt;&#x3D; 24），通过 dlopen 打开系统私有库，或者 lib 库中依赖系统私有库，都会产生异常，甚至可能导致 app 崩溃。</p>
+<h3 id="曾经的美好"><a href="#曾经的美好" class="headerlink" title="曾经的美好"></a>曾经的美好</h3><p>在以前，在 ndk 层面，我们是可以使用一些 hack 的手段得到系统的私有 api 的。</p>
+<p>比如，你想使用虚拟机中的一些内部符号，在 N 以下版本，你可以这么搞</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> *handle = dlopen(<span class="string">&quot;libart.so&quot;</span>, RTLD_NOW);</span><br><span class="line"><span class="type">void</span> *originFunc = dlsym(handle, <span class="string">&quot;_ZNK3art6Thread13DumpJavaStackERNSt3__113basic_ostreamIcNS1_11char_traitsIcEEEE&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>这样你就能得到 art::Thread::DumpJavaStack 的函数指针，然后愉快地调用它了。</p>
+<h3 id="晴天霹雳"><a href="#晴天霹雳" class="headerlink" title="晴天霹雳"></a>晴天霹雳</h3><p>但是到了 N 以后，</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> *handle = dlopen(<span class="string">&quot;libart.so&quot;</span>, RTLD_NOW);</span><br><span class="line"><span class="comment">// 没问题，返回了 handle 指针。</span></span><br><span class="line"><span class="type">void</span> *originFunc = dlsym(handle, <span class="string">&quot;_ZNK3art6Thread13DumpJavaStackERNSt3__113basic_ostreamIcNS1_11char_traitsIcEEEE&quot;</span>);</span><br><span class="line"><span class="comment">// 失败！得到的 originFunc 为空！</span></span><br></pre></td></tr></table></figure>
+
+<p>这就很奇怪了，我们能够得到 handle 指针，就说明 libart.so 是找到了。但是为什么 libart.so 中却没有找到 art::Thread::DumpJavaStack 的符号呢？</p>
+<p>看一下内存映射表，我们发现了一个有趣的东西</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231010164255.png" alt="20231010164255"></p>
+<p>难怪，我们知道 dlopen 参数为 libart.so 的话，系统会先找到&#x2F;system&#x2F;fake-libs64&#x2F;libart.so，而不是&#x2F;system&#x2F;lib64&#x2F;libart.so。</p>
+<p>而&#x2F;system&#x2F;fake-libs64&#x2F;libart.so 又是什么鬼？从名字上看，就知道他是个假的 libart。<br>在系统源码文件 art&#x2F;libart_fake&#x2F;README.md 中，我们找到了对他的解释，</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231010164447.png" alt="20231010164447"></p>
+<p>这就是为了以防你们这些图谋不轨（misbehaving）的 APP 们做一些奇怪的事而专门设的套啊！</p>
+<p>只要你自己的 lib 库依赖了 libart.so 或者试图打开 libart.so，在 linker 查找 libart.so 时，因为 fake-libs 路径被设置在了查找路径表的靠前处，就会先找到&#x2F;system&#x2F;fake-libs64&#x2F;libart.so，而不是真正的&#x2F;system&#x2F;lib64&#x2F;libart.so。而这个&#x2F;system&#x2F;fake-libs64&#x2F;libart.so 的内容基本上的空的（art&#x2F;libart_fake&#x2F;fake.cc），所以在它里面当然什么符号都找不到啦~</p>
+<p>既然如此，那我们在 dlopen 中直接指定 lib 的绝对路径总行了吧？像这样：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> *handle = dlopen(<span class="string">&quot;/system/lib64/libart.so&quot;</span>, RTLD_NOW);</span><br></pre></td></tr></table></figure>
+
+<p>可是很遗憾，它报了一个错：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231010165035.png" alt="20231010165035"></p>
+<p>也就是说，你被允许访问的路径（包含 ld_library_paths、default_library_paths、permitted_paths）只有</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231010165057.png" alt="20231010165057"></p>
+<p>所以，试图访问&#x2F;system&#x2F;lib64&#x2F;下的 libart.so 当然是不行的啦。</p>
+<p>真是魔高一尺道高一丈啊。</p>
+<p>至此，我们算是知道了 Google 封杀在 ndk 中访问系统私有库的方法。本质是在 linker 中加入一系列校验机制来做限制。linker 作为最基础的 lib 库链接器，所有链接行为都会被限制住。</p>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>如何突破官方的限制呢？Nougat_dlfunctions 提供了一个不错的解决方案，可以完美避开官方限制。</p>
+<p>Android 限制的只是 dlopen 这个途径，而我们访问内存是随心所欲的, 方法就是通过内存映射表找到 libart.so 的真实起始位置：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231010165414.png" alt="20231010165414"></p>
+<p>然后在加载地址起始位置手动解析 libart.so 的 elf 格式，提取出所需符号的位置信息。相当于你自己实现 linker 原本的查找逻辑。</p>
+<p>当然，这种遍历内存解析 elf 的实现是比较复杂的。因此，这一次 Google 算是封死了一大波底层 hack 的手段。</p>
+<h3 id="Nougat-dlfunctions"><a href="#Nougat-dlfunctions" class="headerlink" title="Nougat_dlfunctions"></a>Nougat_dlfunctions</h3><p>Nougat_dlfunctions 是这样介绍自己的：</p>
+<p>A hack for loading system libraries in Android Nougat where dlopen() has been disabled by some wise guys.</p>
+<p>它的两个主要 API 如下。形式上跟 dlopen() 和 dlsysm() 完全一致，所以用起来非常简单。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> *<span class="title function_">fake_dlopen</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *libpath, <span class="type">int</span> flags)</span>;</span><br><span class="line"><span class="type">void</span> *<span class="title function_">fake_dlsym</span><span class="params">(<span class="type">void</span> *handle, <span class="type">const</span> <span class="type">char</span> \*name)</span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>fake_dlopen(), 跟 dlopen() 一样，用于 load and link a dynamic library or bundle</li>
+<li>fake_dlsym(), 跟 dlsym() 一样，用于 get address of a symbol</li>
+</ul>
+<h4 id="原理分析"><a href="#原理分析" class="headerlink" title="原理分析"></a>原理分析</h4><p>Nougat_dlfunctions 库的原理本身并不复杂，但由于涉及到 ELF 文件格式，其中的技术细节理解起来还是要花些时间。</p>
+<p>要保证 fake_dlopen() 和 fake_dlsym() 函数可正常运行有一个前提：so 文件本身已经被加载到当前进程。</p>
+<p>更准确地说, Nougat_dlfunctions 库并不能主动加载系统库&#x2F;非公开的库，而是从已加载的系统库&#x2F;非公开库中找到感兴趣的方法地址。</p>
+<p>比如，以 hook Bitmap 为例，可以利用这个库绕开 Android 系统限制拿到目标方法的地址。</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231010170255.png" alt="20231010170255"></p>
+<p>首先，fake_dlopen() 读取 &#x2F;proc&#x2F;self&#x2F;maps 文件。这个文件记录了当前进程的内存布局。</p>
+<ol>
+<li>address - 进程地址空间的起始地址</li>
+<li>permissions - 访问权限</li>
+<li>pathname - 如果该区域是从文件映射来的，pathname 为文件名</li>
+</ol>
+<p>知道进程的内存布局后，不难从其中获取到指定路径的 so 文件的基址。基址保存在 load_addr。</p>
+<p>然后，Nougat_dlfunctions 调用 mmap() 对该 so 文件进行内存映射，映射结果为 elf 并对其进行解析。elf 数据结构类型是 Elf_Ehdr。Elf_Ehdr 定义如下：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231010171940.png" alt="20231010171940"></p>
+<p>简单来说，一个 ELF 文件由一个 Header 及 多个 Section 组成。每个 Section 也有自己的 Section Header，其类型为 Elf32_Shdr。Elf32_Shdr 定义如下：</p>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231010172012.png" alt="20231010172012"></p>
+<p>Nougat_dlfunctions 处理 elf 的方式相当简单粗暴：找到关键信息后直接拷贝一份并保存下来。关键信息包括 .dynsym，.dynstr 等等, 具体可以对照着代码看：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> *<span class="title function_">fake_dlopen</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *libpath, <span class="type">int</span> flags)</span></span><br><span class="line">&#123;</span><br><span class="line">    FILE *maps;</span><br><span class="line">    <span class="type">char</span> buff[<span class="number">256</span>];</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">ctx</span> *<span class="title">ctx</span> =</span> <span class="number">0</span>;</span><br><span class="line">    <span class="type">off_t</span> load_addr, size;</span><br><span class="line">    <span class="type">int</span> k, fd = <span class="number">-1</span>, found = <span class="number">0</span>;</span><br><span class="line">    <span class="type">void</span> *shoff;</span><br><span class="line">    Elf_Ehdr *elf = MAP_FAILED;</span><br><span class="line">    ...</span><br><span class="line">    ctx = (<span class="keyword">struct</span> ctx *) <span class="built_in">calloc</span>(<span class="number">1</span>, <span class="keyword">sizeof</span>(<span class="keyword">struct</span> ctx));</span><br><span class="line">    <span class="keyword">if</span>(!ctx) fatal(<span class="string">&quot;no memory for %s&quot;</span>, libpath);</span><br><span class="line"></span><br><span class="line">    ctx-&gt;load_addr = (<span class="type">void</span> *) load_addr;</span><br><span class="line">    shoff = ((<span class="type">void</span> *) elf) + elf-&gt;e_shoff;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span>(k = <span class="number">0</span>; k &lt; elf-&gt;e_shnum; k++, shoff += elf-&gt;e_shentsize)  &#123;</span><br><span class="line"></span><br><span class="line">        Elf_Shdr *sh = (Elf_Shdr *) shoff;</span><br><span class="line">        log_dbg(<span class="string">&quot;%s: k=%d shdr=%p type=%x&quot;</span>, __func__, k, sh, sh-&gt;sh_type);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">switch</span>(sh-&gt;sh_type) &#123;</span><br><span class="line"></span><br><span class="line">     <span class="keyword">case</span> SHT_DYNSYM:</span><br><span class="line">         <span class="keyword">if</span>(ctx-&gt;dynsym) fatal(<span class="string">&quot;%s: duplicate DYNSYM sections&quot;</span>, libpath); <span class="comment">/* .dynsym */</span></span><br><span class="line">         ctx-&gt;dynsym = <span class="built_in">malloc</span>(sh-&gt;sh_size);</span><br><span class="line">         <span class="keyword">if</span>(!ctx-&gt;dynsym) fatal(<span class="string">&quot;%s: no memory for .dynsym&quot;</span>, libpath);</span><br><span class="line">         <span class="built_in">memcpy</span>(ctx-&gt;dynsym, ((<span class="type">void</span> *) elf) + sh-&gt;sh_offset, sh-&gt;sh_size);</span><br><span class="line">         ctx-&gt;nsyms = (sh-&gt;sh_size/<span class="keyword">sizeof</span>(Elf_Sym)) ;</span><br><span class="line">         <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">     <span class="keyword">case</span> SHT_STRTAB:</span><br><span class="line">         <span class="keyword">if</span>(ctx-&gt;dynstr) <span class="keyword">break</span>; <span class="comment">/* .dynstr is guaranteed to be the first STRTAB */</span></span><br><span class="line">         ctx-&gt;dynstr = <span class="built_in">malloc</span>(sh-&gt;sh_size);</span><br><span class="line">         <span class="keyword">if</span>(!ctx-&gt;dynstr) fatal(<span class="string">&quot;%s: no memory for .dynstr&quot;</span>, libpath);</span><br><span class="line">         <span class="built_in">memcpy</span>(ctx-&gt;dynstr, ((<span class="type">void</span> *) elf) + sh-&gt;sh_offset, sh-&gt;sh_size);</span><br><span class="line">         <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">     <span class="keyword">case</span> SHT_PROGBITS:</span><br><span class="line">         <span class="keyword">if</span>(!ctx-&gt;dynstr || !ctx-&gt;dynsym) <span class="keyword">break</span>;</span><br><span class="line">         <span class="comment">/* won&#x27;t even bother checking against the section name */</span></span><br><span class="line">         ctx-&gt;bias = (<span class="type">off_t</span>) sh-&gt;sh_addr - (<span class="type">off_t</span>) sh-&gt;sh_offset;</span><br><span class="line">         k = elf-&gt;e_shnum;  <span class="comment">/* exit for */</span></span><br><span class="line">         <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"> ...</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ctx 的结构如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ctx</span> &#123;</span></span><br><span class="line">    <span class="type">void</span> *load_addr;</span><br><span class="line">    <span class="type">void</span> *dynstr; <span class="comment">// 保存了 string table</span></span><br><span class="line">    <span class="type">void</span> *dynsym; <span class="comment">// 保存了 dynamic linking table</span></span><br><span class="line">    <span class="type">int</span> nsyms;    <span class="comment">// 保存了 dynamic linking table 的条目大小</span></span><br><span class="line">    <span class="type">off_t</span> bias;   <span class="comment">// ? 不清楚</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>最后，根据指定的方法名在 ctx-&gt;dynsym (即之前保存的 dynamic linking table) 进行查找。代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> *<span class="title function_">fake_dlsym</span><span class="params">(<span class="type">void</span> *handle, <span class="type">const</span> <span class="type">char</span> *name)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> k;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">ctx</span> *<span class="title">ctx</span> =</span> (<span class="keyword">struct</span> ctx *) handle;</span><br><span class="line">    Elf_Sym *sym = (Elf_Sym *) ctx-&gt;dynsym;</span><br><span class="line">    <span class="type">char</span> *strings = (<span class="type">char</span> *) ctx-&gt;dynstr;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span>(k = <span class="number">0</span>; k &lt; ctx-&gt;nsyms; k++, sym++)</span><br><span class="line"> <span class="keyword">if</span>(<span class="built_in">strcmp</span>(strings + sym-&gt;st_name, name) == <span class="number">0</span>) &#123;</span><br><span class="line">     <span class="comment">/*  NB: sym-&gt;st_value is an offset into the section for relocatables,</span></span><br><span class="line"><span class="comment">  but a VMA for shared libs or exe files, so we have to subtract the bias */</span></span><br><span class="line">     <span class="type">void</span> *ret = ctx-&gt;load_addr + sym-&gt;st_value - ctx-&gt;bias;</span><br><span class="line">     log_info(<span class="string">&quot;%s found at %p&quot;</span>, name, ret);</span><br><span class="line">     <span class="keyword">return</span> ret;</span><br><span class="line"> &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果方法名跟 dynamic linking table 中的某一项匹配上了，对应的方法地址可以这样计算出来：<code>ctx-&gt;load_addr + sym-&gt;st_value - ctx-&gt;bias</code></p>
+<p>看一个实际案例：hook Bitmap。假设我们感兴趣的方法名为 createBitmap，</p>
+<ul>
+<li>这个方法在 system&#x2F;lib&#x2F;libandroid_runtime.so 中</li>
+<li>应用启动后 Android 系统会为当前进程加载 libandroid_runtime.so</li>
+<li>proc&#x2F;self&#x2F;maps 中记录了当前进程的内存布局，其中包括 libandroid_runtime.so</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/beichen100/image_host/master/img/20231010174500.png" alt="20231010174500"></p>
+<p>获取 createBitmap() 方法地址流程：</p>
+<p>fake_dlopen()</p>
+<ul>
+<li>parse - 解析 proc&#x2F;self&#x2F;maps， 得到 libandroid_runtime.so 的基址 load_addr</li>
+<li>mmap - 将 libandroid_runtime.so mmap 映射成 elf</li>
+<li>copy - 从 elf 拷贝 .dynstr 和 .dynsym</li>
+</ul>
+<p>fake_dlsym()</p>
+<ul>
+<li>search - 在 .dynsym 查找 createBitmap 字符串对应的项</li>
+<li>calculate - 如果第 4 步中查找成功，最后一步就是计算 createBitmap 方法的地址。计算规则： load_addr + sym-&gt;st_value - bias</li>
+</ul>
+<p>参考：<a target="_blank" rel="noopener" href="https://www.sunmoonblog.com/2019/06/04/fake-dlopen/">https://www.sunmoonblog.com/2019/06/04/fake-dlopen/</a></p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://beichen.link/2023/08/15/Study/%E5%AE%9E%E4%B9%A0/%E6%B3%A8%E5%85%A5%E5%BC%80%E5%8F%91%E4%B9%8Bfake_dlopen/" title="Fake dlopen" target="_blank" rel="external">https://beichen.link/2023/08/15/Study/实习/注入开发之fake_dlopen/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="https://cdn.jsdelivr.net/gh/beichen100/image_host@master/v2-365c58cfcf62b665ec7e17d933f78219_1440w.webp" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="" target="_blank"><span class="text-dark">beichen</span><small class="ml-1x">Android system developer</small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2023/08/15/Study/%E5%AE%9E%E4%B9%A0/System_Server%E8%BF%9B%E7%A8%8B%E6%B3%A8%E5%85%A5%E5%BC%80%E5%8F%91/" title="System_Server进程注入开发"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;Newer</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2023/08/15/Study/Android%E6%BC%8F%E6%B4%9E/Bundle%E9%A3%8E%E6%B0%B4/" title="Bundle 风水"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        &copy; 2023 John Doe
+        
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>
